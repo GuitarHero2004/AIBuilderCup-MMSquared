@@ -1,0 +1,226 @@
+# GreenProcure — technical architecture and contracts
+**Version:** 2.0 · **Status:** implementation design, not a tested system
+
+## 1. Stack and deployment boundary
+| Layer | Choice | Responsibility |
+|---|---|---|
+| Web | React/Vite/TypeScript, Tailwind | Five views, forms, review, comparison, Activity panel |
+| Static hosting | Firebase Hosting | Public frontend and optional PR previews |
+| Identity | Firebase anonymous Auth | Per-visitor UID; token sent to backend |
+| API | Python/FastAPI, Pydantic | Auth/state guards, upload, typed API, orchestration |
+| Agents | Google ADK | One coordinator, two agent-as-tool specialists |
+| Model | Gemini on Google Cloud; official Google Gen AI SDK | PDF extraction and bounded reasoning |
+| Business database | Firestore | Revisions, snapshots, decisions, runs/events and quotas |
+| Document storage | Private Cloud Storage | PDFs and raw structured extraction artefacts |
+| Runtime | One Cloud Run service/container | API and all agents together |
+| Operations | Cloud Logging | Safe structured run/error telemetry |
+| Delivery | GitHub checks, Firebase frontend deploy, Cloud Build backend deploy | Distinct owners; no Vercel |
+
+These are team choices; the supplied competition excerpt names Firebase/Firestore/Cloud Run/
+Gemini, not every framework above. ADK supports agent-as-tool delegation [S01] and deployment
+to Cloud Run [S02]. Keep all agents in process; no microservices just for agent count.
+
+## 2. Runtime flow
+```text
+Browser on Firebase Hosting
+    │ Firebase ID token + HTTPS; fetch-stream for long agent runs
+    ▼
+Cloud Run: FastAPI
+    ├── verify identity, quota, revisions, ownership
+    ├── ordinary endpoints → domain services (no model required)
+    └── ADK coordinator
+          ├── AgentTool(quotation_specialist)
+          │     └── extract one PDF, gaps, clarification draft
+          └── AgentTool(sourcing_specialist)
+                └── reviewed case → deterministic evaluation/scenario tools
+
+Shared services → Firestore + private Storage
+Agent/model layer → Gemini via Google Cloud service identity
+All executed tools → bounded run events + structured logs
+```
+Use agents-as-tools rather than combining transfer-based `sub_agents` and AgentTool for the
+same specialist. Both specialists return results to coordinator; neither delegates back.
+No peer delegation cycle. The terms “subagent” and “specialist” here mean actual subordinate
+ADK agents invoked through this explicit mechanism, not additional cloud services.
+
+## 3. Agent definitions and permissions
+| Agent | Receives | Allowed capabilities | Must not do |
+|---|---|---|---|
+| coordinator | Auth-bound case/run context, user intent, safe summaries | Delegate to specialists; assemble response refs | Approve data, calculate winners, change constraints |
+| quotation_specialist | One authorised PDF ref and expected extraction schema | Extract, identify missing/ambiguous fields, draft clarification | Confirm fields, access another owner, decide sourcing |
+| sourcing_specialist | Confirmed case/quote revisions and policy | Call evaluation/scenario preview, explain returned metrics | Read arbitrary PDFs, alter confirmed inputs, make purchases |
+
+Keep specialised prompts short and versioned in source. The tool service derives owner and
+case from trusted request context; any supplied case/quote ID is checked within that scope.
+PDFs/user messages/tool text never alter allowlists or authority. Treat quoted instructions
+inside a PDF as document content, not system instructions.
+
+## 4. Concrete tool contracts
+All results use `{status, result_ref, data, warnings, error}`. Errors have stable codes.
+
+**Coordinator tools**
+- `consult_quotation_specialist(quote_id, intent)` — bounded delegation for extraction/gaps.
+- `consult_sourcing_specialist(intent, scenario_id)` — bounded delegation for confirmed data.
+
+These describe domain tool names; implement using the installed ADK AgentTool mechanism,
+with an adapter if required. Do not claim this exact wrapper signature is built into the SDK.
+
+**Quotation tools**
+- `extract_quote_pdf(quote_id, expected_draft_revision)` → draft fields, provenance, gaps;
+  a separate schema-constrained Gemini extraction call reads the PDF.
+- `get_quote_review_state(quote_id)` → current draft and missing fields.
+- `store_clarification_draft(quote_id, text)` → copyable draft only, no send.
+
+**Sourcing tools**
+- `get_confirmed_case()` → authorised immutable quote refs plus unresolved blockers.
+- `evaluate_sourcing_options(scenario_id, expected_case_revision)` → immutable evaluation
+  ID, eligibility, computed ranking, winner and limitations.
+- `preview_sourcing_scenario(baseline_evaluation_id, proposed_policy)` → nonapproved preview
+  or proposal requiring confirmation; never commits a change in requirements.
+
+Domain functions inside those tools: textile checks, cost normalisation, net/gross mass,
+leg emissions, feasibility, score normalisation and baseline deltas. The same functions are
+available to direct UI endpoints. Do not turn each arithmetic function into a separate LLM agent.
+
+There is deliberately no `confirm_quote`, `approve_scenario`, `save_decision`, email, shell,
+arbitrary URL fetch or resource-creation tool in any agent's allowlist.
+
+## 5. Human review, state and grounding
+A quotation agent produces a draft and a review-required result, then its request ends.
+The browser presents fields/evidence and submits explicit confirmation to a human-only API.
+A later sourcing request starts a fresh, bounded ADK session reconstructed from Firestore.
+In-memory agent history is not a business database; do not add local SQLite as durable state.
+
+The evaluation engine, not coordinator narrative, owns recommendation eligibility/winner.
+Validate structured explanations against evaluation refs. Render exact amounts from saved
+metrics. If the model contradicts the snapshot, reject/repair within a bounded attempt or
+show explanation unavailable while retaining the actual results.
+
+Gemini PDF input and structured outputs have model-specific support [S03]. Separate extraction
+from orchestration so a request does not assume every model supports schema+all tools together.
+Configure model IDs and locations; verify actual capability with a live smoke test before release.
+
+## 6. API boundary
+Prefix `/api/v1`. Except `GET /healthz` and static frontend assets, business routes require a
+verified Firebase ID token. Firebase documents server token verification [S05]. Use request
+models without UID/approval authority fields supplied by the caller.
+
+| Method/path | Purpose | Important guard |
+|---|---|---|
+| POST `/cases` | Create case or clone synthetic template | Auth; per-user cap; visible assumptions |
+| GET `/cases` | List own cases | Derive UID server-side |
+| GET/PATCH `/cases/{case_id}` | Read/edit requirement | Owner; expected revision; invalidate results |
+| POST `/cases/{case_id}/quotes` | Bounded PDF upload | Owner, limits, content/hash checks |
+| GET `/cases/{case_id}/quotes/{quote_id}` | Read review state | Owner |
+| GET `/cases/{case_id}/quotes/{quote_id}/document` | Stream private source PDF | Owner; safe content headers |
+| PATCH `/cases/{case_id}/quotes/{quote_id}/draft` | User corrections | Expected draft/case revision |
+| POST `/cases/{case_id}/quotes/{quote_id}/confirm` | Create immutable confirmed revision | Human endpoint; no agent exposure |
+| POST `/cases/{case_id}/agent-runs` | Bounded extraction/advice request | Auth, quotas, idempotency, intent allowlist |
+| GET `/cases/{case_id}/runs/{run_id}` | Read run state/result refs | Owner, not global run enumeration |
+| GET `/cases/{case_id}/runs/{run_id}/events` | Read safe actual activity events | Owner; bounded pagination |
+| POST `/cases/{case_id}/scenarios` | Human confirms scenario | Expected case revision; proposal shown in UI |
+| POST `/cases/{case_id}/evaluations` | Direct deterministic evaluation | Reviewed data, current confirmed scenario |
+| GET `/cases/{case_id}/evaluations/{evaluation_id}` | Read snapshot plus stale flag | Owner |
+| POST `/cases/{case_id}/decisions` | Human saves eligible selection | Fresh snapshot; record reason |
+| GET `/cases/{case_id}/decisions/{decision_id}` | Saved in-app summary | Owner |
+
+`POST agent-runs` supports bounded intents `extract_quote|draft_clarification|explain_evaluation|
+propose_scenario`. Reject unknown tool/action names. The coordinator may delegate only within
+that intent's permission set. Pydantic/OpenAPI owns exact bodies; generate TS contracts.
+
+Error contract example:
+```json
+{
+  "error": {
+    "code": "STALE_CASE_REVISION",
+    "message": "The case changed. Review the latest data before continuing.",
+    "retryable": false,
+    "request_id": "example_request_id",
+    "run_id": null
+  }
+}
+```
+Suggested status mapping: 401 auth; 404 owner-scoped not found; 409 stale/active run; 413 size;
+422 bad data; 429 quota; 502 provider/invalid response; 504 timeout. Do not leak other user IDs.
+
+## 7. Streaming and execution lifecycle
+Use authenticated `fetch` streaming (NDJSON or equivalent) for an agent run. Avoid native
+EventSource assumptions about attaching a bearer header. Keep model/tool work inside the
+active HTTP request with cancellation and an application deadline. No `202 accepted` plus
+untracked FastAPI background task; Cloud Run process lifetime is not a job queue.
+
+Persist run start, safe events and result refs. Disconnect/timeout ends or marks the run
+interrupted; do not promise it will keep working after disconnect. The status route retrieves
+recorded progress/result, not a claim of asynchronous completion. A lease expiry reconciles
+process crashes. A future durable worker/queue requires a separate scope decision.
+
+Proposed app run budget: 120 seconds; maximum eight model generations across the entire
+coordinator/specialists/extraction tree, maximum twelve domain-tool calls and two specialist
+delegations. Count nested calls, token/output budgets and retries, not only root turns.
+One automatic provider retry only for transient failures within the same budget; stop repeated
+identical failing calls. Four PDFs are processed as separate bounded runs, not one giant request.
+
+Activity messages are produced by callbacks/tool wrappers after actual work starts/completes.
+Show no hidden chain-of-thought, invented progress or raw sensitive payload. UI cancellation
+and retry must be explicit and respect idempotency/quotas.
+
+## 8. Security and Google runtime configuration
+Use ADC/service identity for deployed Google Cloud model/data access; no service-account
+JSON in browser or Git. Model, region and billing remain prerequisites, not assumed available.
+App data goes through backend; direct Firestore/Storage client access is denied by default.
+Server SDKs bypass Firestore Rules [S06], so shared service methods enforce owner/state.
+
+Cloud Run's HTTP endpoint may be public at the infrastructure level so Firebase-authenticated
+browsers can reach it; Firebase tokens are checked by FastAPI. A Firebase token is not a
+Cloud Run IAM identity token. Account for project policy restrictions during deployment.
+Explicit CORS allowlist includes actual frontend/approved previews; it is not access control.
+
+Cloud Logging captures supported application logs [S10]. Emit request/run ID, agent/tool,
+duration, status and safe counts. Avoid tokens, PDF contents and full personal data. Add a
+model-call kill switch, distributed quotas and small instance/concurrency limits before release.
+
+## 9. Deployment choices and configurable values
+Browser calls the configured Cloud Run API directly. Firebase Hosting rewrites have a
+60-second request timeout [S09]; do not route a potentially longer agent run through one.
+SPA fallback should serve the web index for frontend routes only.
+
+Backend config to validate: `APP_ENV`, `AI_MODE`, `SUBMISSION_MODE`, `GOOGLE_CLOUD_PROJECT`,
+`GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_LOCATION`, `GEMINI_MODEL`, `FIRESTORE_DATABASE_ID`,
+`STORAGE_BUCKET`, `ALLOWED_ORIGINS`, run/quota limits. Cloud Run deployment region and model
+location are distinct choices; verify support instead of forcing the same value.
+Frontend config: Firebase web config, `VITE_API_BASE_URL`, emulator flags. No admin credentials.
+
+`AI_MODE=fixture` is explicit development mode. `SUBMISSION_MODE=true` rejects fixture AI,
+test-only factors and missing live credentials. A credentials error must not activate fixtures.
+The SDK/emulator setup must not point local tests at production by accident.
+
+## 10. Monorepo target after Codex implements it
+```text
+apps/web/                  React/Vite application, tests, package lockfile
+services/api/
+  app/api/                 FastAPI routes and auth
+  app/models/              Pydantic schemas / API contracts
+  app/domain/              Pure textile/cost/carbon/scenario functions
+  app/agents/              Coordinator + two specialists, prompts, tool wrappers
+  app/services/            Authorised business logic and revision guards
+  app/adapters/            Firestore, Storage, Gemini adapters
+  tests/                   Pure/unit/integration/live opt-in tests
+  Dockerfile
+  pyproject.toml + lockfile
+fixtures/source/           Clearly synthetic source JSON
+fixtures/generated/        Generated synthetic PDFs, not answer keys
+services/api/tests/fixtures/ Expected extraction JSON and test-only factors
+infra/firebase/            Hosting config, deny-direct-access rules, needed indexes
+infra/cloud/               Cloud Build config and documented deployment
+.github/workflows/         Checks and approved frontend deploy/preview
+```
+This is a target layout, not a claim that these directories already contain an application.
+Do not add Turborepo, Kubernetes, LangChain, Redis, another database or Terraform by default.
+A root API folder is acceptable in an existing repo if boundaries/tests remain clear.
+
+## 11. Release evidence
+Show an actual Gemini call and two actual specialist delegations across the demonstrated
+workflow; passing mocked tests is insufficient. Verify denied cross-user access, field review,
+A/B trade-off, stale/no-feasible behaviour, reference-factor provenance and incognito access.
+Record the precise deployed commit, Firebase frontend URL, Cloud Run service and health/smoke
+outcomes in IMPLEMENTATION_STATUS. Do not put fabricated URLs or “all tests pass” in README.

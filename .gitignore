@@ -1,0 +1,48 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!**/.env.example
+!.env.*.example
+!**/.env.*.example
+*service-account*.json
+*serviceAccount*.json
+application_default_credentials.json
+credentials.json
+*.pem
+*.key
+secrets/
+
+# Frontend artefacts (keep lockfiles tracked)
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+
+# Python artefacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Cloud/emulator/local operational data
+.firebase/
+*-debug.log
+*.log
+emulator-data/
+uploads/
+local-data/
+.codex-log/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+/.local/
