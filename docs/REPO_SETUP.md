@@ -1,36 +1,35 @@
 # Repository and cloud setup — Minh + Mạnh
-**Status:** instructions to execute, not actions already performed.
+**Status:** local foundation implemented; GitHub access and cloud steps below still require team action.
 
-## 1. Create the repo before adding infrastructure
-Suggested name: `greenprocure`. Keep one monorepo; no frontend/backend repos split.
-Create it under the team's chosen GitHub owner and invite Mạnh using his actual GitHub handle.
+## 1. Join the existing repository and run locally
+Keep the existing monorepo; do not create a second repository or re-import the context pack.
+Invite Mạnh using his actual GitHub handle when the team is ready to share access.
 Do not guess the handle or use a shared account. Decide visibility and licensing yourselves.
 The team's submitted source must meet the organiser's accessible-repository instructions;
 private development is not a guarantee the final submission is publicly accessible.
 
-Clone the new repo and copy the active context files into its root. Keep AGENTS.md
-at the root, not in a nested downloaded folder. Preserve an existing README/AGENTS.md by merging
-rather than blindly replacing them. The initial pack contains context, not runnable app code.
+Clone the existing repository from its actual GitHub URL and follow the root README's
+local quick start. Use Node 24, npm 11/12, Python 3.12 and Java 21+. The checked-in npm workspace
+and `services/api/uv.lock` supply the tested dependency baseline. Keep AGENTS.md at the root.
 Keep GREENPROCURE_CONTEXT.md and CODEX_KICKOFF.md under docs/. Historical v1 files are optional
 local-only material under `.local/legacy/archive/` when retained; teammates do not need them to build v2.
 
-PowerShell-friendly example (replace the placeholder account):
+PowerShell-friendly setup after cloning (run from the actual repository root):
 ```powershell
-$RepoUrl = "https://github.com/YOUR_ACCOUNT/greenprocure.git"
-git clone $RepoUrl
-cd greenprocure
-# Copy the active context files here, including docs, .github and .gitignore.
-git status
-# Inspect the files before staging; never stage credentials.
-git add README.md AGENTS.md docs .github .gitignore
-git diff --cached --stat
-git commit -m "docs: establish GreenProcure v2 implementation context"
-# Push only after checking the correct remote and repository visibility.
-git remote -v
-git push -u origin main
+npm ci
+npm run setup:api
+# First setup only; do not overwrite an existing local configuration.
+Copy-Item apps/web/.env.example apps/web/.env.local
+npm run check
+npm run test:integration
 ```
-If cloning an existing repo, use its current branch/workflow. Do not rewrite history or force-push.
-Then open Codex in the repository and use `docs/CODEX_KICKOFF.md`.
+Use the README's three-terminal commands for the browser, API and emulators. These use only
+the isolated `demo-greenprocure` project on loopback. No cloud access or Firebase login is
+needed. Integration tests own their emulator processes; stop dev emulators before running them.
+For browser smoke verification, run `npm run setup:browser` once, then `npm run test:e2e`.
+Emulator data is temporary; it does not survive emulator shutdown in the default setup.
+Use the current branch/workflow. Do not rewrite history or force-push. Read
+`docs/IMPLEMENTATION_STATUS.md` before using `docs/CODEX_KICKOFF.md` for the next increment.
 
 ## 2. Lightweight collaboration
 Feature branches such as `feat/quotation-review` and `feat/sourcing-engine` → PR → one review
@@ -39,21 +38,26 @@ extra paid review bot. Suggested ownership: Minh focuses product/UI/test fixture
 API/agents/cloud; both review data contracts and maths. This is proposed ownership, not a claim
 about either person's proficiency.
 
-After actual CI job names exist, protect `main` with one approval, passing checks, resolved
+The checked-in workflow defines the `checks` job. After its first real successful GitHub run,
+protect `main` with one approval, passing checks, resolved
 review threads and blocked force-push/deletion. GitHub feature availability depends on account/
 repo plan [S11]. The supplied PR template is only a checklist; it does not configure enforcement.
 Do not require two external reviewers for a two-person team or require checks that never run.
 
-## 3. Start with code checks, not deployment automation
-Have Codex generate real checks once manifests exist:
-- Frontend lint, typecheck, unit tests, production build.
-- Backend lint/type checks where configured, pytest, API contract consistency.
-- Pure deterministic calculation/security tests with no production credentials.
-- A small emulator/browser test as the integrated path becomes runnable.
+## 3. Code checks and the next increments
+`.github/workflows/ci.yml` installs locked dependencies, runs `npm run check` and starts
+isolated Firebase integration tests. It has read-only repository permissions and no cloud
+credentials. The workflow has not run on GitHub as part of local setup.
+`npm run check` covers frontend lint/typecheck/unit tests/build, Ruff checks and Python tests,
+plus generated API contract consistency. Python type checking is not separately configured.
+Browser smoke is available locally; CI currently runs API/emulator integration, not Chromium.
+Add calculation, confirmation, stale-revision and no-feasible-option tests with those features;
+the current foundation does not implement or claim to verify them.
 
 CI on untrusted/fork PRs gets no production secrets. Do not use privileged pull_request_target
 checkout/execution of untrusted code. Optional AI review does not replace tests or human review.
-The repo pack itself does not install GitHub workflows or connect the GitHub app.
+The foundation supplies the checks file; it does not configure branch protection, connect
+GitHub/Firebase integrations or grant teammate access.
 
 ## 4. Google project and access
 Use one Firebase-enabled Google Cloud project for the initial synthetic demo. Grant the teammate
@@ -98,8 +102,10 @@ Keep frontend/API contracts backwards-compatible during separate deployments. Ta
 submission commit and record both deployed versions. Freeze unnecessary deployments during evaluation.
 
 ## 6. Credentials, config and rollback
-Codex should create safe `.env.example` files after the app's config schema exists. Do not put
-actual secrets in them. Runtime ADC is not a file to ship in a public repo. Firebase client
+Safe `.env.example` files exist in `apps/web/` and `services/api/`. Root `dev:api` deliberately
+sets local emulator configuration; production starts the app directly with reviewed runtime
+environment values. Do not put actual secrets in examples. Runtime ADC is not a file to ship
+in a public repo. Firebase client
 configuration is distinct from privileged admin credentials; validate both appropriately.
 Store server-only optional secrets in the approved cloud secret mechanism, not browser variables.
 

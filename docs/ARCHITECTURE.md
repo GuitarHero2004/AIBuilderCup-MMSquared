@@ -1,5 +1,5 @@
 # GreenProcure — technical architecture and contracts
-**Version:** 2.0 · **Status:** implementation design, not a tested system
+**Version:** 2.1 · **Revised:** 4 October 2026 · **Status:** implementation design, not a tested system
 
 ## 1. Stack and deployment boundary
 | Layer | Choice | Responsibility |
@@ -7,26 +7,32 @@
 | Web | React/Vite/TypeScript, Tailwind | Five views, forms, review, comparison, Activity panel |
 | Static hosting | Firebase Hosting | Public frontend and optional PR previews |
 | Identity | Firebase anonymous Auth | Per-visitor UID; token sent to backend |
+| App attestation | Firebase App Check | Verify public business API requests alongside identity and ownership |
 | API | Python/FastAPI, Pydantic | Auth/state guards, upload, typed API, orchestration |
 | Agents | Google ADK | One coordinator, two agent-as-tool specialists |
 | Model | Gemini on Google Cloud; official Google Gen AI SDK | PDF extraction and bounded reasoning |
 | Business database | Firestore | Revisions, snapshots, decisions, runs/events and quotas |
 | Document storage | Private Cloud Storage | PDFs and raw structured extraction artefacts |
 | Runtime | One Cloud Run service/container | API and all agents together |
-| Operations | Cloud Logging | Safe structured run/error telemetry |
-| Delivery | GitHub checks, Firebase frontend deploy, Cloud Build backend deploy | Distinct owners; no Vercel |
+| Operations | Cloud Logging + Cloud Monitoring | Safe structured logs, latency/error/quota/model-use metrics and alerts |
+| Delivery | GitHub checks, Firebase frontend deploy, Cloud Build → Artifact Registry → Cloud Run | Reviewed backend image and release; existing frontend previews |
+| Server secrets, if needed | Secret Manager | Actual server secrets only; Google service access uses runtime identity |
 
 These are team choices; the supplied competition excerpt names Firebase/Firestore/Cloud Run/
 Gemini, not every framework above. ADK supports agent-as-tool delegation [S01] and deployment
 to Cloud Run [S02]. Keep all agents in process; no microservices just for agent count.
 
+Google's current model-platform documentation uses Gemini Enterprise Agent Platform, the
+evolution of Vertex AI [S23]. This terminology does not move the ADK runtime off Cloud Run.
+Use the official Google Gen AI SDK; verify its backend-selection options during implementation.
+
 ## 2. Runtime flow
 ```text
 Browser on Firebase Hosting
-    │ Firebase ID token + HTTPS; fetch-stream for long agent runs
+    │ Firebase ID token + App Check token + HTTPS; fetch-stream for long agent runs
     ▼
 Cloud Run: FastAPI
-    ├── verify identity, quota, revisions, ownership
+    ├── verify identity, App Check, quota, revisions, ownership
     ├── ordinary endpoints → domain services (no model required)
     └── ADK coordinator
           ├── AgentTool(quotation_specialist)
@@ -36,7 +42,7 @@ Cloud Run: FastAPI
 
 Shared services → Firestore + private Storage
 Agent/model layer → Gemini via Google Cloud service identity
-All executed tools → bounded run events + structured logs
+All executed tools → bounded run events + structured logs/monitoring
 ```
 Use agents-as-tools rather than combining transfer-based `sub_agents` and AgentTool for the
 same specialist. Both specialists return results to coordinator; neither delegates back.
@@ -99,11 +105,16 @@ show explanation unavailable while retaining the actual results.
 Gemini PDF input and structured outputs have model-specific support [S03]. Separate extraction
 from orchestration so a request does not assume every model supports schema+all tools together.
 Configure model IDs and locations; verify actual capability with a live smoke test before release.
+P0 targets digital Vietnamese/English quotation PDFs. Measure scanned variants separately;
+do not claim general scan accuracy. Retain source-page/excerpt evidence for human review.
+Consider Document AI later only if measured extraction gaps justify another service [S20].
 
 ## 6. API boundary
 Prefix `/api/v1`. Except `GET /healthz` and static frontend assets, business routes require a
 verified Firebase ID token. Firebase documents server token verification [S05]. Use request
 models without UID/approval authority fields supplied by the caller.
+Public business routes also verify Firebase App Check tokens [S16]; this does not replace
+Firebase Auth, owner checks, quotas or the human-only endpoint boundaries below.
 
 | Method/path | Purpose | Important guard |
 |---|---|---|
@@ -140,7 +151,7 @@ Error contract example:
   }
 }
 ```
-Suggested status mapping: 401 auth; 404 owner-scoped not found; 409 stale/active run; 413 size;
+Suggested status mapping: 401 auth; 403 App Check; 404 owner-scoped not found; 409 stale/active run; 413 size;
 422 bad data; 429 quota; 502 provider/invalid response; 504 timeout. Do not leak other user IDs.
 
 ## 7. Streaming and execution lifecycle
@@ -167,36 +178,67 @@ and retry must be explicit and respect idempotency/quotas.
 ## 8. Security and Google runtime configuration
 Use ADC/service identity for deployed Google Cloud model/data access; no service-account
 JSON in browser or Git. Model, region and billing remain prerequisites, not assumed available.
+Do not download service-account keys. Use Secret Manager only for actual server secrets if
+needed, with runtime IAM access [S19]; it is not a substitute for ADC/service identity.
 App data goes through backend; direct Firestore/Storage client access is denied by default.
 Server SDKs bypass Firestore Rules [S06], so shared service methods enforce owner/state.
+
+Verify App Check in the Python API using the supported server verification mechanism [S16].
+Confine debug tokens to development; never accept them as public-release configuration.
+Do not promise Python token consumption/replay protection without supported, tested APIs.
 
 Cloud Run's HTTP endpoint may be public at the infrastructure level so Firebase-authenticated
 browsers can reach it; Firebase tokens are checked by FastAPI. A Firebase token is not a
 Cloud Run IAM identity token. Account for project policy restrictions during deployment.
 Explicit CORS allowlist includes actual frontend/approved previews; it is not access control.
 
-Cloud Logging captures supported application logs [S10]. Emit request/run ID, agent/tool,
-duration, status and safe counts. Avoid tokens, PDF contents and full personal data. Add a
-model-call kill switch, distributed quotas and small instance/concurrency limits before release.
+Cloud Logging captures supported application logs [S10]; Cloud Monitoring adds metrics and
+alerts [S17]. Record request/run ID, agent/tool, latency, errors, quota denials and model use,
+including available token counts. Avoid auth tokens, PDF contents and full personal data.
+Keep run IDs in logs; aggregate metrics by bounded categories rather than per-run or per-visitor
+labels. Keep estimated model cost distinct from actual billing. Retain the model-call kill switch,
+distributed quotas and small instance/concurrency limits before release. Alerts-only billing
+budgets do not enforce a hard spending cap [S24].
+
+The public demo must disclose processing, retention and anonymous-session loss before upload.
+Set the retention period with the team; do not imply parent-record expiry deletes child records
+or Storage objects. Preserve private access and follow the schema's explicit cleanup policy.
 
 ## 9. Deployment choices and configurable values
 Browser calls the configured Cloud Run API directly. Firebase Hosting rewrites have a
 60-second request timeout [S09]; do not route a potentially longer agent run through one.
 SPA fallback should serve the web index for frontend routes only.
+For backend delivery, Cloud Build builds the image, Artifact Registry stores it and the
+reviewed release deploys to the existing Cloud Run service [S18]. GitHub checks and Firebase
+frontend previews retain their existing responsibilities. Deployment still needs authorisation.
 
 Backend config to validate: `APP_ENV`, `AI_MODE`, `SUBMISSION_MODE`, `GOOGLE_CLOUD_PROJECT`,
 `GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_LOCATION`, `GEMINI_MODEL`, `FIRESTORE_DATABASE_ID`,
 `STORAGE_BUCKET`, `ALLOWED_ORIGINS`, run/quota limits. Cloud Run deployment region and model
 location are distinct choices; verify support instead of forcing the same value.
+`GOOGLE_GENAI_USE_VERTEXAI` is an illustrative existing SDK selector, not a promised universal
+flag. Verify the installed SDK's supported Google Cloud backend selector and model/location
+settings against current official documentation [S03, S23] before implementation.
 Frontend config: Firebase web config, `VITE_API_BASE_URL`, emulator flags. No admin credentials.
+App Check provider configuration must separate development debug setup from the public release.
 
 `AI_MODE=fixture` is explicit development mode. `SUBMISSION_MODE=true` rejects fixture AI,
 test-only factors and missing live credentials. A credentials error must not activate fixtures.
 The SDK/emulator setup must not point local tests at production by accident.
+Google sign-in through account linking is P1 after I4, preserving the existing anonymous UID
+and owned data where supported [S21]. Maps, Search and Workspace integrations are not new P0
+dependencies. Cloud Carbon Footprint concerns cloud-service emissions, not quotation logistics
+factors; it cannot replace the reviewed transport-factor dataset [S22].
 
-## 10. Monorepo target after Codex implements it
+## 10. Monorepo boundaries
+The local foundation now implements web cases, API models/services/Firestore adapter,
+Firebase emulators, generated OpenAPI types and checks. See README for the actual runnable
+tree and commands. The broader target below also includes later product components:
 ```text
-apps/web/                  React/Vite application, tests, package lockfile
+package.json + package-lock.json  Root npm workspace and single JavaScript lockfile
+apps/web/                  React/Vite application and tests
+  src/features/            Feature UI and form state
+  src/api/generated/       TypeScript contract generated from FastAPI OpenAPI
 services/api/
   app/api/                 FastAPI routes and auth
   app/models/              Pydantic schemas / API contracts
@@ -214,7 +256,12 @@ infra/firebase/            Hosting config, deny-direct-access rules, needed inde
 infra/cloud/               Cloud Build config and documented deployment
 .github/workflows/         Checks and approved frontend deploy/preview
 ```
-This is a target layout, not a claim that these directories already contain an application.
+Domain calculations, ADK agents, fixtures and cloud delivery directories are future work,
+not empty scaffold folders. The backend is a modular monolith: routes call owner-authorised
+services; services use adapters; future pure calculations remain independent of SDKs.
+Frontend feature components and hooks own presentation/form state; a mandatory MVVM layer
+is unnecessary for this two-person React app. MERN is a different technology stack and does
+not match the selected Python/Firestore architecture.
 Do not add Turborepo, Kubernetes, LangChain, Redis, another database or Terraform by default.
 A root API folder is acceptable in an existing repo if boundaries/tests remain clear.
 
@@ -224,3 +271,6 @@ workflow; passing mocked tests is insufficient. Verify denied cross-user access,
 A/B trade-off, stale/no-feasible behaviour, reference-factor provenance and incognito access.
 Record the precise deployed commit, Firebase frontend URL, Cloud Run service and health/smoke
 outcomes in IMPLEMENTATION_STATUS. Do not put fabricated URLs or “all tests pass” in README.
+Trace PRD service acceptance to actual Firebase identity/App Check, private file access,
+Firestore persistence, Gemini calls, ADK events and monitoring evidence. Report extraction
+quality by language/input type, interruption/retry behavior and live versus fixture results.

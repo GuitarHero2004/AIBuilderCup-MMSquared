@@ -1,6 +1,6 @@
 # GreenProcure — full implementation context
-**Version:** 2.0 · **Prepared:** 1 October 2026 · **Team:** Minh and Mạnh
-**Audience:** the team and Codex · **Status:** proposed implementation baseline for a new repo
+**Version:** 2.1 · **Prepared:** 1 October 2026 · **Revised:** 4 October 2026 · **Team:** Minh and Mạnh
+**Audience:** the team and Codex · **Status:** implementation baseline; local foundation exists, full MVP pending
 
 ## 1. What we are building
 GreenProcure is a sourcing decision assistant for a buyer at a Vietnamese garment SME.
@@ -22,19 +22,28 @@ is retained as roadmap, not an instruction to build everything now.
 | Team scope | Two people; one material line and up to four quotes per case |
 | Frontend | React + Vite + TypeScript; Tailwind for UI; Firebase Hosting |
 | Identity | Firebase Authentication anonymous “Try demo”; no shared public login |
+| Public API protection | Firebase App Check plus verified identity, ownership and quotas |
 | Backend | Python + FastAPI; one container on Cloud Run |
 | Agents | One ADK coordinator + Quotation Specialist + Sourcing Specialist |
 | Delegation | Bounded agents-as-tools; no uncontrolled peer-to-peer loops |
-| Model | Gemini through Google Cloud, official SDK and ADC/service identity |
+| Model | Gemini through Google Cloud, official Google Gen AI SDK and ADC/service identity |
 | Data | Firestore for business records; private Cloud Storage for original PDFs |
-| Observability | Actual run/tool events in the UI; structured Cloud Logging |
+| Observability | Actual run/tool events in the UI; Cloud Logging and Cloud Monitoring |
 | Collaboration | GitHub, short feature branches, review by the other teammate |
-| CI/CD | GitHub Actions checks; Firebase Hosting previews; Cloud Build backend deployment |
+| CI/CD | GitHub Actions checks; Firebase Hosting previews; Cloud Build → Artifact Registry → existing Cloud Run |
+| Secrets | Secret Manager only for actual server secrets if needed; no downloaded service-account keys |
 | Excluded | Vercel, extra databases, Kubernetes, extra agent frameworks, OpenAI runtime calls |
 
 Codex is our development tool, not the product's runtime model. Google AI Studio is optional
 for prompt experimentation. No fine-tuning/training is necessary for the planned workflow.
 Do not infer that more agents or Google services earn points automatically.
+
+The v2.1 PRD ties Google services to live workflow evidence, private data, abuse controls and
+measured reliability. App Check complements authentication and quotas; debug tokens stay in
+development. Monitoring covers latency, errors, quota denials and model use. Estimated cost
+is not actual billing, and billing-budget alerts are not spending caps. Keep the global kill switch.
+Current Google documentation calls the model platform Gemini Enterprise Agent Platform, the
+evolution of Vertex AI; the backend remains one Cloud Run service. Verify actual SDK selectors.
 
 If an existing application is present, inspect it before scaffolding. Preserve working code;
 document a proposed migration instead of replacing it automatically.
@@ -63,6 +72,11 @@ The agent Activity panel is part of those views, not a separate agent control pl
 
 Each extraction is one bounded request. Each sourcing run begins from stored confirmed
 state. Human review is a persisted pause between runs, not an open model call waiting forever.
+P0 targets digital Vietnamese/English quotation PDFs; measure scanned variants separately.
+Document AI is a later option only if measured gaps justify it. Disclose data processing,
+retention and loss of anonymous-session access; interruptions show persisted status and explicit
+retry rather than a promise of background completion. Google sign-in account linking is P1
+after I4. Maps, Search and Workspace integrations remain outside P0.
 
 ## 5. Rules that override older examples
 1. P0 scoring is **cost 45%, lead time 25%, carbon 30%**. Lower Carbon is **10/10/80**.
@@ -87,6 +101,9 @@ See `docs/DECISIONS.md` for source-to-v2 changes and `docs/CALCULATION_SPEC.md` 
 Synthetic quotations are acceptable demo inputs. They must be labelled as such. In live mode,
 Gemini actually reads the input; tools actually calculate; edits change the results;
 Firestore actually persists; agent events represent real calls.
+Record service-level acceptance evidence and extraction quality by language/input type against
+the PRD's existing ≥80% required-field target. Cloud Carbon Footprint does not supply transport
+emission factors; the reviewed logistics-factor requirement remains unchanged.
 
 Never select a result from a supplier-name lookup, send the extraction answer key to Gemini,
 fake a progress trace, or switch to fixtures silently after an API error. If explanation fails,
@@ -113,6 +130,8 @@ External docs verify capabilities, not product scope. Later explicit team instru
 may change scope; record the change rather than pretending it was always in the source.
 
 ## 9. First Codex task
+The local case/auth/persistence foundation has been created. Read README and
+`docs/IMPLEMENTATION_STATUS.md` before continuing; do not scaffold it again.
 Implement Increment 1 in `docs/CODEX_KICKOFF.md`: a small, tested vertical slice with
 one PDF and real confirmation/evaluation. Missing credentials block live verification,
 not local domain code. Do not stop at a plan and do not claim unexecuted tests have passed.
