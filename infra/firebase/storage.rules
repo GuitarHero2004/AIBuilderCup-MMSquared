@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // PDFs are uploaded and streamed through the owner-checked backend.
+    // Do not grant browser access or rely on this rule to restrict Admin SDKs.
+    match /{object=**} {
+      allow read, write: if false;
+    }
+  }
+}

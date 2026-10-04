@@ -1,0 +1,31 @@
+{
+  "name": "greenprocure",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24 <25", "npm": ">=11 <13" },
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "setup:api": "node scripts/python.mjs setup",
+    "setup:browser": "node scripts/browser-install.mjs",
+    "dev:web": "npm run dev --workspace=@greenprocure/web",
+    "dev:api": "node scripts/python.mjs dev",
+    "dev:emulators": "node scripts/emulators.mjs",
+    "lint": "npm run lint --workspace=@greenprocure/web",
+    "typecheck": "npm run typecheck --workspace=@greenprocure/web",
+    "test": "npm run test --workspace=@greenprocure/web",
+    "build": "npm run build --workspace=@greenprocure/web",
+    "check": "node scripts/check.mjs",
+    "test:api": "node scripts/python.mjs test",
+    "test:integration": "node scripts/integration.mjs",
+    "contracts:generate": "node scripts/contracts.mjs",
+    "contracts:check": "node scripts/contracts.mjs --check",
+    "test:e2e": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "firebase-tools": "15.32.1",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}
