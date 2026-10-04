@@ -1,5 +1,5 @@
 # Decisions and explicit changes from v1
-**Version:** 2.0 · **Date:** 1 October 2026
+**Version:** 2.1 · **Original baseline:** 1 October 2026 · **Revised:** 4 October 2026
 
 ## Source basis
 The three uploaded Vietnam Textile SME files are optional historical material, preserved
@@ -34,6 +34,23 @@ Some are scope changes from the conversation; others resolve implementation gaps
 
 [S04] is in `REFERENCES.md`. All score thresholds, limits and normalisation choices are
 product engineering choices, not industry standards or programme mandates.
+
+## v2.1 Google-first review — 4 October 2026
+The team requested a review and revision for meaningful Google-service use. These are proposed
+implementation requirements, not built features or a claim about programme points. D01–D17
+remain the historical v2 decisions; calculations, schemas, human authority and the two-person
+MVP stay unchanged.
+
+| ID | Review finding | v2.1 decision | Reason / status |
+|---|---|---|---|
+| D18 | Google use needed traceable product outcomes | Tie existing services to live identity, extraction, private files, persistence, delegation and operational evidence | Strengthen release acceptance without adding agents or runtimes |
+| D19 | Anonymous authentication alone does not address public abuse | Verify Firebase App Check on public business APIs alongside auth/ownership/quotas; debug tokens only in development | [S16]; no unsupported Python replay-consumption promise |
+| D20 | Logs alone leave operational evidence underspecified | Add Cloud Monitoring for latency/errors/quota denials/model use; retain quotas/global kill switch; distinguish estimates from actual billing | [S17], [S24]; billing-budget alerts are not hard spending caps |
+| D21 | Backend image delivery and actual secrets needed explicit ownership | Cloud Build → Artifact Registry → existing Cloud Run; Secret Manager only for actual server secrets if needed, ADC/runtime IAM for Google access | [S18], [S19]; GitHub checks/Firebase previews unchanged, no downloaded keys |
+| D22 | PDF support and extraction scoring were ambiguous | Digital Vietnamese/English PDFs in P0; measure scans and quality by language/input type against the existing ≥80% target; assess Document AI later only for measured gaps | [S20]; no blanket scan-accuracy claim or new OCR dependency |
+| D23 | Public data lifecycle and interruption UX needed acceptance evidence | Disclose retention/processing/anonymous-session loss; show persisted interrupted states and explicit idempotent retries | Existing ownership, request lifecycle and cleanup policies remain authoritative |
+| D24 | Additional Google services could expand scope without buyer value | Google sign-in account linking is P1 after I4; Maps/Search/Workspace stay outside P0; Cloud Carbon Footprint is not a transport-factor source | [S21], [S22]; preserve one-order scope and reviewed logistics factors |
+| D25 | Platform and preset terminology needed alignment | Note Gemini Enterprise Agent Platform naming for the evolution of Vertex AI; verify actual Google Gen AI SDK selectors; use Lower Carbon consistently | [S23]; Cloud Run runtime and .10/.10/.80 preset weights unchanged |
 
 ## Unresolved external dependencies
 - Exact Google project/bucket/service account, billing authorisation and collaborator identity.

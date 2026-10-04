@@ -1,5 +1,5 @@
 # GreenProcure — Vietnam Textile SME MVP PRD
-**Version:** 2.0 · **Date:** 1 October 2026 · **Team:** Minh and Mạnh
+**Version:** 2.1 · **Date:** 4 October 2026 · **Team:** Minh and Mạnh
 **Focus:** one fabric sourcing decision · **Status:** implementation requirements, not verified features
 
 The domain and workflow derive from the supplied v1 PRD. Changes in scope, maths, identity
@@ -37,6 +37,29 @@ The completed demo must show live PDF extraction, editable review, real eligibil
 calculations, persisted data, a legitimate A/B trade-off, bounded specialist delegation,
 real activity events and human selection. It must not need direct database edits.
 
+## 5.1 Google service roles and release evidence
+Use Google managed services for the platform capabilities below. Each service must support
+a user or operational outcome, with live evidence before release. These are requirements,
+not claims of an existing integration. Service references [Sxx] are in REFERENCES.md.
+
+| Capability | Google implementation | Evidence required by I4 |
+|---|---|---|
+| Web access | Firebase Hosting | A fresh incognito visitor can complete the deployed journey |
+| Private access and abuse protection | Firebase Authentication + App Check [S16] | Owner isolation passes; invalid app verification is rejected before paid work |
+| Document interpretation and explanation | Gemini on Google Cloud, Google Gen AI SDK and Google ADK [S01–S03] | Real PDF extraction and bounded specialist calls have model/prompt/run evidence |
+| Business state | Firestore | Reviewed revisions, evaluations and decisions survive refresh and a fresh backend process |
+| Original documents | Private Cloud Storage | Original bytes and SHA-256 are retained; another owner cannot retrieve them |
+| API, agent tools and calculations | One FastAPI + ADK Cloud Run service | Server-side gates and deterministic results work through the deployed API |
+| Operational visibility | Cloud Logging + Cloud Monitoring [S10, S17] | Correlated failures, latency, quota denials and a tested alert are observable |
+| Reviewed delivery | Cloud Build + Artifact Registry for Cloud Run; Firebase Hosting previews [S07, S18] | Build, image and deployed revision can be traced to the reviewed commit |
+
+Runtime access to Google services uses service identity and least-privilege IAM. Use Secret
+Manager only when an actual server-side secret is needed [S19]; do not create or store a
+service-account key to satisfy this table. GitHub remains the source/review and CI-check system.
+Exact SDK versions, model selection, regions and IAM configuration belong in ARCHITECTURE
+and REPO_SETUP. Google currently groups the model capabilities under Gemini Enterprise Agent
+Platform, evolved from Vertex AI [S23]; the selected application runtime remains Cloud Run.
+
 # 6. Non-Goals
 No ERP, orders/contracts/payments, supplier marketplace, agent email sending, full LCA or
 Scope 3, certificate verification, risk prediction/training, live route/FX feed, splitting
@@ -64,6 +87,11 @@ A user can start a demo without registration or a shared password.
 Acceptance: incognito entry works; two visitors cannot read/write each other's cases,
 files, run events or recommendations; expired tokens produce a recoverable auth state.
 Refreshing the same session can reload persisted data. Recovery across browsers is not P0.
+For the public release, verify Firebase App Check tokens on protected business API requests
+alongside the Firebase ID token and owner checks [S16]. App Check does not replace either
+identity or quotas. An invalid app-verification state must explain how to retry without
+silently bypassing enforcement or starting a paid model call. Development exceptions stay
+outside the public deployment.
 
 ## FR-02 — Create Fabric Sourcing Case [P0]
 Required: name, reference order date, destination, quantity in metres, maximum lead time,
@@ -88,10 +116,20 @@ the same extraction path as uploaded files. Expected JSON belongs only in tests.
 Acceptance: oversize/non-PDF and fifth-quote requests are rejected server-side; duplicate
 retry does not silently create another charged extraction; failed runs can be retried explicitly.
 
+P0 supports machine-readable quotation PDFs in Vietnamese or English. Include mixed-language
+field labels in the test set; preserve original text and flag ambiguous numbers/units for
+review. This input-language requirement does not add full UI localisation or currency conversion.
+Scanned/image-only PDFs are outside the guaranteed P0 input set until their layouts pass the
+same extraction evaluation. Unreadable or unsupported input gets a clear explanation and a
+request for a readable PDF; a syntactically valid file is not proof that its terms were read.
+
 ## FR-04 — Quotation Specialist Extraction [P0]
 Extract commercial, textile and logistics groups defined in the schema. Keep `raw_extraction`
 unmodified; edit a separate review draft. A field records value, source type, document/page/
 excerpt where available, review state and optional note. Use nullable structured output.
+Use Gemini through the Google Cloud model API and Google Gen AI SDK with a supported response
+schema [S03]. Validate the returned schema and field values on the server; valid JSON is not
+evidence that an extracted term is correct. Keep model/prompt versions with the run.
 
 Acceptance: changed PDF terms cause changed extracted values; missing mode stays null;
 ambiguous “15 days” is not silently confirmed end-to-end; invalid model JSON fails validation;
@@ -107,6 +145,9 @@ colour/finish. A known hard failure is `ineligible`; unconfirmed/missing require
 
 Acceptance: boundary values are tested; unreviewed extraction cannot be recommended; a
 required evidence claim needs a human applicability check; edits make old results stale.
+The reviewer can open the authorised original PDF and inspect the cited page/excerpt while
+correcting a field. Missing or unverifiable source evidence is visibly unavailable, never a
+fabricated citation or automatic confirmation.
 
 ## FR-06 — Missing Information [P0]
 Classify missing values by what they block: technical screening, cost comparison, delivery,
@@ -165,6 +206,9 @@ The UI shows boundary, mass/distance provenance and limitations. Estimates are n
 product footprints, realised savings or credits.
 Acceptance: deterministic output; no double counting between fuel boundaries; partial
 first/last-mile coverage is not called complete; test factors cannot enter submission mode.
+Google Cloud Carbon Footprint describes emissions associated with Google Cloud usage [S22].
+It is not the reference-factor source for fabric shipments. Gemini must not invent freight
+factors; the independently reviewed factor manifest remains a live-release prerequisite.
 
 ## FR-12 — Supplier Risk [Deferred]
 Preserve as roadmap only. P0 has no synthetic delivery-history rating, raw risk score or
@@ -198,7 +242,7 @@ shown as unavailable; AI cannot fabricate risk, certification, supplier history 
 If generation fails, show actual calculations with an explicit missing-explanation message.
 
 ## FR-16 — Scenario Lab [P0]
-Presets: Balanced, Lowest Cost, Lowest Carbon, Fastest Delivery, Custom. Slider changes
+Presets: Balanced, Lowest Cost, Lower Carbon, Fastest Delivery, Custom. Slider changes
 calculate directly; a user-requested explanation invokes the agent separately.
 Natural language can propose weights/cost-increase/carbon-reduction caps. Show a structured
 proposal for user confirmation before persistence/evaluation. Agents do not call that endpoint.
@@ -244,6 +288,20 @@ Acceptance: model timeout, invalid JSON, stale edit, expired auth, quota exhaust
 request and absent factors have usable states. No untracked background tasks continue after
 an HTTP response. Live mode never falls back silently to fixture mode.
 
+Show the visitor's remaining allowance and the reason a run cannot start. Enforce the schema's
+per-visitor/global limits across instances before provider work. A repeated idempotency key
+returns the stored result or current run state. An explicit new retry may consume allowance;
+explain this before retrying an ambiguous provider failure, without promising exactly-once billing.
+After navigation or connection loss, reload the persisted run status/result. Interrupted work
+is shown as interrupted and requires explicit retry; do not imply that background work continued.
+
+Use run IDs to locate safe Cloud Logging records and relate failures to aggregate Cloud
+Monitoring metrics/alerts [S17].
+Measure request/model latency, failures, model-call usage and quota denials. Report estimated
+model cost separately from billed cost, using recorded pricing assumptions when estimates exist.
+Exercise the global model-call kill switch and an operational alert before public release.
+Alerts-only billing budgets are notifications, not enforcement of application limits [S24].
+
 # 9. Non-Functional Requirements
 **Reliability:** core workflow has no live FX/maps dependency. Gemini failure remains visible.
 Persist durable data in Firestore/Storage; ephemeral agent context is reconstructed per run.
@@ -254,6 +312,13 @@ measure actual PDF/model latency. Proposed run timeout 120 seconds; not a promis
 **Operations:** live mode validates config, uses real factors, has quotas and logged errors;
 public homepage plus AI flow must be tested without developer credentials.
 **Portability:** Windows PowerShell setup and pinned compatible packages; no mandatory Bash-only local workflow.
+**Data handling:** before upload, explain that PDFs are processed by Google's model service,
+what is stored privately, the configured retention period and how anonymous-session access can
+be lost. The public demo requests synthetic/non-confidential input. Before public release, the
+team must choose and document retention for records, child records, original PDFs and raw model
+outputs. Cleanup follows schema §33 and requires explicit authorisation; no automatic deletion
+may break the evaluation window. Do not claim a data-residency or retention guarantee that has
+not been verified for the selected services and locations.
 
 # 10. AI vs Deterministic Logic
 AI: extraction, ambiguity detection, bounded delegation, language-to-scenario proposal and
@@ -283,19 +348,31 @@ main path. Do not claim every test ran because a demo video was recorded.
 # 13. Priorities and Increment Gates
 | Gate | Deliverable | Evidence required before next gate |
 |---|---|---|
-| I1 | Repo/config, pure engine tests, one PDF extraction-review-confirm-evaluate path | Real/fixture states separate; no fake result; local tests documented |
+| I1 | Repo/config, pure engine tests, one PDF extraction-review-confirm-evaluate path | Real/fixture states separate; no fake result; local tests and extraction test-set boundaries documented |
 | I2 | Four quotes, two specialists and coordinator wired to allowlisted tools | Actual delegation/events; cross-user and state tests |
 | I3 | Comparison, scenarios, human decision summary | A/B trade-off, stale/no-feasible tests |
-| I4 | Google deployment, quotas, CI/CD, incognito smoke test | Real service endpoints and saved test evidence |
+| I4 | Google deployment, App Check, quotas, monitoring, CI/CD, incognito smoke test | Section 5.1 live evidence, private-access tests, retention notice and tested failure/limit states |
 
 P1 only after I4: PDF export, richer evidence, durable account upgrade, locale/FX additions.
 Future only: risk history, split sourcing, ERP, Scope 3, traceability, climate intelligence.
+
+Google-service extensions are evaluated after I4 against a demonstrated need:
+- Link an anonymous Firebase account to Google sign-in so a returning buyer can retain access;
+  verify UID/data continuity and account-collision handling [S21]. This remains the P1 account upgrade.
+- Evaluate Document AI OCR/extraction for measured scanned-document or table-layout failures
+  [S20]. Compare required-field accuracy, evidence quality, latency and cost with the Gemini
+  baseline before adoption; preserve human review and disclose the actual extraction path.
+Neither extension is needed for P0. Live Maps/routes, Google Search supplier discovery, Workspace
+email actions, BigQuery analytics and a separate managed agent runtime are not added to this MVP.
 
 # 14. Key Risks
 Scope inflation → preserve one order and bounded agents. Incorrect green claims → limits and
 factor provenance. Misleading ranking → hard gates, common boundaries, no fake risk data.
 Prompt injection → restricted tools and server checks. Public cost abuse → quotas, size/call
 limits and operational monitoring; anonymous auth alone is not a complete defence.
+Service integration and public-demo operations also cost time for a two-person team. Stage
+App Check, monitoring and delivery evidence into I4; additional services need a stated user
+benefit, evaluation result and explicit scope decision.
 
 # 15. Success Criteria
 Prepared extraction set target ≥80% correct required fields before correction, measured against
@@ -303,6 +380,17 @@ an answer key and reported as a small-demo-set result, not production accuracy. 
 values must never be silently filled. Pure calculation tests must reproduce expected outputs.
 Record live tests separately from mocks and measure actual latency. All release checklist items
 must be evidenced; this document does not certify completion.
+
+For reproducibility, freeze the synthetic evaluation PDFs and answer keys, list the required
+fields and normalisation rules, and report numerator/denominator before human corrections.
+Include Vietnamese, English and mixed-label digital layouts plus missing/ambiguous terms;
+report scanned variants separately and declare exactly which input categories were tested.
+Score readable present fields separately from correct missing/ambiguous-field handling so
+null-heavy samples cannot inflate the accuracy claim. Report evidence/page-reference correctness
+separately; schema-valid output alone does not count as a correct extraction. Record model,
+prompt and dataset versions, failures, latency and model-call usage. The four-quote demo and
+its test variants do not establish general supplier-document accuracy. Changes to model/prompt
+versions require rerunning this evaluation before release.
 
 # 16. Future Product Metrics
 Validate comparison time saved, missed technical constraints detected, data completeness,
