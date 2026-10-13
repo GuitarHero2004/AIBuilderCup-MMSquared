@@ -150,6 +150,30 @@ below. Update this file as implementation and verification continue.
   increment for the existing case workspace. Quote/review/evaluation/scenario/decision APIs
   and their unresolved response/retry contracts must be agreed before connected implementation.
 
+## Wireframes and visual direction — 14 October 2026
+
+- Continued on `feat/ui-workspace` at `aebe330`; the working tree was clean on entry.
+- Added [offline screen wireframes](design/UI_WIREFRAMES.html), a
+  [visual-direction guide](design/VISUAL_DIRECTION.md), and two rendered desktop previews.
+  Linked the design package from README and the screen plan.
+- The design artifact contains seven screen views, 23 illustrative states, grayscale/colour
+  switching, desktop/mobile layouts and local review controls. It has no network/API access,
+  authentication, uploads, model calls or persistent business records. Fixture carbon values
+  are explicitly test-only; no new production feature or calculation engine is implemented.
+- Verification: standalone headless Chromium/Playwright checked all 23 states at 1440, 390
+  and 320px (69 state/viewport combinations), with no page overflow, JavaScript errors or
+  outgoing network requests. Checked confirmation gates, extraction recovery, conflicting
+  requirement edits, pending scenario policy, no feasible option, scenario/buyer selection
+  preservation, stale save blocking and mobile source switching. Desktop and representative
+  mobile screenshots were visually inspected. Proposed text-colour contrast was calculated.
+- Independent review identified misleading pending-scenario and requirement-conflict states;
+  corrected those and reran the artifact checks. No application test suite or live services
+  were run; this is design-artifact verification, not end-to-end product verification.
+- Application source, API contracts, dependencies and cloud configuration are unchanged.
+  No deployment or remote push occurred. Existing backend and release dependencies remain.
+- Next smallest implementation step after design review: the shared layout and existing
+  anonymous case list/create/detail experience, preserving its working API and isolation.
+
 ## Per-increment report template
 ### Increment / commit
 ### Files changed

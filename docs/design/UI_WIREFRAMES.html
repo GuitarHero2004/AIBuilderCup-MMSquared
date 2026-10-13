@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>GreenProcure · screen wireframes</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: light; font-family: "Segoe UI", Arial, sans-serif; color: #18251e; background: #e9eeeb; font-size: 14px; }
+    body { margin: 0; }
+    button, input, select, textarea { font: inherit; }
+    button, a, input, select, textarea { touch-action: manipulation; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .65; }
+    :focus-visible { outline: 3px solid #176443; outline-offset: 3px; }
+    .review-bar { padding: 16px 24px; border-bottom: 1px solid #c9d3cd; background: #edf2ef; }
+    .review-top { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+    .review-top strong { font-size: 16px; }
+    .review-top a { color: #176443; }
+    .review-bar p { margin: 6px 0 12px; color: #536259; line-height: 1.5; }
+    .review-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    .review-controls label { display: grid; gap: 5px; font-size: 12px; color: #374b3e; }
+    .review-controls select { padding: 9px 30px 9px 10px; border: 1px solid #a3b0a8; border-radius: 6px; background: white; color: #18251e; min-height: 40px; max-width: 100%; }
+    .gp { --canvas: #f7f9f8; --side: #f1f5f2; --surface: #fff; --border: #dfe6e1; --text: #18251e; --muted: #536259; --primary: #176443; --hover: #125035; --selected: #e6f0e9; --warn-bg: #fff3d6; --warn: #7a4b00; --bad-bg: #fcedec; --bad: #9c2d2d; --good-bg: #e6f0e9; --good: #176443; --neutral-bg: #eef1ef; display: grid; grid-template-columns: 224px minmax(0, 1fr); min-height: 780px; color: var(--text); background: var(--canvas); line-height: 1.5; }
+    .gp.wireframe { --canvas: #fafafa; --side: #f4f4f4; --surface: #fff; --border: #d8d8d8; --text: #222; --muted: #555; --primary: #3d3d3d; --hover: #252525; --selected: #e8e8e8; --warn-bg: #f3f3f3; --warn: #444; --bad-bg: #f1f1f1; --bad: #333; --good-bg: #ececec; --good: #333; --neutral-bg: #efefef; }
+    .gp button, .gp input, .gp select, .gp textarea { color: inherit; }
+    .gp button:focus-visible, .gp input:focus-visible, .gp select:focus-visible, .gp textarea:focus-visible, .gp summary:focus-visible { outline-color: var(--primary); }
+    .sidebar { padding: 24px 16px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 28px; }
+    .brand { display: flex; gap: 10px; align-items: center; }
+    .mark { width: 36px; height: 36px; display: grid; place-items: center; background: var(--primary); color: white; font-weight: 600; border-radius: 8px; font-size: 13px; }
+    .brand strong { display: block; font-size: 17px; letter-spacing: -.35px; }
+    .brand small { color: var(--muted); }
+    .nav-group { display: grid; gap: 5px; }
+    .nav-label, .eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--muted); font-weight: 600; }
+    .nav-label { padding: 0 12px 6px; }
+    .nav-item { text-align: left; border: 0; background: transparent; border-radius: 7px; padding: 12px; min-height: 44px; }
+    .nav-item.selected { background: var(--selected); font-weight: 600; color: var(--primary); }
+    .sidebar-footer { margin-top: auto; font-size: 12px; padding: 12px; border-top: 1px solid var(--border); color: var(--muted); }
+    .sidebar-footer strong { display: block; color: var(--text); margin-bottom: 3px; }
+    .work { min-width: 0; }
+    .topbar { padding: 18px 32px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; gap: 12px; justify-content: space-between; align-items: center; flex-wrap: wrap; min-height: 68px; }
+    .crumb { font-size: 13px; color: var(--muted); }
+    .crumb span { padding: 0 8px; }
+    .main { padding: 28px 32px 40px; min-width: 0; max-width: 1600px; }
+    .page-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    h1 { margin: 3px 0 5px; font-size: 24px; line-height: 1.3; letter-spacing: -.6px; font-weight: 600; }
+    h2 { font-size: 18px; margin: 0 0 16px; font-weight: 600; }
+    h3 { font-size: 14px; margin: 0 0 12px; font-weight: 600; }
+    p { margin: 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    .button { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; min-height: 42px; padding: 10px 16px; font-weight: 600; line-height: 1.4; }
+    .button.primary { background: var(--primary); border-color: var(--primary); color: white; }
+    .button.primary:hover:not(:disabled) { background: var(--hover); }
+    .button:hover:not(:disabled) { border-color: var(--primary); }
+    .button.link { background: transparent; border-color: transparent; color: var(--primary); padding: 8px 0; text-align: left; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .tab { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 11px 0; min-height: 44px; color: var(--muted) !important; }
+    .tab.active { color: var(--text) !important; border-color: var(--primary); font-weight: 600; }
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 22px; min-width: 0; }
+    .panel + .panel { margin-top: 20px; }
+    .split { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 24px; align-items: start; }
+    .review-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+    .field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+    .field > span { font-weight: 600; font-size: 14px; }
+    .field input, .field select, .field textarea { width: 100%; border: 1px solid #758579; border-radius: 6px; background: var(--surface); min-height: 42px; padding: 10px 12px; }
+    .field input[readonly] { background: var(--canvas); }
+    .field textarea { resize: vertical; min-height: 94px; line-height: 1.5; }
+    .field small { color: var(--muted); font-size: 12px; }
+    .section { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
+    .badge { display: inline-block; font-size: 12px; line-height: 1.45; font-weight: 600; border-radius: 5px; padding: 4px 8px; background: var(--neutral-bg); color: var(--muted); }
+    .badge.good { color: var(--good); background: var(--good-bg); }
+    .badge.warn { color: var(--warn); background: var(--warn-bg); }
+    .badge.bad { color: var(--bad); background: var(--bad-bg); }
+    .notice { padding: 14px 16px; background: var(--neutral-bg); border-radius: 6px; margin-bottom: 20px; display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    .notice.warn { background: var(--warn-bg); color: var(--warn); }
+    .notice.bad { background: var(--bad-bg); color: var(--bad); }
+    .notice.good { background: var(--good-bg); color: var(--good); }
+    .notice strong { display: block; }
+    .summary { display: flex; gap: 8px 20px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin: -8px 0 20px; }
+    .table-region { overflow-x: auto; max-width: 100%; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    thead th { background: var(--side); font-size: 12px; font-weight: 600; color: var(--muted); }
+    td small { display: block; color: var(--muted); margin-top: 4px; }
+    .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .cases-table { min-width: 620px; }
+    .quotes-table { min-width: 610px; }
+    .compare-table { min-width: 720px; }
+    .compare-table th:first-child { position: sticky; left: 0; background: var(--surface); width: 190px; z-index: 1; font-size: 12px; }
+    .compare-table thead th:first-child { background: var(--side); }
+    .compare-table th, .compare-table td { padding: 15px 14px; }
+    .compare-table .excluded { background: var(--canvas); }
+    .table-note { padding: 12px 0; font-size: 12px; color: var(--muted); }
+    .list { list-style: none; margin: 0; padding: 0; }
+    .list li { padding: 13px 0; border-bottom: 1px solid var(--border); }
+    .list li:first-child { padding-top: 0; }
+    .list li:last-child { border: 0; padding-bottom: 0; }
+    .kv { display: flex; gap: 14px; justify-content: space-between; margin-bottom: 12px; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .empty { text-align: center; padding: 50px 24px; }
+    .empty h2 { margin-bottom: 10px; }
+    .empty .actions { justify-content: center; margin-top: 22px; }
+    .dropzone { border: 1px dashed #899b8f; border-radius: 8px; padding: 38px 20px; text-align: center; background: var(--surface); }
+    .dropzone .actions { justify-content: center; margin: 18px 0 12px; }
+    .paper-wrap { padding: 14px; background: var(--neutral-bg); border-radius: 8px; }
+    .paper-tools { display: flex; gap: 10px; justify-content: space-between; font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+    .paper { min-height: 470px; background: var(--surface); border: 1px solid var(--border); padding: 28px; }
+    .paper h2 { letter-spacing: .07em; font-size: 18px; margin-top: 12px; }
+    .paper table { font-size: 12px; margin: 28px 0; }
+    .paper th, .paper td { padding: 10px 4px; }
+    .paper mark { background: var(--selected); color: var(--text); }
+    details { border-top: 1px solid var(--border); padding-top: 15px; margin-top: 18px; }
+    summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+    .source-link { color: var(--primary); font-size: 12px; text-decoration: underline; background: transparent; border: 0; padding: 6px 0; min-height: 32px; text-align: left; }
+    .check { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0; }
+    .check input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--primary); flex: 0 0 auto; }
+    .check span { line-height: 1.5; }
+    .footer-actions { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .policy { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
+    .policy div { border-bottom: 2px solid var(--border); padding-bottom: 12px; }
+    .policy strong { display: block; font-size: 21px; font-weight: 600; }
+    .policy small { color: var(--muted); }
+    .outcome { padding: 18px 0; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+    .outcome h2 { margin: 8px 0; font-size: 22px; }
+    .dialog { border: 1px solid var(--border); border-radius: 8px; max-width: 680px; padding: 26px; color: var(--text); background: var(--surface); }
+    dialog::backdrop { background: #18251e66; }
+    #announcement { margin-top: 18px; font-size: 13px; color: var(--muted); min-height: 22px; }
+    .mobile-source-nav { display: none; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1150px) { .split { grid-template-columns: minmax(0, 1fr); } .main { padding: 24px; } .topbar { padding: 16px 24px; } .gp { grid-template-columns: 192px minmax(0, 1fr); } }
+    @media (max-width: 900px) { .review-split { grid-template-columns: 1fr; } .mobile-source-nav { display: flex; margin-bottom: 16px; } .review-split .paper-wrap { display: none; } .review-split.show-source .paper-wrap { display: block; } .review-split.show-source .review-fields { display: none; } }
+    @media (max-width: 680px) { .review-bar { padding: 14px 16px; } .review-controls { display: grid; grid-template-columns: minmax(0, 1fr); } .review-controls select { width: 100%; font-size: 16px; } .gp { display: block; min-height: 0; } .sidebar { padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--border); gap: 12px; } .sidebar .nav-group { display: flex; flex-wrap: wrap; } .nav-label, .sidebar-footer, .brand small { display: none; } .brand strong { font-size: 16px; } .brand .mark { width: 30px; height: 30px; } .nav-item { padding: 8px 12px; } .topbar { padding: 12px 16px; } .main { padding: 22px 16px; } h1 { font-size: 23px; } .grid2 { grid-template-columns: 1fr; } .panel { padding: 18px; } .tabs { gap: 16px; } .tab { font-size: 13px; } .button { min-height: 44px; } .field input, .field select, .field textarea { font-size: 16px; } .paper { padding: 20px 16px; } .summary { gap: 7px 12px; } .kv { font-size: 13px; } .empty { padding: 34px 18px; } .page-heading .actions { width: 100%; } }
+    @media print { .review-controls, .sidebar, .topbar, .tabs, button, #announcement { display: none !important; } .gp { display: block; } .main { padding: 0; } .review-bar { background: white; } .table-region { overflow: visible; } }
+    @media (max-width: 680px) {
+      .cases-table { min-width: 0; }
+      .cases-table thead { display: none; }
+      .cases-table tbody, .cases-table tr, .cases-table td { display: block; }
+      .cases-table td { border: 0; padding: 10px 16px; }
+      .cases-table td:nth-child(2)::before { content: 'Stage '; display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+      .cases-table td:nth-child(3)::before { content: 'Quotations '; display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+      .cases-table td:last-child { padding-bottom: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="review-bar">
+    <div class="review-top"><strong>GreenProcure / design study</strong><a href="VISUAL_DIRECTION.md">Visual direction notes</a></div>
+    <p>Independent synthetic screen states. No uploads, AI calls or saved decisions. Carbon values are arithmetic fixtures, not approved live estimates.</p>
+    <div class="review-controls">
+      <label>Screen<select id="screen"><option value="workspace">01 · Workspace</option><option value="requirements">02 · Requirements</option><option value="quotes">03 · Quotations</option><option value="review">04 · Review &amp; confirmation</option><option value="compare">05 · Comparison</option><option value="scenario">06 · Scenario</option><option value="decision">07 · Decision</option></select></label>
+      <label>Screen state<select id="state"></select></label>
+      <label>Appearance<select id="appearance"><option value="wireframe">Low-fidelity wireframe</option><option value="colour">Colour direction</option></select></label>
+    </div>
+  </header>
+  <div class="gp wireframe" id="prototype">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark" aria-hidden="true">GP</span><div><strong>GreenProcure</strong><small>Sourcing workspace</small></div></div>
+      <nav class="nav-group" aria-label="Main"><div class="nav-label">Workspace</div><button class="nav-item selected" data-go="workspace">Sourcing workspace</button><button class="nav-item" data-action="help">Help &amp; methodology</button></nav>
+      <div class="sidebar-footer"><strong>Private demo session</strong>Synthetic sourcing examples<br>Access belongs to this browser.</div>
+    </aside>
+    <div class="work">
+      <header class="topbar"><div class="crumb" id="crumb">Workspace</div><span class="badge">Synthetic demo</span></header>
+      <main class="main" id="main"></main>
+    </div>
+    <dialog class="dialog" id="help"><h2>How this decision works</h2><p>Review quotation evidence, confirm the inputs, compare eligible offers and make your own selection. Cost, delivery and estimated logistics carbon are separate criteria.</p><p class="section">This design study contains illustrative screens. In the product, Python calculates the results and the buyer confirms inputs and decisions. A certificate reference is not issuer verification.</p><form method="dialog" class="footer-actions"><button class="button primary">Close</button></form></dialog>
+  </div>
+  <script>
+    'use strict';
+    const screenNames = { workspace: 'Workspace', requirements: 'Requirements', quotes: 'Quotations', review: 'Review & confirmation', compare: 'Comparison', scenario: 'Scenario', decision: 'Decision' };
+    const states = {
+      workspace: ['In progress', 'Empty', 'Session expired'],
+      requirements: ['Create', 'Saved', 'Conflict'],
+      quotes: ['Ready for review', 'Empty', 'Extraction failed', 'Interrupted'],
+      review: ['Missing mode', 'Ready to confirm', 'Confirmed'],
+      compare: ['Current', 'Outdated', 'Missing factor', 'Only eligible'],
+      scenario: ['Lower Carbon', 'No feasible option', 'Unsaved preview'],
+      decision: ['Review selection', 'Saved', 'Outdated']
+    };
+    const screenControl = document.getElementById('screen');
+    const stateControl = document.getElementById('state');
+    const main = document.getElementById('main');
+    let currentScreen = 'workspace';
+    let currentState = states.workspace[0];
+    let decisionPolicy = 'baseline';
+    let decisionChoice = 'A';
+    let decisionReason = 'The offer meets the fabric, budget and delivery requirements, with the lower comparable cost among eligible options.';
+    const escapeText = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const button = (text, attributes = '', primary = false) => `<button type="button" class="button${primary ? ' primary' : ''}" ${attributes}>${text}</button>`;
+    const badge = (text, kind = '') => `<span class="badge ${kind}">${text}</span>`;
+    const notice = (title, text, kind = '', action = '') => `<div class="notice ${kind}"><div><strong>${title}</strong>${text ? `<span class="small">${text}</span>` : ''}</div>${action}</div>`;
+    const heading = (title, text, actions = '', eyebrow = 'GP-001 · Woven fabric') => `<div class="page-heading"><div>${eyebrow ? `<div class="eyebrow">${eyebrow}</div>` : ''}<h1>${title}</h1><p class="muted">${text}</p></div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
+    const field = (label, value, hint = '', attrs = 'readonly') => `<label class="field"><span>${label}</span><input value="${value}" ${attrs}>${hint ? `<small>${hint}</small>` : ''}</label>`;
+    const context = () => '<div class="summary"><span>50,000 m</span><span>65/35 woven · 130 GSM ±5%</span><span>Delivery ≤25 days</span><span>Budget USD 150,000</span></div>';
+    const tabs = () => currentScreen === 'workspace' ? '' : `<nav class="tabs" aria-label="Case">${[['requirements','Requirements'],['quotes','Quotations'],['compare','Compare'],['decision','Decision']].map(([key,label]) => `<button type="button" class="tab ${(currentScreen === key || currentScreen === 'review' && key === 'quotes' || currentScreen === 'scenario' && key === 'compare') ? 'active' : ''}" data-go="${key}">${label}</button>`).join('')}</nav>`;
+    const fixtureNote = () => notice('Illustrative calculation fixture', 'Carbon figures use a test-only coefficient. Live ranking requires an approved factor and matching boundaries.');
+    const kv = (name, value) => `<div class="kv"><dt>${name}</dt><dd>${value}</dd></div>`;
+
+    function workspace() {
+      if (currentState === 'Session expired') return heading('Restore your session', 'Your saved cases are not available until this browser session is restored.', '', '') + `<section class="panel empty"><h2>Session needs attention</h2><p class="muted">Retry verification. A new anonymous identity will not recover another session’s cases.</p><div class="actions">${button('Retry verification', 'data-state="In progress"', true)}</div></section>`;
+      const top = heading('Sourcing workspace', 'Create a case or continue your next sourcing decision.', button('Create sourcing case', 'data-go="requirements"', true), 'Your workspace');
+      if (currentState === 'Empty') return top + `<section class="panel empty"><h2>Your first sourcing case starts here</h2><p class="muted">Set your fabric requirements, review quotations and compare eligible options.</p><p class="small muted" style="margin-top:12px">Private demo · up to two cases · synthetic inputs</p><div class="actions">${button('Create sourcing case', 'data-go="requirements"', true)}</div></section>`;
+      return top + notice('One quotation needs your review', 'Supplier B is missing a confirmed transport mode.', 'warn', button('Open review', 'data-go="review"')) + `<div class="table-region" role="region" aria-label="Sourcing cases"><table class="cases-table"><thead><tr><th>Case</th><th>Stage</th><th>Quotations</th><th>Next action</th></tr></thead><tbody><tr><td><strong>Woven uniform fabric</strong><small>GP-001 · 50,000 m · USD</small></td><td>${badge('Reviewing quotations', 'warn')}</td><td>4 of 4<small>1 needs review</small></td><td>${button('Continue review', 'data-go="review"')}</td></tr></tbody></table></div><p class="table-note">1 of 2 demo cases used. Saved requirements belong to this private browser session.</p>`;
+    }
+
+    function requirements() {
+      const saved = currentState === 'Saved';
+      let html = heading(saved ? 'Case requirements' : 'Create sourcing case', 'Set the conditions every acceptable offer must meet.', saved ? button('View quotations', 'data-go="quotes"', true) : '', saved ? 'GP-001 · Saved requirements' : 'New sourcing decision');
+      if (currentState === 'Conflict') html += notice('The case changed while you were editing', 'Keep these entries for comparison, then load the latest saved revision.', 'warn', button('Review latest requirements', 'data-state="Saved"'));
+      html += `<div class="split"><section class="panel"><h2>Order details</h2><div class="grid2">${field('Case name','Woven uniform fabric','',saved?'readonly':'')}${field('Quantity · metres','50000','Full order quantity',saved?'readonly':'inputmode="decimal"')}${field('Order reference date','2026-10-14','Day zero for calendar-day delivery',saved?'readonly':'type="date"')}${field('Maximum delivery · calendar days','25','The complete order must arrive by this limit.',saved?'readonly':'inputmode="numeric"')}${field('Maximum budget · USD','150000','One currency per case',saved?'readonly':'inputmode="decimal"')}${field('Destination','Fictional HCMC buyer facility','Vietnam',saved?'readonly':'')}</div><div class="section"><h2>Fabric requirements</h2><p class="small muted" style="margin-bottom:16px">Fixed synthetic preset for the first frontend increment.</p><dl>${kv('Construction','Woven')}${kv('Composition','65% polyester / 35% cotton')}${kv('Composition tolerance','±2 percentage points')}${kv('Fabric weight','130 GSM ±5%')}${kv('Minimum usable width','150 cm')}${kv('Required certificate','None')}</dl></div><div class="section"><h2>Comparison basis</h2><p>Material and declared delivery charges; excludes tax and duties.</p><p class="small muted" style="margin-top:8px">Transport scope: origin facility to buyer facility. Accounting boundary: WTW.</p></div>${saved ? '' : `<div class="footer-actions">${button('Cancel','data-go="workspace"')}${button('Create case','data-state="Saved"',true)}</div>`}</section><aside class="panel"><h2>What happens next</h2><ul class="list"><li>Save the requirements.</li><li>Add up to four quotation PDFs.</li><li>Review extracted information before comparison.</li></ul><details><summary>Requirements are hard limits</summary><p class="small muted">Changing preferences cannot override fabric, MOQ, budget or delivery failures.</p></details></aside></div>`;
+      return html;
+    }
+
+    function quotes() {
+      const empty = currentState === 'Empty';
+      let html = heading('Supplier quotations', 'Review each source before its information is used.', button('Add quotation PDF', empty ? 'data-action="upload"' : 'disabled aria-describedby="quote-limit"', true));
+      if (empty) return html + `<section class="dropzone"><h2>Add your first quotation</h2><p class="muted">A readable quotation PDF in Vietnamese or English.</p><div class="actions">${button('Choose PDF','data-action="upload"',true)}${button('Use synthetic samples','data-state="Ready for review"')}</div><p class="small muted">Up to four quotations · proposed limit 10 MiB / 10 pages per PDF</p></section><section class="panel" style="margin-top:20px"><h2>Before uploading</h2><p>Quotations are processed by Google’s model service and stored privately. Use synthetic, non-confidential documents for the public demo.</p><p class="small muted" style="margin-top:10px">Design dependency: the team must define retention before public uploads are enabled. Clearing browser data can lose anonymous-session access.</p></section>`;
+      if (currentState === 'Extraction failed') html += notice('Supplier B extraction failed', 'No reviewed data was created from this attempt. Inspect the file or explicitly retry.', 'bad', button('Retry extraction','data-action="retry"'));
+      else if (currentState === 'Interrupted') html += notice('Connection lost during extraction', 'Check the recorded status before starting another run. Work may have been interrupted.', 'warn', button('Check recorded status','data-action="status"'));
+      const bStatus = currentState === 'Extraction failed' ? badge('Failed','bad') : currentState === 'Interrupted' ? badge('Status unresolved','warn') : badge('Needs review','warn');
+      html += `<p id="quote-limit" class="small muted" style="margin-bottom:16px">4 of 4 quotation slots used. Each extraction is a separate bounded run.</p><div class="table-region" role="region" aria-label="Quotation list"><table class="quotes-table"><thead><tr><th>Source document</th><th>Processing</th><th>Human review</th><th>Action</th></tr></thead><tbody>${['A','B','C','D'].map(id => `<tr><td><strong>Supplier_${id}_Quote.pdf</strong><small>Synthetic quotation · 1 page</small></td><td>${id === 'B' && currentState !== 'Ready for review' ? bStatus : 'Extraction complete'}</td><td>${id === 'B' ? badge('Transport mode unresolved','warn') : badge('Confirmed')}</td><td>${button(id === 'B' ? 'Review quotation' : 'View confirmed fields', 'data-go="review" data-to-state="' + (id === 'B' ? 'Missing mode' : 'Confirmed') + '"')}</td></tr>`).join('')}</tbody></table></div><div class="footer-actions"><p class="small muted">Confirmation records your review. Eligibility is checked separately.</p>${button('Go to comparison','data-go="compare"')}</div>`;
+      return html;
+    }
+
+    function review() {
+      const missing = currentState === 'Missing mode';
+      const confirmed = currentState === 'Confirmed';
+      let html = heading('Review Supplier B quotation', 'Check the source and confirm the information you intend to use.', button('All quotations','data-go="quotes"'), 'GP-001 · Quotation B · Synthetic source');
+      if (confirmed) html += notice('Quotation revision confirmed', 'The source and reviewed assumptions are retained. Confirmation does not guarantee eligibility.', 'good');
+      else if (missing) html += notice('One blocking review issue', 'Transport mode is not stated. Logistics carbon and complete ranking remain unavailable.', 'warn');
+      html += `<div class="mobile-source-nav actions"><button class="button" data-action="show-fields" aria-pressed="true">Fields</button><button class="button" data-action="show-source" aria-pressed="false">Source document</button></div><div class="review-split" id="review-split"><section class="paper-wrap" aria-label="Synthetic source excerpt"><div class="paper-tools"><span>Supplier_B_Quote.pdf</span><span>Page 1 / 1</span></div><div class="paper"><div class="eyebrow">Synthetic quotation excerpt</div><h2>SUPPLIER B</h2><p class="small muted">Illustrative source for design review</p><table><tbody><tr><th>Material</th><td>Woven polyester-cotton</td></tr><tr><th>Composition</th><td>65% polyester / 35% cotton</td></tr><tr><th>Fabric weight</th><td>130 GSM</td></tr><tr><th>Width</th><td><mark>150 cm usable / total</mark></td></tr><tr><th>Quantity</th><td>50,000 metres</td></tr><tr><th>Unit price</th><td>USD 2.94 / metre</td></tr><tr><th>Full delivery</th><td>23 calendar days</td></tr><tr><th>MOQ</th><td>20,000 metres</td></tr><tr><th>Transport mode</th><td>Not stated</td></tr></tbody></table><p class="small muted">Declared delivery included. Tax and duties excluded.</p></div></section><section class="panel review-fields"><h2>Reviewed fields ${confirmed ? badge('Confirmed') : ''}</h2><div class="grid2">${field('Composition','65% polyester / 35% cotton','Quotation page 1')}${field('Fabric weight · GSM','130','Quotation page 1')}${field('Usable width · cm','150','Total width is also 150 cm.')}${field('Unit price · USD / metre','2.94','Declared delivery included.')}${field('Full delivery · calendar days','23','Full order to buyer')}${field('MOQ · metres','20000','No extra purchasing assumed.')}</div><button class="source-link" data-action="show-source">Inspect width in source · page 1</button><div class="section"><label class="field"><span>Transport mode ${missing ? badge('Missing','warn') : badge('Reviewed assumption')}</span><select id="transport-mode" ${confirmed?'disabled':''}><option value="" ${missing?'selected':''}>Not stated — choose after clarification</option><option value="road" ${!missing?'selected':''}>Road</option></select><small>${missing ? 'A blank value stays unknown; it is never treated as zero emissions.' : 'User-entered assumption for this synthetic example; not extracted from the PDF.'}</small></label>${!confirmed ? `<label class="check"><input id="review-check" type="checkbox" ${!missing?'checked':''}><span>I reviewed these values and the source of any correction or assumption.</span></label>` : ''}</div><details><summary>Clarification draft</summary><p class="small muted" style="margin:8px 0">Copyable text only; nothing is sent.</p><label class="field"><span>Question for Supplier B</span><textarea readonly>Please confirm the transport mode used for the full delivery to the buyer. The quotation does not state this, and it is needed for the logistics estimate.</textarea></label></details><div class="footer-actions">${confirmed ? button('Edit reviewed fields','data-state="Ready to confirm"') : button('Save draft','data-action="save-draft"')}${confirmed ? button('Go to comparison','data-go="compare"',true) : button('Confirm reviewed quotation', 'id="confirm-quote" data-state="Confirmed"' + (missing ? ' disabled aria-describedby="confirm-help"' : ''), true)}</div>${!confirmed ? '<p class="small muted" id="confirm-help" style="margin-top:10px">Resolve the transport-mode review and acknowledge your review before confirming.</p>' : ''}</section></div>`;
+      return html;
+    }
+
+    function compare() {
+      const stale = currentState === 'Outdated';
+      const unavailable = currentState === 'Missing factor';
+      const single = currentState === 'Only eligible';
+      const block = stale || unavailable;
+      let html = heading('Compare sourcing options', 'Confirmed inputs, common boundaries and explicit exclusions.', button('Review decision', block ? 'disabled aria-describedby="comparison-blocker"' : 'data-go="decision"', true));
+      html += context();
+      if (stale) html += notice('Outdated comparison', 'Quotation inputs changed after evaluation E-01. These results are historical; re-evaluate before selecting.', 'warn', button('Re-evaluate','data-state="Current"'));
+      if (unavailable) html += notice('Approved emissions factor unavailable', 'Known cost and delivery values remain visible. Complete ranking is blocked even when carbon weight is zero.', 'warn');
+      html += `<p id="comparison-blocker" class="small muted" style="margin-bottom:16px">${block ? 'Decision saving is blocked until a current, complete evaluation is available.' : 'Balanced · cost 45% / delivery 25% / carbon 30% · illustrative evaluation E-01'}</p>`;
+      html += `<div class="table-region" role="region" aria-label="Supplier comparison"><table class="compare-table"><thead><tr><th>Decision criteria</th><th>Supplier A<br>${badge(single?'Only eligible option':'Balanced preference','good')}</th><th>Supplier B</th><th class="excluded">Supplier C</th><th class="excluded">Supplier D</th></tr></thead><tbody><tr><th>Eligibility</th><td>${badge(unavailable?'Needs review':'Eligible',unavailable?'warn':'good')}</td><td>${badge(unavailable || single?'Needs review':'Eligible',unavailable || single?'warn':'good')}</td><td class="excluded">${badge('Ineligible','bad')}<small>Late delivery</small></td><td class="excluded">${badge('Ineligible','bad')}<small>Composition mismatch</small></td></tr><tr><th>Comparable cost · USD</th><td class="num">142,500</td><td class="num">147,000</td><td class="num excluded">135,000</td><td class="num excluded">125,000</td></tr><tr><th>Full delivery · days</th><td class="num">20</td><td class="num">23</td><td class="num excluded">30<small>Limit: 25</small></td><td class="num excluded">10</td></tr><tr><th>Logistics CO₂e · kg<br><span class="muted">Test-only values</span></th><td class="num">${unavailable?'Unavailable':'600'}</td><td class="num">${unavailable || single?'Unavailable':'150'}</td><td class="num excluded">${unavailable?'Unavailable':'400'}</td><td class="num excluded">${unavailable?'Unavailable':'80'}</td></tr><tr><th>Preference score</th><td class="num">${unavailable?'Not scored':single?'100':'70'}</td><td class="num">${unavailable || single?'Not scored':'30'}</td><td class="excluded">Not ranked</td><td class="excluded">Not ranked</td></tr><tr><th>Reason / next step</th><td>${unavailable?'Approved factor needed.':single?'Only complete, eligible option.':'Meets the stated requirements.'}</td><td>${unavailable?'Approved factor needed.':single?'Transport mode unresolved.':'Meets requirements; lower carbon, higher cost.'}</td><td class="excluded">Delivery exceeds the deadline.</td><td class="excluded">80/20 does not meet 65/35 requirement.</td></tr></tbody></table></div><p class="table-note">Declared cost basis: material and delivery; tax and duties excluded. Preference scores are relative to the eligible set.</p>${fixtureNote()}<div class="split"><section class="panel"><h2>Trade-off to consider</h2><p>${unavailable?'Carbon is unavailable. No complete recommendation can be made from this state.':single?'Supplier A is the only eligible option with complete metrics. A score of 100 does not mean perfect sustainability.':'Supplier B costs about 3.16% more and arrives three days later, within the 25-day limit. Its test-only logistics estimate is 75% lower than A.'}</p><div class="footer-actions">${button('Inspect quote evidence','data-go="review"')}${button('Explore scenario',block || single?'disabled':'data-go="scenario"')}</div></section><aside class="panel"><h2>Evaluation context</h2><dl>${kv('Input revision',stale?'Historical revision 3':'Revision 3')}${kv('Cost basis','Declared delivery')}${kv('Carbon boundary','Origin to buyer · WTW')}</dl><details><summary>Sources &amp; limitations</summary><p class="small muted">Net fabric mass 9,750 kg; synthetic packaging 250 kg. Routes and the 0.1 kg CO₂e/tonne-km coefficient are arithmetic fixtures. A live estimate must use approved reference data.</p></details></aside></div>`;
+      return html;
+    }
+
+    function scenario() {
+      const infeasible = currentState === 'No feasible option';
+      const unsaved = currentState === 'Unsaved preview';
+      let html = heading('Explore a sourcing scenario', 'Change preferences while preserving the baseline and hard requirements.', button('Back to comparison','data-go="compare"')) + context();
+      if (unsaved) html += notice('Unsaved scenario preview', 'Review and apply the policy before saving a decision from this scenario.', 'warn');
+      html += `<div class="split"><section class="panel"><div class="eyebrow">${unsaved?'Preview':'Applied policy'} · Lower Carbon</div><div class="outcome">${badge(infeasible?'No feasible option':'Supplier B is feasible',infeasible?'warn':'good')}<h2>${infeasible?'No offer meets both relative caps':'Supplier B'}</h2><p class="muted">${infeasible?'B exceeds the +2% cost cap. A does not reduce carbon by 25%. C and D remain ineligible.':'USD 147,000 · 23 days · 150 kg CO₂e, test-only estimate'}</p></div><div class="table-region" role="region" aria-label="Baseline versus scenario"><table><thead><tr><th>Metric</th><th>Baseline · A</th><th>Scenario · B</th></tr></thead><tbody><tr><th>Comparable cost</th><td>USD 142,500</td><td>USD 147,000<small>+3.16%</small></td></tr><tr><th>Full delivery</th><td>20 days</td><td>23 days<small>+3 days</small></td></tr><tr><th>Test-only logistics CO₂e</th><td>600 kg</td><td>150 kg<small>75% lower</small></td></tr></tbody></table></div><p class="table-note">Same 50,000 m, declared cost scope and carbon boundary. C/D stay excluded.</p>${fixtureNote()}<div class="footer-actions">${button(infeasible?'Adjust caps':'Edit scenario', 'data-state="Unsaved preview"')}${button('Review decision',infeasible || unsaved?'disabled aria-describedby="scenario-gate"':'data-go="decision"',true)}</div><p class="small muted" id="scenario-gate" style="margin-top:10px">${infeasible?'A decision needs a feasible result.':unsaved?'Apply this policy and evaluate it first.':'This scenario uses the preserved baseline inputs and anchors.'}</p></section><aside class="panel"><h2>Decision priorities</h2><div class="policy"><div><strong>10%</strong><small>Cost</small></div><div><strong>10%</strong><small>Delivery</small></div><div><strong>80%</strong><small>Carbon</small></div></div><label class="field"><span>Maximum cost increase vs A</span><select id="cost-cap"><option value="5" ${!infeasible?'selected':''}>5%</option><option value="2" ${infeasible?'selected':''}>2%</option></select></label><label class="field" style="margin-top:18px"><span>Minimum carbon reduction vs A</span><input value="25%" readonly></label><details open><summary>Hard requirements stay fixed</summary><p class="small muted">Technical specification, MOQ, USD 150,000 budget and 25-day delivery deadline remain enforced.</p></details><div class="footer-actions">${button('Apply scenario','data-action="apply-scenario"',true)}</div><p class="small muted" style="margin-top:10px">Weight changes use calculations. Asking for an explanation is a separate AI action.</p></aside></div>`;
+      return html;
+    }
+
+    function decision() {
+      const saved = currentState === 'Saved';
+      const stale = currentState === 'Outdated';
+      let html = heading(saved?'Saved sourcing decision':'Review your decision', saved?'An immutable record of your selection and its evaluation.':'Choose an eligible offer and record your reason.', saved?button('Back to comparison','data-go="compare"'):'');
+      if (saved) html += notice('Decision saved — illustrative state', 'Decision D-01 · 14 October 2026 · frozen evaluation E-01', 'good');
+      if (stale) html += notice('The evaluation is outdated', 'Inputs changed after this comparison. Re-evaluate before saving a new decision; previous decisions stay unchanged.', 'warn',button('Re-evaluate','data-go="compare"'));
+      html += `<div class="split"><section class="panel"><h2>${saved?'Your selection':'Select a quotation'}</h2><label class="field"><span>Eligible offer</span><select id="decision-quote" ${saved || stale?'disabled':''}><option value="A">Supplier A · Balanced preference</option><option value="B">Supplier B · eligible alternative</option></select></label><p id="choice-note" class="small muted" style="margin-top:10px">Matches the recorded Balanced preference.</p><dl class="section" id="decision-metrics">${kv('Comparable cost','USD 142,500')}${kv('Full delivery','20 calendar days')}${kv('Test-only logistics CO₂e','600 kg')}${kv('Policy','Balanced · 45 / 25 / 30')}</dl><label class="field"><span>Selection reason</span><textarea id="decision-reason" ${saved?'readonly':''}>The offer meets the fabric, budget and delivery requirements, with the lower comparable cost among eligible options.</textarea></label>${!saved?'<label class="check"><input type="checkbox" id="decision-check"><span>I reviewed the evaluation, assumptions and limitations and confirm this selection.</span></label>':''}<div class="footer-actions">${button('Back to comparison','data-go="compare"')}${!saved?button('Save decision','id="save-decision" data-state="Saved" disabled aria-describedby="decision-gate"',true):''}</div>${!saved?`<p id="decision-gate" class="small muted" style="margin-top:10px">${stale?'A current evaluation is required.':'Enter a reason and confirm your review to save.'}</p>`:''}</section><aside class="panel"><h2>Included in the record</h2><ul class="list"><li>Requirement and quote revisions</li><li>Calculated comparison and policy</li><li>Engine recommendation and buyer choice</li><li>Your reason, assumptions and limitations</li></ul><details open><summary>No order is placed</summary><p class="small muted">Saving a sourcing decision does not contact a supplier, issue a purchase order or make a payment.</p></details></aside></div><div style="margin-top:20px">${fixtureNote()}</div>`;
+      return html;
+    }
+
+    const renderers = { workspace, requirements, quotes, review, compare, scenario, decision };
+    function syncDecision() {
+      const select = document.getElementById('decision-quote');
+      const scenarioChoice = decisionPolicy === 'lower_carbon';
+      select.innerHTML = scenarioChoice ? '<option value="B">Supplier B · Lower Carbon preference</option>' : '<option value="A">Supplier A · Balanced preference</option><option value="B">Supplier B · eligible alternative</option>';
+      select.value = decisionChoice;
+      document.getElementById('decision-reason').value = decisionReason;
+      const b = decisionChoice === 'B';
+      document.getElementById('choice-note').textContent = scenarioChoice ? 'Matches the applied Lower Carbon scenario. Supplier A fails its minimum carbon-reduction cap.' : b ? 'Buyer selection differs from the recorded recommendation of Supplier A.' : 'Matches the recorded Balanced preference.';
+      document.getElementById('decision-metrics').innerHTML = kv('Comparable cost',b?'USD 147,000':'USD 142,500') + kv('Full delivery',b?'23 calendar days':'20 calendar days') + kv('Test-only logistics CO₂e',b?'150 kg':'600 kg') + kv('Policy',scenarioChoice?'Lower Carbon · 10 / 10 / 80':'Balanced · 45 / 25 / 30');
+      if(currentState === 'Saved') main.querySelector('.notice.good .small').textContent = `Decision D-01 · 14 October 2026 · frozen evaluation ${scenarioChoice?'E-02':'E-01'} · Supplier ${decisionChoice}`;
+    }
+    function render() {
+      main.innerHTML = tabs() + renderers[currentScreen]() + '<div id="announcement" role="status" aria-live="polite"></div>';
+      if(currentScreen === 'requirements' && currentState === 'Conflict') {
+        main.querySelector('h1').textContent = 'Review conflicting requirement changes';
+        main.querySelector('.page-heading p').textContent = 'Review the latest saved revision before reconciling these entries.';
+        const save = main.querySelector('.footer-actions [data-state="Saved"]');
+        save.textContent = 'Save requirement changes';
+        save.disabled = true;
+        const hint = document.createElement('p');
+        hint.className = 'small muted';
+        hint.style.marginTop = '12px';
+        hint.textContent = 'Saving is blocked until the current revision has been reviewed and changes reconciled.';
+        save.closest('.footer-actions').after(hint);
+      }
+      if(currentScreen === 'quotes' && ['Extraction failed','Interrupted'].includes(currentState)) {
+        const bRow = main.querySelectorAll('.quotes-table tbody tr')[1];
+        bRow.cells[2].innerHTML = badge('Draft unavailable');
+        bRow.cells[3].innerHTML = currentState === 'Extraction failed' ? button('Retry extraction','data-action="retry"') : button('Check status','data-action="status"');
+      }
+      if(currentScreen === 'review' && currentState !== 'Confirmed') {
+        main.querySelectorAll('.review-fields .grid2 input').forEach(input => input.readOnly = false);
+      }
+      if(currentScreen === 'compare') {
+        if(currentState === 'Missing factor') main.querySelector('.compare-table thead .badge').outerHTML = badge('Not ranked');
+        if(currentState === 'Outdated') main.querySelector('.compare-table thead .badge').outerHTML = badge('Historical preference');
+        const hint = document.createElement('p');
+        hint.className = 'small muted';
+        hint.style.marginBottom = '10px';
+        hint.textContent = 'On narrow screens, scroll the table sideways to inspect all four suppliers.';
+        main.querySelector('.table-region').before(hint);
+      }
+      main.querySelectorAll('.table-region').forEach(region => region.tabIndex = 0);
+      const blockedDecision = currentScreen === 'compare' && ['Missing factor','Outdated'].includes(currentState) || currentScreen === 'scenario' && ['No feasible option','Unsaved preview'].includes(currentState);
+      if(blockedDecision) main.querySelector('.tabs [data-go="decision"]').disabled = true;
+      if(currentScreen === 'decision') syncDecision();
+      document.getElementById('crumb').innerHTML = currentScreen === 'workspace' ? 'Workspace' : `Workspace <span aria-hidden="true">/</span> GP-001 <span aria-hidden="true">/</span> ${screenNames[currentScreen]}`;
+      document.querySelectorAll('.tab').forEach(el => { if(el.classList.contains('active')) el.setAttribute('aria-current','page'); });
+    }
+    function navigate(screen, state) {
+      if(screen === 'decision' && currentScreen !== 'decision') {
+        decisionPolicy = currentScreen === 'scenario' ? 'lower_carbon' : 'baseline';
+        decisionChoice = decisionPolicy === 'lower_carbon' ? 'B' : 'A';
+        decisionReason = decisionChoice === 'B' ? 'The offer meets all hard requirements and the confirmed relative caps, with lower estimated logistics carbon in this synthetic example.' : 'The offer meets the fabric, budget and delivery requirements, with the lower comparable cost among eligible options.';
+      }
+      currentScreen = screen;
+      currentState = state && states[screen].includes(state) ? state : states[screen][0];
+      screenControl.value = screen;
+      stateControl.innerHTML = states[screen].map(value => `<option>${value}</option>`).join('');
+      stateControl.value = currentState;
+      render();
+    }
+    function announce(text) { document.getElementById('announcement').textContent = text; }
+    screenControl.addEventListener('change', () => navigate(screenControl.value));
+    stateControl.addEventListener('change', () => { currentState = stateControl.value; render(); });
+    document.getElementById('appearance').addEventListener('change', event => document.getElementById('prototype').classList.toggle('wireframe', event.target.value === 'wireframe'));
+    document.getElementById('prototype').addEventListener('click', event => {
+      const target = event.target.closest('button');
+      if (!target || target.disabled) return;
+      if (target.dataset.go) {
+        if(currentScreen === 'quotes' && target.dataset.toState === 'Confirmed') {
+          const supplier = target.closest('tr').querySelector('strong').textContent.split('_')[1];
+          const info = {A:['65/35','2.85','20'],C:['65/35','2.70','30'],D:['80/20','2.50','10']}[supplier];
+          const dialog = document.getElementById('help');
+          dialog.innerHTML = `<h2>Supplier ${escapeText(supplier)} · confirmed fields</h2><p class="small muted">Synthetic quotation · reviewed source excerpt</p><dl class="section">${kv('Composition',info[0])}${kv('Unit price',`USD ${info[1]} / metre`)}${kv('Full delivery',`${info[2]} calendar days`)}</dl><p>Confirmation records the reviewed values. Eligibility is evaluated separately.</p><form method="dialog" class="footer-actions"><button class="button primary">Close</button></form>`;
+          dialog.showModal(); return;
+        }
+        navigate(target.dataset.go, target.dataset.toState); return;
+      }
+      if (target.dataset.state) { navigate(currentScreen, target.dataset.state); return; }
+      const action = target.dataset.action;
+      if (action === 'help') {
+        const dialog = document.getElementById('help');
+        dialog.innerHTML = '<h2>How this decision works</h2><p>Review source evidence, confirm the inputs, compare eligible offers and make your own selection. Python calculates authoritative results; the buyer confirms inputs and decisions.</p><p class="section">Cost, delivery and estimated logistics carbon are separate criteria. A certificate reference is not issuer verification. This offline design study uses independent synthetic examples.</p><form method="dialog" class="footer-actions"><button class="button primary">Close</button></form>';
+        dialog.showModal(); return;
+      }
+      if (action === 'show-source' || action === 'show-fields') {
+        const show = action === 'show-source';
+        document.getElementById('review-split').classList.toggle('show-source', show);
+        main.querySelectorAll('.mobile-source-nav button').forEach(el => el.setAttribute('aria-pressed', String((el.dataset.action === 'show-source') === show)));
+        if (show) announce('Illustrative source excerpt shown. The usable-width row is highlighted.');
+      }
+      if (action === 'save-draft') announce('Preview: draft-save acknowledgement. No data is stored in this design study.');
+      if (action === 'upload') announce('Preview only: this control will open the PDF picker once upload is implemented. No file is read here.');
+      if (action === 'retry') announce('Preview: an explicit retry may consume allowance. No extraction was started.');
+      if (action === 'status') announce('Preview: persisted run is interrupted. A real product will offer an explicit retry after checking status.');
+      if (action === 'apply-scenario') navigate('scenario', document.getElementById('cost-cap').value === '2' ? 'No feasible option' : 'Lower Carbon');
+    });
+    main.addEventListener('input', event => {
+      if (currentScreen === 'review') {
+        const confirm = document.getElementById('confirm-quote');
+        if(confirm) confirm.disabled = !(document.getElementById('transport-mode').value && document.getElementById('review-check').checked);
+      }
+      if (currentScreen === 'scenario' && event.target.id === 'cost-cap') {
+        currentState = 'Unsaved preview';
+        stateControl.value = currentState;
+        const primary = main.querySelector('[data-go="decision"]');
+        if(primary) primary.disabled = true;
+        main.querySelectorAll('[data-go="decision"]').forEach(button => button.disabled = true);
+        main.querySelector('.panel > .eyebrow').textContent = 'Previous applied result — policy changes pending';
+        const resultBadge = main.querySelector('.outcome .badge');
+        resultBadge.className = 'badge';
+        resultBadge.textContent = 'Previous result — reapply to check feasibility';
+        if(!document.getElementById('pending-policy')) {
+          const pending = document.createElement('div');
+          pending.id = 'pending-policy';
+          pending.innerHTML = notice('Policy changes are not applied', 'The displayed metrics belong to the previous policy. Apply the edited caps to check feasibility.', 'warn');
+          main.querySelector('.split').before(pending);
+        }
+        document.getElementById('scenario-gate').textContent = 'Unsaved policy change. Apply the scenario before reviewing a decision.';
+      }
+      if (currentScreen === 'decision') {
+        if(event.target.id === 'decision-reason') decisionReason = event.target.value;
+        const save = document.getElementById('save-decision');
+        if(save) save.disabled = currentState === 'Outdated' || !document.getElementById('decision-check').checked || !document.getElementById('decision-reason').value.trim();
+      }
+    });
+    main.addEventListener('change', event => {
+      if(event.target.id === 'decision-quote') {
+        decisionChoice = event.target.value;
+        decisionReason = '';
+        syncDecision();
+        document.getElementById('decision-check').checked = false;
+        document.getElementById('save-decision').disabled = true;
+      }
+    });
+    navigate('workspace');
+  </script>
+</body>
+</html>

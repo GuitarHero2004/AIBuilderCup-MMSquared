@@ -107,6 +107,7 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [Architecture, agent contracts and API](docs/ARCHITECTURE.md)
 - [Exact calculations and demo test design](docs/CALCULATION_SPEC.md)
 - [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
+- [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)
 - [Implementation verification ledger](docs/IMPLEMENTATION_STATUS.md)

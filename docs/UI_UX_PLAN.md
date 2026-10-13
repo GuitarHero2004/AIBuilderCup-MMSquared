@@ -336,8 +336,11 @@ not claims of executed application tests:
 - Refresh, identity change, lost connection, failed extraction, failed explanation and an
   uncertain save all preserve the distinction between known results and unresolved work.
 
-**Next task:** turn this flow into low-fidelity screen wireframes and settle the visual
-direction using the supplied BeyondPilot and GreenProcure references. After that, the first
-small implementation increment can refresh the shared layout and existing case list/create/
-detail experience in `apps/web`, preserving the working API. Later quote/comparison screens
-follow agreed contracts; neither this document nor its branch claims they are implemented.
+**Design follow-up:** the [offline wireframes](design/UI_WIREFRAMES.html) and
+[visual-direction guide](design/VISUAL_DIRECTION.md) now cover the seven screens,
+representative recovery states, responsive layouts and proposed styling.
+
+**Next implementation step after design review:** refresh the shared layout and existing
+case list/create/detail experience in `apps/web`, preserving the working API. Later quote/
+comparison screens follow agreed contracts. The design package is not connected application
+functionality and does not change the implementation status of those features.
