@@ -130,6 +130,26 @@ below. Update this file as implementation and verification continue.
   next product increment remain unchanged. This is a local commit handoff, without a push,
   deployment, cloud configuration change or additional application implementation.
 
+## UI flow and screen planning — 14 October 2026
+
+- Created local branch `feat/ui-workspace` from freshly fetched `dev` at
+  `bb31efe3008f9f8bbad32a7d40bc509bfd870509`; the working tree was clean before branching.
+- Added [the UI/UX flow and screen plan](UI_UX_PLAN.md) and linked it from README. The plan
+  covers navigation, seven screen states across the five view families, optional scenarios,
+  explicit human confirmation/selection, recovery states, accessibility and API dependencies.
+- Planning is based on the current v2 repository contracts and supplied BeyondPilot/GreenProcure
+  visual references. Existing case UI/API capabilities are distinguished from future workflows;
+  backend, AI integration and release ownership are not assumed to have been agreed.
+- Checks executed: Git status/branch/remote inspection, `ls-remote`, `fetch --no-tags origin dev`,
+  `merge --ff-only origin/dev`, branch creation, source review, an independent document review,
+  and local Markdown link/fence/whitespace validation. The flow diagram was inspected as source,
+  not rendered. No frontend/backend application tests were run for these documentation changes.
+- Live/fixture status: no UI implementation, runtime change, Gemini/ADK call, fixture execution,
+  dependency installation, deployment or remote push. Existing release blockers are unchanged.
+- Next planned task: low-fidelity wireframes and visual direction; then a small frontend
+  increment for the existing case workspace. Quote/review/evaluation/scenario/decision APIs
+  and their unresolved response/retry contracts must be agreed before connected implementation.
+
 ## Per-increment report template
 ### Increment / commit
 ### Files changed
