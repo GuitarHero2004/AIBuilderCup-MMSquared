@@ -2,7 +2,8 @@
 
 **Date:** 14 October 2026
 
-**Status:** planning draft for team review; no new application behaviour implemented
+**Status:** flow specification for team review; Milestone 1 case UI implemented locally,
+with quotation-to-decision workflows still planned. See the implementation ledger for evidence.
 
 **Branch:** `feat/ui-workspace`
 
@@ -12,8 +13,8 @@
 
 Give a textile SME buyer one clear path from fabric requirements to an informed sourcing
 decision. This document completes the first UI planning task: navigation, screen content,
-actions, transitions and recovery states. Visual tokens, wireframes and application code
-are subsequent tasks.
+actions, transitions and recovery states. The linked design package covers visual tokens
+and wireframes; implementation proceeds in small reviewed increments.
 
 Minh is taking the lead on user flows and UI/UX. Backend/database work is expected to be
 coordinated with Mạnh; this document does not claim his availability or assign unagreed work.
@@ -340,7 +341,57 @@ not claims of executed application tests:
 [visual-direction guide](design/VISUAL_DIRECTION.md) now cover the seven screens,
 representative recovery states, responsive layouts and proposed styling.
 
-**Next implementation step after design review:** refresh the shared layout and existing
-case list/create/detail experience in `apps/web`, preserving the working API. Later quote/
-comparison screens follow agreed contracts. The design package is not connected application
-functionality and does not change the implementation status of those features.
+**Milestone 1 implementation:** the shared layout and existing case list/create/detail
+experience in `apps/web` have been refreshed, including a help view, validation, unsaved-draft
+protection and uncertain-save readback. In-app navigation preserves the existing anonymous
+session and case APIs; direct case URLs, saved-requirement editing and later sourcing steps
+remain unavailable. See [the verification ledger](IMPLEMENTATION_STATUS.md).
+
+**Workspace refinement:** the create form now groups fixed specifications into a compact,
+visible summary and expands detailed methodology on demand. Budget and delivery semantics,
+fabric tolerances and the logistics boundary remain visible. Entry and saved-case copy
+distinguish the intended sourcing outcome from today's create/save/reopen functionality.
+See the implementation ledger for verification and remaining limitations.
+
+## 9. Delivery gates, branch isolation and backward review
+
+Our UI Milestone 1 is the requirements-workspace foundation, not completion of PRD I1.
+The next product gate is one real PDF through extraction, source review, correction,
+human confirmation and deterministic evaluation. Small branches contribute to that shared
+acceptance gate; a finished screen alone does not demonstrate the connected product.
+
+| Reviewable task / proposed branch | Outcome and dependency |
+|---|---|
+| Current `feat/ui-workspace` | Finish and review the existing requirements flow and its refinements |
+| `feat/ui-quotation-intake` | Real upload/sample path and persisted processing state; agree collection/upload/run contracts first |
+| `feat/ui-quotation-review` | Source-backed corrections, draft save and human confirmation of the latest revision |
+| `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
+| `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
+| `feat/ui-quote-comparison` | Four offers, actual specialist events, A/B eligibility and C/D exclusions; I2 and comparison portion of I3 |
+| `feat/ui-scenarios` | Explicit scenario application, preserved baseline, Lower Carbon and no feasible option |
+| `feat/ui-decision-summary` | Human choice/reason, immutable save/reopen and stale-save guards; complete I3 |
+| `test/ui-demo-readiness` | Full acceptance journey and failure/accessibility checks; distinguish local evidence from I4 deployed evidence |
+
+Use a separate branch and worktree for each new concurrent task, with explicit ownership
+of shared navigation, styles, contracts and generated types. Preserve the current dirty
+checkout. Dependent tasks start from an approved committed baseline, preferably integrated
+into `dev`; independent work can use approved `dev` in another worktree. Do not silently
+commit, stash or copy uncommitted foundations into several branches. Backend work has its
+own branch and agreed owner; this plan does not assign work to Mạnh without agreement.
+
+Before handing over every development task:
+
+1. Identify the buyer outcome and exact PRD acceptance requirement.
+2. Work backwards through the preceding actions, saved inputs, evidence, state and API guarantees.
+3. Exercise relevant happy, missing-data, failure, interruption, refresh and stale-state paths.
+4. Inspect changed desktop/mobile layouts, keyboard navigation and next-action clarity.
+5. Refine gaps within the task and rerun affected checks. Broader changes get a separate task/branch.
+6. Record executed checks, live/fixture/unavailable paths, dependencies and user review steps.
+
+Leave all implementation changes uncommitted until the user explicitly requests a commit;
+push, merge and deployment require their respective authorization. Review is not automatic
+permission to commit. Later wireframes remain design examples until their API paths work.
+
+When a commit is requested, split the branch's changes into coherent commits by functionality
+or section. Use short, meaningful, mostly plain-language messages with limited technical terms.
+This standing preference is also recorded in `AGENTS.md`.

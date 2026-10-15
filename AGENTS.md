@@ -37,6 +37,13 @@ Use official docs, not guessed model identifiers or imports. Generate TS API typ
 OpenAPI or check equivalence. Keep JSON snake_case; decimal-safe maths; Windows-friendly commands.
 Avoid adding packages/services just for architectural appearance.
 
+Use separate branches/worktrees for independent tasks and an approved committed baseline for
+dependent work. Finish every development task by working backwards from its PRD outcome,
+refining gaps and rechecking affected behaviour. Keep small corrections on that task's branch.
+Leave changes uncommitted until the user asks; commit approval does not imply push approval.
+When authorised, split changes into coherent commits by functionality or section. Use short,
+meaningful, mostly plain-language messages, with technical terms only where useful.
+
 The pack initially has no runnable app. Do not pretend setup/test commands already exist.
 When scaffolding, define real frontend lint/typecheck/test/build scripts and Python test/lint
 commands, execute available checks and update README with commands that actually work.

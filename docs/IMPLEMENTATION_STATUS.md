@@ -174,6 +174,122 @@ below. Update this file as implementation and verification continue.
 - Next smallest implementation step after design review: the shared layout and existing
   anonymous case list/create/detail experience, preserving its working API and isolation.
 
+## UI Milestone 1 — case workspace — 14 October 2026
+
+- Branch: continued on `feat/ui-workspace`, clean on entry. New changes remain unstaged
+  and uncommitted for user review. No push, merge or deployment was performed.
+- Changed: shared `AppShell`, case list, focused create/saved-requirements views and
+  Help & methodology. Applied the pale sidebar/white surface/forest-green visual direction,
+  readable form typography, mobile records, keyboard focus and responsive navigation.
+- Interaction: controlled drafts, linked validation summary, field-level feedback, native
+  discard dialog with keyboard containment, leave-page warning and focus restoration.
+  Duplicate submissions are blocked synchronously. An uncertain write preserves the draft,
+  requires successful list readback and lets the buyer inspect saved cases before resuming.
+- API client: added structural checks for the response fields the UI consumes before a
+  successful response can discard the draft. Ambiguous POST failures (including storage or
+  proxy 5xx) require readback; explicitly aborted storage contention remains retryable.
+  Pydantic/generated contracts, payloads, decimal strings and backend routes are unchanged.
+- Preserved: anonymous identity, owner/session boundary, two-case cap, fixed textile preset,
+  synthetic disclosure and API-only browser access. No production fixture fallback exists.
+- `npm run check` passed: frontend lint/typecheck, **26 frontend tests**, production build,
+  Python Ruff lint/format, **69 backend tests**, and generated-contract verification.
+  Three opt-in tests were skipped in that command (two emulator integration tests and one
+  deployed smoke). The existing Starlette/httpx deprecation warning remains.
+- `npm run test:e2e` passed after correcting dialog keyboard focus and mobile breadcrumb
+  wrapping. **17 evidence groups** include real emulator sign-in/create/reload, separate
+  visitors, the two-case limit, validation, draft keep/discard, explicit save rejection,
+  duplicate-submit prevention and readback after losing a real successful POST response.
+  A real old-owner response delivered after sign-out and a new anonymous sign-in does not
+  populate the new workspace. Network faults are injected only in the browser test.
+- Responsive QA: entry/create/requirements/workspace/help checked at **1440, 1024, 768,
+  390 and 320px** (25 screen/viewport combinations), including 160-character case and
+  destination values. No page overflow or uncaught browser JavaScript errors. Rendered
+  desktop/tablet/mobile and error-state screenshots were visually inspected. This is not
+  a complete screen-reader audit or cross-browser certification.
+- Evidence: `.local/artifacts/ui-workspace/report.json` and PNGs, ignored from Git. The
+  final stylesheet refinement received another browser run and production build.
+- Live/fixture status: real local Auth/Firestore/FastAPI persistence using synthetic cases.
+  No live Gemini/ADK call, cloud/deployed verification or new backend capability. No project
+  dependency or lockfile change. Existing cloud/factor/model/retention blockers remain.
+- Local review services started with `npm run dev:emulators`, `npm run dev:api` and
+  `npm run dev:web` using explicit emulator-only frontend settings. The app and API health
+  URL returned HTTP 200. The emulator CLI downloaded its optional UI asset into local cache.
+- Scope limits: views use local React state (no direct URLs or browser-history routing);
+  unsaved drafts are memory-only. Saved requirements are read-only. Upload/review/evaluation/
+  scenario/decision workflows remain planned. Local emulator data is temporary.
+- Backend handoff remains section 7 of [the UI plan](UI_UX_PLAN.md): agree quote collection,
+  upload/sample/status, confirmation, preview and uncertain-mutation readback contracts.
+  Next increment after user review: quotation intake and processing feedback.
+
+## Workspace refinement and PRD backward review — 14 October 2026
+
+- Continued the existing uncommitted task on `feat/ui-workspace`. Preserved all earlier
+  changes; nothing staged, committed, pushed, merged or deployed.
+- Condensed fixed fabric requirements into three labelled rows. Composition and GSM
+  tolerances, minimum usable width and absent colour/finish/evidence requirements remain
+  visible and match the existing payload. All six editable fields, units, budget boundary
+  and full-order/calendar-day/date hints remain visible.
+- Detailed comparison methodology now uses a native keyboard-operable disclosure. The
+  logistics boundary stays visible while collapsed; the expanded copy explains well-to-wheel
+  and excludes fabric production. Error and recovery controls remain outside the disclosure.
+- Entry copy describes saving/reopening a sourcing brief and explicitly bounds the preview.
+  The saved requirements notice now appears before the detailed values. Visual backward
+  review found duplicate confirmations after that move; consolidated visible feedback while
+  retaining the live screen-reader status announcement.
+- Backward review traced saved requirements to acknowledged persistence, validated editable
+  inputs and the fixed specification. Independent source review found no mismatch with
+  PRD FR-02 or `form.ts`. No validation, mutation, authentication or API contract logic changed.
+- Final `npm run check` passed: lint, TypeScript, production build, **26 frontend tests**,
+  Ruff lint/format, **69 backend tests** and generated-contract verification. Three opt-in
+  tests were skipped (two emulator integration tests and one deployed smoke); the existing
+  Starlette/httpx deprecation warning remains.
+- `npm run test:e2e` could not start a second emulator suite because the existing local
+  preview occupied its ports. Verified those processes belonged to this project and reused
+  them without stopping services or changing configuration. The temporary runner uses the
+  existing browser suite with its service-start block replaced by health checks, plus a
+  focused disclosure check. Used the repository's existing Playwright cache via
+  `PLAYWRIGHT_BROWSERS_PATH` after the standalone runner initially searched the default cache.
+- Final `node .local/artifacts/ui-workspace-refinement/run.mjs` passed **19 evidence groups**:
+  existing persistence/reload, validation, draft recovery, duplicate-save prevention,
+  uncertain-write readback, quota and identity-race checks; native Enter/Space disclosure
+  operation preserves focus/edited values and sends no POST. **30 screen/viewport checks**
+  across 1440/1024/768/390/320px found no horizontal overflow or uncaught JavaScript errors.
+- Final `node .local/artifacts/ui-workspace-refinement/inspect.mjs` passed the targeted
+  visual inspection assertions. At 390px, the same collapsed create-screen capture changed
+  from 2313px to 2074px in height. The normal-length saved-case confirmation/preview limits
+  fit within the first 844px viewport. Desktop, mobile, expanded-methodology and saved-state
+  screenshots were visually reviewed; no full screen-reader/cross-browser audit is claimed.
+- Evidence: ignored `.local/artifacts/ui-workspace-refinement/` contains `report.json`,
+  `inspection.json`, screenshots and the one-off verification runners. No permanent tests,
+  dependencies, backend, generated types or infrastructure changed in this refinement.
+- Updated the UI plan with PRD I1–I4 delivery gates and the requested branch/worktree and
+  backward-review workflow. Next product gate remains one real PDF through review,
+  confirmation and evaluation; dependent branches need an approved committed baseline and
+  the section 7 API handoffs. UI Milestone 1 does not complete PRD I1.
+- Live/fixture status: real local emulator persistence of synthetic cases only. No live AI
+  or deployed verification. Existing preview remains available at `http://127.0.0.1:5173/`;
+  emulator data remains temporary. Public-release dependencies are unchanged.
+
+## Reviewed commit preparation — 15 October 2026
+
+- The user explicitly authorised committing the reviewed workspace and pushing it to `dev`.
+  Created focused commits for save reliability (`edace4a`), the workspace interface
+  (`738e4f0`) and browser checks (`1db3c22`); documentation and working instructions are
+  grouped separately. Messages are short and primarily plain language.
+- All 15 reviewed files matched the versions from the final passing verification above.
+  Readiness review found no material blocker, and `git diff --check` passed. Application
+  code and test inputs have not changed since that verification, so tests were not repeated
+  merely to create commits. New edits only record the user's workflow preferences and status.
+- Fetched `origin`; at preparation time `dev` remained at `bb31efe`, with no teammate changes
+  to reconcile. Integration will preserve the existing history, including the two earlier
+  UI planning commits. No force push, production deployment or cloud change is requested.
+- Recorded the standing preference in `AGENTS.md` and the UI plan: separate tasks by branch
+  and worktree, review backwards from PRD outcomes, and use coherent commits with concise
+  messages when authorised. Future tasks still stay uncommitted until the user asks.
+- The next connected product gate remains PRD I1. Upload/review/evaluation contracts,
+  live AI and deployed acceptance remain outstanding; this commit set is the requirements
+  workspace foundation and does not imply a completed sourcing workflow.
+
 ## Per-increment report template
 ### Increment / commit
 ### Files changed
