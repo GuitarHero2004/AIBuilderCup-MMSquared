@@ -1,13 +1,15 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace, 14 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace and separate intake UI preview, 15 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
 the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
 linked validation, unsaved-draft protection and readback after an uncertain save.
 This is not the complete MVP: quotation upload, Gemini/ADK, human
 quote confirmation, calculations, scenarios and decisions are still to be implemented.
-No cloud resources or deployment have been created by this foundation.
+No cloud resources or deployment have been created by this foundation. Quotation-intake
+components and a development-only simulation are now available for design review; they
+do not upload files, extract fields or change the production case workspace.
 
 ## Local quick start
 Install Node.js 24 (npm 11 or 12), Python 3.12 and Java 21+ first; Java 22 was used locally.
@@ -45,6 +47,35 @@ Use synthetic data only. Cases survive page/API reloads while emulators are runn
 emulator data is temporary and is discarded on shutdown. Clearing browser data loses the
 anonymous identity. `/healthz` reports process/config liveness, not dependency readiness.
 
+## Quotation intake UI review
+
+From the repository root, after `npm ci`, start the isolated UI preview:
+
+```powershell
+npm run dev --workspace=@greenprocure/web -- --port 5174
+```
+
+Open http://127.0.0.1:5174/quotation-preview.html. This entry needs no API, Firebase
+configuration or sign-in. The production build includes only the normal app entry.
+
+The blue preview banner labels every outcome as simulated. Select a synthetic/non-confidential
+PDF to run basic local header/size checks, then choose **Upload quotation** and an explicit preview
+outcome. Nothing leaves the browser. Try **Simulate lost response** → **Check saved quotations**
+→ **Simulate saved result** to review duplicate-upload protection. The synthetic sample picker
+creates illustrative records, not source PDFs or extracted fields. The review action opens
+a handoff explanation; the source/field review screen belongs to the next milestone.
+
+Expand **Preview controls** for loading, unavailable, failed, interrupted, needs-review and
+four-quotation scenarios. Changing the scenario or reloading clears in-memory work. The
+10 MiB / 10-page / four-quotation limits are illustrative; final limits and recovery guarantees
+must come from the server. Browser checks do not validate page count, encryption or PDF content.
+
+The intake-specific test scripts, test inputs and screenshots are kept locally and are not
+included in this branch's committed files. Executed results are recorded in the
+[verification ledger](docs/IMPLEMENTATION_STATUS.md). See
+[the proposed API handoff](docs/QUOTATION_INTAKE_CONTRACT.md) for missing endpoints,
+owner checks, duplicate prevention, disclosure and integration dependencies.
+
 ## Checks
 ```powershell
 npm run check
@@ -80,6 +111,8 @@ One monorepo, feature-oriented React UI and a modular FastAPI backend:
 ```text
 apps/web/                  React + Vite + TypeScript + Tailwind
   src/features/cases/      Case form, validation and saved requirements
+  src/features/quotations/ Reusable intake UI; not connected to an API yet
+  src/dev/                Development-only intake simulation; excluded from app entry
   src/api/                API client and generated OpenAPI types
   src/auth/               Firebase anonymous identity and App Check
 services/api/
@@ -119,6 +152,7 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [Architecture, agent contracts and API](docs/ARCHITECTURE.md)
 - [Exact calculations and demo test design](docs/CALCULATION_SPEC.md)
 - [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
+- [Quotation intake API handoff (proposal)](docs/QUOTATION_INTAKE_CONTRACT.md)
 - [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)
