@@ -144,8 +144,10 @@ a valid baseline evaluation can go directly to a decision.
 
 **Question:** Which documents are available, and which need review?
 
-- Primary action: **Add quotation PDF**; alternative: **Use synthetic sample**. Samples use
-  the same private upload/extraction path and remain visibly labelled synthetic.
+- Empty case: lead with **Upload quotation** or **Use synthetic sample**. Once documents exist,
+  show quotations and their next actions first, followed by an expandable **Add a quotation**
+  section. Collapsing or reordering preserves the selected file; recovery keeps the form visible.
+  Connected samples must use the same private upload/extraction path and remain labelled synthetic.
 - Show file name, upload/extraction status, review status, missing-information summary and
   the appropriate action: Review, Check status or Retry. Show the four-quote limit.
 - Before upload, explain Google model processing, private storage, configured retention
@@ -155,8 +157,12 @@ a valid baseline evaluation can go directly to a decision.
   encrypted, oversized or unreadable documents. A fifth quote cannot bypass the server limit.
 - One PDF per bounded extraction run. Keep other quote records visible during processing.
   No simulated percentage or suggestion of an implemented background queue.
-- Selecting a row opens Review. Failed extraction preserves a useful error/status and an
-  explicit retry action; it never substitutes fixture results in live mode.
+- Each row separates saved PDF, extraction and human-review states. Use one relevant action:
+  Extract information, Check status, Retry extraction, Review quotation or View reviewed quotation.
+  Review opens only when the review state is ready; failed extraction keeps a useful error and
+  explicit retry. It never substitutes fixture results in live mode.
+- Keep order, budget and the full delivery requirement visible; disclose longer fabric specs
+  on demand. Upload is prominent and Clear selected PDF stays a quieter secondary action.
 
 ### S3 — Quotation review and confirmation
 
@@ -362,8 +368,9 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 
 | Reviewable task / proposed branch | Outcome and dependency |
 |---|---|
-| Current `feat/ui-workspace` | Finish and review the existing requirements flow and its refinements |
-| `feat/ui-quotation-intake` | Real upload/sample path and persisted processing state; agree collection/upload/run contracts first |
+| `feat/ui-workspace` (merged to `dev`) | Requirements flow and its refinements reviewed and integrated |
+| Current `feat/ui-quotation-intake` | User-approved scope: reusable intake UI, development simulation and concrete API handoff; no backend implementation |
+| Later intake integration, separate branch | Connect real upload/sample path and persisted processing state after collection/upload/run contracts and backend are ready |
 | `feat/ui-quotation-review` | Source-backed corrections, draft save and human confirmation of the latest revision |
 | `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
 | `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
@@ -372,12 +379,22 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 | `feat/ui-decision-summary` | Human choice/reason, immutable save/reopen and stale-save guards; complete I3 |
 | `test/ui-demo-readiness` | Full acceptance journey and failure/accessibility checks; distinguish local evidence from I4 deployed evidence |
 
-Use a separate branch and worktree for each new concurrent task, with explicit ownership
-of shared navigation, styles, contracts and generated types. Preserve the current dirty
-checkout. Dependent tasks start from an approved committed baseline, preferably integrated
-into `dev`; independent work can use approved `dev` in another worktree. Do not silently
-commit, stash or copy uncommitted foundations into several branches. Backend work has its
-own branch and agreed owner; this plan does not assign work to Mạnh without agreement.
+Use C:\AIBuilderCup-MMSquared as the single working folder, per the user's 15 October 2026
+instruction. Separate milestones by branch within that checkout; do not create extra
+worktrees or duplicate project folders unless explicitly requested. Work on one branch at
+a time and preserve current changes before switching. Helpers can work on explicitly owned
+files in the active branch without changing Git state. Dependent tasks start from an approved
+committed baseline, preferably integrated into `dev`. Do not silently commit, stash or copy
+uncommitted foundations into several branches. Backend work has its own branch and agreed
+owner; this plan does not assign work to Mạnh without agreement.
+
+**Intake UI review, 15 October 2026:** `quotation-preview.html` is a separate development
+entry. It covers file preflight, sample selection, distinct upload/extraction/review states,
+uncertain-result recovery, and the case cap. All outcomes are synthetic and memory-only;
+the real case workspace has no link to this preview. Requirements use the supported woven
+fabric preset. At the quote cap, the upload form is hidden while retaining pending selection, so review actions are
+easier to reach. The [proposed API handoff](QUOTATION_INTAKE_CONTRACT.md) records outstanding
+backend requirements. This task does not complete FR-03 or PRD I1.
 
 Before handing over every development task:
 
@@ -393,5 +410,8 @@ push, merge and deployment require their respective authorization. Review is not
 permission to commit. Later wireframes remain design examples until their API paths work.
 
 When a commit is requested, split the branch's changes into coherent commits by functionality
-or section. Use short, meaningful, mostly plain-language messages with limited technical terms.
+or section. Write meaningful messages explaining what changed and why, without being unnecessarily
+long. Use mostly non-technical language with a little technical detail where useful. Stage reviewed
+files explicitly and keep private test cases and artifacts local. Commit-only approval stays local;
+a request covering both commit and push authorises both without another confirmation.
 This standing preference is also recorded in `AGENTS.md`.
