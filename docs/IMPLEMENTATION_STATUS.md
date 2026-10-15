@@ -1,7 +1,8 @@
 # Implementation and verification ledger
-**Current state — 4 October 2026:** local development foundation implemented. The complete
-sourcing workflow and cloud release remain pending. Earlier documentation-only work is recorded
-below. Update this file as implementation and verification continue.
+**Current state — 15 October 2026:** local case workspace implemented; quotation-intake UI
+prepared in a separate development-only simulation. Real PDF intake, extraction, review,
+evaluation and cloud release remain pending. Dated entries below distinguish current work
+from earlier verification.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
@@ -9,6 +10,7 @@ below. Update this file as implementation and verification continue.
 | App manifests / locked dependencies | Created and locally installed | Root npm workspace/lock, API pyproject/uv.lock |
 | Domain calculations | Specified, not implemented | pytest output, commit |
 | Frontend and contracts | Case UI and generated API types implemented | Local lint/typecheck/build/unit checks pass |
+| Quotation intake UI | Reusable components and development simulation prepared | UI checks pass; real upload/extraction and generated quote contracts remain unavailable |
 | Auth/Firestore/Storage | Anonymous Auth + case persistence verified in emulators | Direct client rules deny access; no PDF adapter/cloud verification |
 | Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
 | Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
@@ -289,6 +291,178 @@ below. Update this file as implementation and verification continue.
 - The next connected product gate remains PRD I1. Upload/review/evaluation contracts,
   live AI and deployed acceptance remain outstanding; this commit set is the requirements
   workspace foundation and does not imply a completed sourcing workflow.
+
+## Quotation intake UI and API handoff — 15 October 2026
+
+- **Scope and baseline:** the user chose UI plus a concrete API handoff for Mạnh, excluding
+  backend implementation. Created `feat/ui-quotation-intake` in a separate worktree from
+  merged `dev` at `5ccc395` (PR #1). The original workspace checkout remains untouched.
+  These changes are uncommitted; no push, merge, deployment or cloud change was performed.
+- **Changed components:** `features/quotations/` contains the reusable intake view, presentation
+  types and the PDF preflight helper. `features/quotation-intake.css` provides responsive
+  styling. `quotation-preview.html` and `src/dev/` provide an isolated development entry with
+  eleven explicitly simulated states. Local-only `pdfPreflight.test.ts` and
+  `scripts/quotation-preview-smoke.mjs` verify the feature; these private tests are excluded
+  from this branch's commits, as recorded in the commit-preparation entry below.
+  README/UI plan describe how to review it; `QUOTATION_INTAKE_CONTRACT.md` records proposed APIs.
+- **Buyer flow prepared:** supported case requirements → select PDF or synthetic example →
+  basic local preflight → pending/known/uncertain save → separate extraction state → review
+  handoff. Failed saves retain selection; uncertain outcomes block another upload until readback
+  resolves them. A failed readback does not permit a fresh retry. Extraction retries are explicit;
+  missing-information counts remain nullable. The next review screen is not implemented here.
+- **Backward review and refinements:** aligned the example with the actual USD/woven fabric
+  preset, tolerances and full-order lead-time semantics. At four quotations, removed the
+  redundant upload form to bring review actions forward. Pending saves show the last checked
+  count and an unresolved result, rather than asserting that no quotation exists. Improved
+  focus after simulated actions and mobile delivery text wrapping. Inspected desktop/mobile
+  screenshots, including mixed, full and uncertain states.
+- **Executed checks:** installed locked dependencies with offline `npm ci`; ran `npm run lint`,
+  `npm run typecheck`, `npm run test`, `npm run build` and
+  `node scripts/quotation-preview-smoke.mjs`. Lint/typecheck/build passed; **31 frontend tests
+  passed**, including five PDF preflight tests. After final UI refinements, lint/build (including
+  typecheck) and browser checks passed again. The final browser run passed **12 groups and
+  55 layouts**: eleven scenarios at 1440, 1024, 768, 390 and 320 pixels, without horizontal overflow.
+  It covered keyboard/dialog recovery, source selection, lost-response reconciliation,
+  retained selection, deliberate extraction retries, the cap, reload and production exclusion.
+  `git diff --check` passed. Evidence is ignored under `.local/artifacts/quotation-intake/`.
+- **Live/fixture/unavailable:** local browser interactions and basic PDF byte/header checks are
+  real. All save/run/list outcomes and synthetic sample records are manually controlled,
+  memory-only simulations. The browser run observed no fetch/XHR, external requests,
+  local/session storage mutations or uncaught errors. Production output excludes the preview
+  HTML and simulation JavaScript; the existing app entry is unchanged. Real PDF upload, private
+  storage, Gemini, source viewing, confirmation and persisted run recovery are unavailable.
+  Page count, encryption and PDF validity are not verified by preflight. No source sample PDFs
+  or answer-key extraction are supplied by this preview.
+- **Tests not rerun:** backend unit, emulator integration, existing full-workspace end-to-end
+  and deployed/live-AI checks. This task changes no backend, API client/generated contracts,
+  production app entry, infrastructure or dependency manifest/lockfile. The full root
+  `npm run check` was not run; frontend evidence above must not imply backend verification.
+- **Integration dependencies:** Mạnh's contract review and implementation of owned quotation
+  collection/upload/sample/run routes, operation readback/idempotency, private source access,
+  authoritative limits and error/retry states. Current `CaseRead` only accepts draft/revision 1;
+  its model, generated types and frontend guard must evolve together. `run_id` is currently
+  null-only, idempotency headers are not allowed by CORS, and retention/disclosure policy is
+  unresolved. All changes in the handoff remain proposals, not accepted API commitments.
+- **Next smallest step:** review this UI/handoff, then agree the API contract with Mạnh. Once
+  the approved UI baseline is committed, source-backed quotation review can start in a separate
+  branch; real intake wiring needs the backend contract and endpoints. FR-03 and PRD I1 remain
+  incomplete until genuine upload → extraction → human review/confirmation → evaluation works.
+
+## Single working folder — 15 October 2026
+
+- The user requires all work in `C:\AIBuilderCup-MMSquared` and explicitly requested deletion
+  of the other GreenProcure working folders. This supersedes the earlier worktree arrangement.
+  `AGENTS.md` and the UI plan now require separate branches in this single checkout, with no
+  extra worktrees or duplicate project folders unless explicitly requested.
+- Switched the clean primary checkout to `feat/ui-quotation-intake` at `5ccc395`. Transferred
+  all 16 uncommitted intake files and verified their SHA-256 hashes before any cleanup.
+  Preserved and hash-checked 58 screenshots/report files; retained the screenshot helper.
+  A local migration manifest, original file backup and historical-work archive are ignored
+  under `.local/migrations/quotation-intake-2026-10-15/` inside the primary checkout.
+- Retired both linked worktrees and deleted the extra GreenProcure design, planning, reference,
+  UI, intake and related Notion-snapshot folders after preserving their historical material.
+  `git worktree list` now contains only `C:\AIBuilderCup-MMSquared`. Branch history is preserved;
+  nothing was committed, pushed or deployed during the move.
+- Verification in the canonical folder: `npm run test` passed all 31 frontend tests;
+  `npm run build` passed TypeScript checking and production build. Restarted Vite from
+  `C:\AIBuilderCup-MMSquared\apps\web` on port 5174 and successfully rendered the intake preview
+  in Chromium at desktop and mobile widths. Application source was not changed by the move;
+  the earlier full 12-group/55-layout browser evidence remains applicable and preserved.
+
+## Private UI stress testing and refinement — 15 October 2026
+
+- User requested autonomous local stress testing without publishing test cases. All new
+  adversarial scripts, synthetic files, screenshots and detailed reports were kept in the OS
+  temporary directory, outside this repository. No commit, push, publication or deployment
+  occurred. Only this summary is recorded here; no new stress-test files were added to Git.
+- Worked backwards from reliable selection, truthful saved state and recoverable next actions.
+  Reproduced and fixed four UI issues: stalled file checks prevented replacement; a full
+  collection discarded a pending selection; changed byte limits left prior validation usable;
+  and 200% text enlargement clipped sidebar labels despite no page-level overflow.
+- Selection controls now remain usable during local preflight. Clear cancels the selection,
+  ignores late reads and returns keyboard focus to the file input. Upload remains blocked while
+  checking or while a save outcome is unresolved. The full-case form is hidden while retaining
+  its selection state. Changed limits block upload and expose an explicit Recheck action:
+  actual native-file reselection can emit cancel instead of change, so this action reuses the
+  selected File directly. Sidebar labels wrap at enlarged text sizes; dialogs are centred.
+- Final private stress run passed: 25 repeated four-quotation journeys (100 simulated saves),
+  75 unavailable readbacks, 25 confirmed-rejection/retry paths and 75 extraction attempts,
+  with 25/30-click bursts. No duplicate records, uncaught errors, business/external requests or
+  local/session storage writes were observed. File-boundary/error checks ran under 6x CPU
+  throttling. Deferred reads, clear/replacement, offline selection retention and reload passed.
+- Private component-prop checks passed for changing limits and uncertain/full/rejected state
+  transitions. Native-file tests verified rejection and acceptance through Recheck without
+  needing another picker change. Keyboard-only flow, long Unicode filenames, and normal/200%
+  text checks passed at 1440, 844, 640 and 320 pixels; enlarged sidebar clipping was visually
+  rechecked after the fix. The final clear-selection focus check also passed.
+- Existing browser regression was run from a private temporary copy, writing its output only
+  to temporary storage: 12 groups and 55 layouts passed. Its existing cap assertion now checks
+  that preserved inputs are hidden rather than removed. Existing frontend unit tests passed
+  (31); lint, TypeScript checks and build passed. After the last focus refinement, lint/types
+  and the affected keyboard interaction passed again. These are local UI checks, not server
+  load benchmarks or evidence of real upload, storage, extraction or live-AI capacity.
+- Next: user review of the refined intake UI and proposed API handoff. Backend integration
+  remains pending; changes stay uncommitted on `feat/ui-quotation-intake` in the single
+  `C:\AIBuilderCup-MMSquared` working folder.
+
+## Quotation intake page refinement and backward review - 15 October 2026
+
+- Completed the four authorised refinements on `feat/ui-quotation-intake` in the sole
+  `C:\AIBuilderCup-MMSquared` checkout. Changes remain uncommitted; nothing was pushed or
+  published. New browser scripts, screenshots and detailed reports remain in OS temporary
+  storage outside this repository. Existing smoke selectors were updated for the revised UI.
+- Empty cases lead with upload/sample selection. Existing quotations and their next actions
+  appear before an expandable Add a quotation section. Stable keyed panels preserve the native
+  file input when reordered; collapsed and full-case forms retain selection and validation.
+  Pending, uncertain and rejected saves expose recovery. Full cases show a limit explanation.
+- Rows explicitly distinguish a saved PDF, extraction and human review. Each exposes its
+  applicable action: Extract information, Check status, Retry extraction, Review quotation or
+  View reviewed quotation. Missing information stays unknown when no count was supplied;
+  zero missing fields still requires review. Confirmation does not imply eligibility.
+- Upload quotation leads a quieter Clear selected PDF action with a usable keyboard/touch
+  target. Order, budget and complete delivery terms stay visible; fabric specifications use
+  a native expandable disclosure. Feature CSS remains scoped to intake; no new dependencies.
+- Worked backwards from the buyer outcome: understand requirements, select a source, know
+  whether it saved, find the document and identify its next action. Independent review caught
+  a focus issue when a background refresh added the first quotation while the form was in use.
+  The form now remains open during editing; a known-save/reset clears selection and restores
+  the default disclosure state. Corrected full-cap guidance and accessible action names too.
+- Validation: all 31 frontend tests passed; lint, TypeScript checks and production build passed.
+  Existing browser regression passed 12 groups / 55 layouts, including production exclusion,
+  lost-response recovery, retry, cap and reload. After the focus refinement, independent private
+  browser checks passed 9 groups / 40 layouts at 320, 390, 844 and 1440 pixels, normal and 200%
+  text. They verified native input identity, focused refresh, collapse/reopen, rejection,
+  full-cap recovery, keyboard order and absence of horizontal overflow. No browser errors or
+  business/external requests were observed. Desktop/mobile screenshots were visually reviewed.
+- Review verdict: ready for user review within the UI-plus-proposed-API-handoff scope. No
+  blocking UI issue remains in the exercised paths. Real upload/storage/extraction, source PDF
+  review, correction and confirmation are still unavailable; FR-03 and I1 remain incomplete.
+  Real-phone, Safari/Firefox and screen-reader checks were not performed. User review comes
+  before any commit; the next feature belongs on a separate branch after the baseline is approved.
+
+## Authorised local commit preparation - 15 October 2026
+
+- The user authorised local commits after reviewing the branch and revising the grouping.
+  Four coherent groups cover the reusable intake UI, proposed backend handoff, isolated
+  development preview, and project review/workflow records. Messages explain what changed
+  and why in mostly non-technical language, without unnecessary length.
+- Only the reviewed feature/documentation files are selected. The two untracked verification
+  files, `apps/web/src/features/quotations/pdfPreflight.test.ts` and
+  `scripts/quotation-preview-smoke.mjs`, remain local and are explicitly excluded through
+  `.git/info/exclude`. Their contents were preserved and hash-recorded outside the repository.
+  Private stress scripts, synthetic test inputs, screenshots and detailed reports remain
+  excluded. Preview scenario data stays with the development UI because it is required to
+  render the explicitly labelled simulation, not an executable test suite.
+- Corrected the README action label and removed commands that would depend on the excluded
+  local smoke script. Updated the workflow wording to preserve the user's message preference
+  and the separate commit/push authorization boundary.
+- Source behavior is unchanged from the reviewed UI. Final commit preparation ran
+  `npm run test --workspace=@greenprocure/web -- --exclude src/features/quotations/pdfPreflight.test.ts`:
+  all 26 tests intended for the committed tree passed. `npm run typecheck` and
+  `git diff --check` passed. Earlier 31-test results include five local-only PDF checks;
+  browser verification remains local evidence, not a test suite shipped in these commits.
+- All commits stay on `feat/ui-quotation-intake`. No remote push, pull request, merge,
+  deployment or cloud change is authorised by this commit-only request.
 
 ## Per-increment report template
 ### Increment / commit

@@ -37,12 +37,19 @@ Use official docs, not guessed model identifiers or imports. Generate TS API typ
 OpenAPI or check equivalence. Keep JSON snake_case; decimal-safe maths; Windows-friendly commands.
 Avoid adding packages/services just for architectural appearance.
 
-Use separate branches/worktrees for independent tasks and an approved committed baseline for
-dependent work. Finish every development task by working backwards from its PRD outcome,
+Use C:\AIBuilderCup-MMSquared as the single working folder. Keep independent tasks on separate
+branches in this checkout; do not create extra worktrees or duplicate project folders unless
+the user explicitly requests them. Work on one branch at a time and preserve uncommitted work
+before any branch switch. Dependent tasks start from an approved committed baseline.
+Finish every development task by working backwards from its PRD outcome,
 refining gaps and rechecking affected behaviour. Keep small corrections on that task's branch.
 Leave changes uncommitted until the user asks; commit approval does not imply push approval.
-When authorised, split changes into coherent commits by functionality or section. Use short,
-meaningful, mostly plain-language messages, with technical terms only where useful.
+When authorised, split changes into coherent commits by functionality or section. Write meaningful
+messages that explain what changed and why, without being unnecessarily long. Use mostly
+non-technical language with a little technical detail where useful. Stage specific reviewed files;
+keep private test cases, test inputs, screenshots and detailed reports out of commits.
+A request to commit and push authorises both steps; carry out the authorised steps without
+asking again. A commit-only request stays local. Verify the committed contents and report hashes.
 
 The pack initially has no runnable app. Do not pretend setup/test commands already exist.
 When scaffolding, define real frontend lint/typecheck/test/build scripts and Python test/lint
