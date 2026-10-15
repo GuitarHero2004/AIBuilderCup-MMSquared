@@ -1,9 +1,11 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local development foundation, 4 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace, 14 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
-the Firebase emulators. This is not the complete MVP: quotation upload, Gemini/ADK, human
+the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
+linked validation, unsaved-draft protection and readback after an uncertain save.
+This is not the complete MVP: quotation upload, Gemini/ADK, human
 quote confirmation, calculations, scenarios and decisions are still to be implemented.
 No cloud resources or deployment have been created by this foundation.
 
@@ -56,7 +58,17 @@ emulators and verify persistence, owner isolation, the atomic case cap and direc
 Browser smoke tests start their own API/web servers and emulators. Stop manually running dev
 servers/emulators before either integration command to avoid port conflicts. Browser installation
 is a one-time local download; Linux may also need [Playwright's system libraries](https://playwright.dev/docs/browsers#install-system-dependencies).
-Screenshots and tool caches stay ignored under `.local/`.
+Screenshots and tool caches stay ignored under `.local/`. The browser run writes its
+execution report and desktop/mobile screenshots to `.local/artifacts/ui-workspace/`.
+It exercises real local persistence, failure recovery, the case cap and a delayed save
+response arriving after an identity change. Faults are injected by the test, not the app.
+
+To review the case UI, start the three local services above, then try: **Start private demo**
+→ **Create sourcing case** → change a requirement → **Cancel / Keep editing** → save
+→ **Back to workspace** → refresh and reopen the saved case. Visit **Help & methodology**
+for the current scope. Navigation uses in-app views; direct case URLs and browser history
+routing are not implemented. Unsaved drafts stay in memory and are lost on reload after
+the browser's leave-page warning. Saved emulator data lasts only while the emulators run.
 
 After changing Pydantic models, run `npm run contracts:generate` and review the generated
 TypeScript diff. `npm run test:api` runs backend tests alone. Deployed smoke tests are opt-in;
@@ -106,6 +118,8 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [Firestore schema and ownership](docs/GreenProcure_Vietnam_Textile_SME_Database_Schema.md)
 - [Architecture, agent contracts and API](docs/ARCHITECTURE.md)
 - [Exact calculations and demo test design](docs/CALCULATION_SPEC.md)
+- [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
+- [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)
 - [Implementation verification ledger](docs/IMPLEMENTATION_STATUS.md)
