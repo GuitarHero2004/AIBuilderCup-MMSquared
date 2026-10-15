@@ -1,8 +1,8 @@
 # GreenProcure — visual direction and wireframe guide
 
-**Date:** 14 October 2026
-**Status:** design draft for team review; documentation only
-**Branch:** `feat/ui-workspace`
+**Date:** initial direction 14 October 2026; implementation rules updated 15 October 2026
+**Status:** original wireframe reference plus current implementation consistency rules
+**Original planning branch:** `feat/ui-workspace`
 
 ## Purpose and references
 
@@ -30,6 +30,36 @@ Keep its prototype label visible; sample activity and outcomes are illustrations
 - Prefer useful lists and comparison rows to decorative metric cards or sparklines.
 - Use restrained corners and borders; reserve shadows for overlays and menus.
 - Progress reflects saved work, never XP, a sustainability trophy or acceptance of AI advice.
+
+## Current implementation consistency rules
+
+The 15 October 2026 refinement applies these rules to the case workspace, create/detail/help
+views, quotation intake and quotation review. The offline wireframes remain historical design
+examples; they are not the current implementation or evidence of connected quotation services.
+
+- Shared definitions live in `apps/web/src/styles.css`: body/field text 14px, supporting
+  text 13px, metadata 12px at the default 15px root size; section labels use the shared
+  section token. Feature styles consume the same tokens.
+- Use spacing steps of 4, 8, 12, 16, 20, 24 and 32px. Content panels use 24px desktop
+  padding and 16px on narrow screens. Page headings align with the main content gutter.
+- Controls use 6px corners, panels 8px and dialogs 12px. Standard actions use 14px text,
+  weight 600 and a 44px minimum height; do not override shared button typography with
+  feature-wide font resets. Dialogs share a backdrop color and visible focus treatment.
+- Status labels retain words as well as color: neutral for unavailable/not-ready states,
+  blue for information/processing, amber for attention or uncertain outcomes, red for known
+  errors, green for a completed operation. Extraction success does not mean human review
+  or eligibility. Those remain separate states.
+- Desktop quotation rows share semantic Document, Processing, Review and Action columns.
+  Action widths and alignment do not depend on row copy. On narrower content widths they
+  become labelled records; filenames and actual failure reasons remain readable.
+- Put routine instructions at section level; keep actual missing fields, failed operations
+  and recovery guidance near their controls. A new unreviewed field is not a validation error.
+  Removing repeated guidance must not remove confirmation gates or source limitations.
+- Large text must trigger useful wrapping rather than clipping or forced word fragments.
+  Test long names, navigation, header actions, units, dialogs and buttons separately from
+  document-level overflow. Put units beside field labels rather than over input values.
+- Inspect desktop/mobile screenshots and check exact alignments after functional regression.
+  Keep private screenshots, executable tests and detailed reports outside committed files.
 
 ## Proposed colour tokens
 

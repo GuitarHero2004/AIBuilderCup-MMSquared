@@ -1,15 +1,17 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace and separate intake UI preview, 15 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace and intake/review UI previews, 16 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
 the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
 linked validation, unsaved-draft protection and readback after an uncertain save.
+Workspace and quotation views share consistent controls, status colors, spacing and responsive
+layouts. Desktop quotations use aligned columns; narrow screens use labelled records.
 This is not the complete MVP: quotation upload, Gemini/ADK, human
 quote confirmation, calculations, scenarios and decisions are still to be implemented.
-No cloud resources or deployment have been created by this foundation. Quotation-intake
-components and a development-only simulation are now available for design review; they
-do not upload files, extract fields or change the production case workspace.
+No cloud resources or deployment have been created by this foundation. Quotation intake and
+review components have development-only simulations for design review. They do not upload
+files, call AI, persist corrections or change the production case workspace.
 
 ## Local quick start
 Install Node.js 24 (npm 11 or 12), Python 3.12 and Java 21+ first; Java 22 was used locally.
@@ -63,7 +65,7 @@ PDF to run basic local header/size checks, then choose **Upload quotation** and 
 outcome. Nothing leaves the browser. Try **Simulate lost response** → **Check saved quotations**
 → **Simulate saved result** to review duplicate-upload protection. The synthetic sample picker
 creates illustrative records, not source PDFs or extracted fields. The review action opens
-a handoff explanation; the source/field review screen belongs to the next milestone.
+the quotation review workspace described below.
 
 Expand **Preview controls** for loading, unavailable, failed, interrupted, needs-review and
 four-quotation scenarios. Changing the scenario or reloading clears in-memory work. The
@@ -75,6 +77,37 @@ included in this branch's committed files. Executed results are recorded in the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md). See
 [the proposed API handoff](docs/QUOTATION_INTAKE_CONTRACT.md) for missing endpoints,
 owner checks, duplicate prevention, disclosure and integration dependencies.
+
+## Quotation review UI walkthrough
+
+Use the same local `quotation-preview.html` entry. In **Preview controls**, choose
+**Extracted quotation needs review**, then **Review quotation**. The review workspace shows
+an explicitly labelled synthetic demonstration with its own two-page PDF and page excerpts;
+it is not an extraction of the selected intake record. Uploaded files never silently acquire
+sample evidence, and this walkthrough does not confirm the original intake record.
+
+Inspect fields beside the source, correct a value with its basis/note, mark the relevant fields
+reviewed, then **Save draft**. Saving and confirmation have separate manually chosen outcomes.
+**Confirm reviewed quotation** acts only on the latest saved review state and shows a simulated
+receipt. An acknowledged unknown value retains its missing-information blockers; known failures
+remain visible. Confirmation does not calculate eligibility, carbon or ranking.
+
+Review scenarios cover missing values, unavailable source, known failure, pending/uncertain
+save, conflict and a previous demonstration confirmation. Switching Source/Fields on narrow
+screens preserves edits. Back navigation warns about unsaved edits; unresolved mutations must
+be checked first. Saved demonstration drafts survive leaving/reopening the review workspace
+within the same preview session; a reload or intake-scenario reset clears them.
+Use **Save and confirm review** in the checklist to reach the actions without traversing every
+field. The source-unavailable limitation also appears in the confirmation dialog.
+
+This example requires no certificate evidence. Full evidence applicability, cost-adjustment
+and multi-leg editing remain pending. The preview retains earlier confirmation receipts,
+but does not preserve or display immutable historical field snapshots.
+
+See the [proposed quotation review API handoff](docs/QUOTATION_REVIEW_CONTRACT.md) for the
+source, draft, human-confirmation and recovery dependencies. The sample PDF is a development
+UI asset, excluded from the production build. Test scripts and rendered QA screenshots remain
+outside the committed feature files.
 
 ## Checks
 ```powershell
@@ -112,7 +145,8 @@ One monorepo, feature-oriented React UI and a modular FastAPI backend:
 apps/web/                  React + Vite + TypeScript + Tailwind
   src/features/cases/      Case form, validation and saved requirements
   src/features/quotations/ Reusable intake UI; not connected to an API yet
-  src/dev/                Development-only intake simulation; excluded from app entry
+  src/features/quotation-review/ Source, corrections and explicit review UI
+  src/dev/                Development-only intake/review simulations; excluded from app entry
   src/api/                API client and generated OpenAPI types
   src/auth/               Firebase anonymous identity and App Check
 services/api/
@@ -153,6 +187,7 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [Exact calculations and demo test design](docs/CALCULATION_SPEC.md)
 - [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
 - [Quotation intake API handoff (proposal)](docs/QUOTATION_INTAKE_CONTRACT.md)
+- [Quotation review API handoff (proposal)](docs/QUOTATION_REVIEW_CONTRACT.md)
 - [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)
