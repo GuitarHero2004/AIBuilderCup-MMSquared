@@ -41,6 +41,7 @@ export function ComparisonPreview() {
   const [state, setState] = useState(() => initialState('ready-before-evaluate', 0));
   const [inspection, setInspection] = useState<InspectionContext | null>(null);
   const [decision, setDecision] = useState<DecisionContext | null>(null);
+  const [leaveTarget, setLeaveTarget] = useState('/quotation-preview.html');
   const controlsTitle = useRef<HTMLHeadingElement>(null);
   const previewDetails = useRef<HTMLDetailsElement>(null);
   const outcomeControls = useRef<HTMLDivElement>(null);
@@ -148,10 +149,11 @@ export function ComparisonPreview() {
     setState({ ...state, operation: { status: 'checking', kind: state.pending.kind, message: `Checking the same ${state.pending.kind} operation. Choose its recorded result above; this is not a second request.` }, notice: `Readback for ${state.pending.id} is simulated. The pending input references remain unchanged.` });
     focusControls();
   }
-  function requestBack() {
-    if (pending || mutationLock.current) leaveDialog.current?.showModal();
-    else window.location.assign('/quotation-preview.html');
+  function requestNavigation(target: string) {
+    if (pending || mutationLock.current) { setLeaveTarget(target); leaveDialog.current?.showModal(); }
+    else window.location.assign(target);
   }
+  function requestBack() { requestNavigation('/quotation-preview.html'); }
   function inspectQuotation(quoteId: string, revisionId: string | null) {
     const snapshot = state.snapshot;
     const offer = snapshot?.offers.find((item) => item.id === quoteId && item.confirmedRevisionId === revisionId);
@@ -176,6 +178,7 @@ export function ComparisonPreview() {
         <p className="nav-label">DESIGN PREVIEW</p>
         <a className="nav-item" href="/quotation-preview.html" onClick={(event) => { event.preventDefault(); requestBack(); }}><Icon name="fabric" />Quotation walkthrough</a>
         <span className="nav-item" aria-current="page"><Icon name="grid" />Comparison</span>
+        <a className="nav-item" href="/scenario-preview.html" onClick={(event) => { event.preventDefault(); requestNavigation('/scenario-preview.html'); }}><Icon name="grid" />Scenario example</a>
       </nav>
       <div className="sidebar-footer"><Icon name="shield" /><div><strong>Independent synthetic example</strong><p>No signed-in session.<br />No decision is saved.</p></div></div>
     </aside>
@@ -224,8 +227,8 @@ export function ComparisonPreview() {
     <dialog ref={leaveDialog} className="preview-dialog" aria-labelledby="comparison-leave-title">
       <h2 id="comparison-leave-title">Leave this unresolved walkthrough?</h2>
       <p className="preview-dialog-note">The simulated operation has no confirmed outcome yet. Leaving clears this in-memory comparison. No real service operation will be cancelled or completed.</p>
-      <p className="comparison-dialog-note">The quotation intake page is an independent demonstration; it will not receive this comparison or your selection.</p>
-      <div className="comparison-dialog-actions"><button className="button button-primary" autoFocus onClick={() => leaveDialog.current?.close()}>Stay with this result</button><a className="button button-secondary" href="/quotation-preview.html">Leave for quotation walkthrough</a></div>
+      <p className="comparison-dialog-note">The next page is an independent demonstration; it will not receive this comparison or your selection.</p>
+      <div className="comparison-dialog-actions"><button className="button button-primary" autoFocus onClick={() => leaveDialog.current?.close()}>Stay with this result</button><a className="button button-secondary" href={leaveTarget}>{leaveTarget === '/scenario-preview.html' ? 'Leave for scenario example' : 'Leave for quotation walkthrough'}</a></div>
     </dialog>
   </div>;
 }

@@ -1,16 +1,16 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace and intake/review/comparison UI previews, 16 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace and intake/review/comparison/scenario UI previews, 16 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
 the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
 linked validation, unsaved-draft protection and readback after an uncertain save.
 Workspace and quotation views share consistent controls, status colors, spacing and responsive
 layouts. Desktop quotations use aligned columns; narrow screens use labelled records.
 This is not the complete MVP: quotation upload, Gemini/ADK, human
-quote confirmation, calculations, scenarios and decisions are still to be implemented.
-No cloud resources or deployment have been created by this foundation. Quotation intake, comparison and
-review components have development-only simulations for design review. They do not upload
+quote confirmation, calculations, persisted scenarios and decisions are still to be implemented.
+No cloud resources or deployment have been created by this foundation. Quotation intake, review,
+comparison and scenario components have development-only simulations for design review. They do not upload
 files, call AI, persist corrections or change the production case workspace.
 
 ## Local quick start
@@ -127,8 +127,8 @@ Test-only carbon values and preference rankings are not live sourcing advice.
 Choose a permitted offer using its radio control, then **Review decision** beside the ranked
 results to inspect a local handoff. Choosing an
 alternative eligible offer preserves the original preference winner. This step does not save
-a decision. Scenario editing, persistent decision summaries and backend integration remain
-separate milestones. An unresolved evaluation or an outdated result blocks advancement.
+a decision. The independent scenario walkthrough is linked through **Scenario example**;
+persistent decision summaries and backend integration remain separate milestones. An unresolved evaluation or an outdated result blocks advancement.
 Optional explanation requests preserve usable current results and the buyer's selection;
 request progress and recovery are shown with the explanation. Expand supporting explanation
 and provenance details when needed; common comparison scope and blocking reasons stay visible.
@@ -141,6 +141,37 @@ coordinator and specialists. Its implementation is a separate milestone in the
 See the [proposed comparison API handoff](docs/QUOTATION_COMPARISON_CONTRACT.md). The preview
 entry and fixtures are excluded from the default production build. Private test scripts,
 screenshots and detailed reports remain outside the repository.
+
+## Scenario exploration UI walkthrough
+
+Open `http://127.0.0.1:5174/scenario-preview.html` with the isolated UI preview running,
+or follow **Scenario example** from the comparison preview. This is a separate supplied
+baseline, not transferred quotations or results from another walkthrough.
+
+Choose a preference preset or enter custom priorities totaling exactly 100%. Optional
+relative limits remain distinct when blank (disabled) versus zero (active). Inspect the
+fixed requirements and common comparison boundaries, then **Review scenario** and **Apply
+scenario**. Choose an explicit simulated outcome in **Preview controls**. Applying creates
+a separate demonstration result; the original baseline and previous receipts stay intact.
+The screen compares supplied cost, delivery and carbon differences against that baseline.
+
+Prepared results cover Balanced, Lowest Cost, Lower Carbon, Fastest Delivery and Custom
+20/20/60, each with no limits, maximum +5% cost/minimum 25% carbon reduction, or maximum
++2%/minimum 25%. Other valid settings remain a draft with a clear unavailable-preview
+message; they do not silently acquire another policy's result. No live preview calculation,
+backend confirmation, persistence or AI is connected.
+
+The examples include no feasible option, stale inputs, missing source/factor information,
+undefined percentages against zero, unknown outcome/readback, and a confirmed scenario whose
+evaluation failed. **Resume evaluation** preserves that existing confirmation. Edits block
+decision handoff until a matching result is applied or the applied settings are restored.
+Offer details retain hard failures; preferences cannot override them. **Review decision**
+shows exact references without saving a decision.
+
+See the [proposed scenario API handoff](docs/SCENARIO_CONTRACT.md) for deterministic preview,
+human confirmation, immutable evaluation and recovery dependencies. Presentation types are
+not generated backend contracts. The preview entry and fixtures stay out of the production
+build; new executable tests, screenshots and detailed reports stay outside the repository.
 
 ## Checks
 ```powershell

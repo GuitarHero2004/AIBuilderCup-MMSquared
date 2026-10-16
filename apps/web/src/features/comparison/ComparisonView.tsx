@@ -238,7 +238,7 @@ function ComparisonContent(props: ComparisonProps) {
   </div>;
 }
 
-function OfferDetails({ offer, snapshot, titleId }: { offer: ComparisonOffer; snapshot: ComparisonSnapshot; titleId: string }) {
+export function OfferDetails({ offer, snapshot, titleId }: { offer: ComparisonOffer; snapshot: ComparisonSnapshot; titleId: string }) {
   return <div className="cmp-dialog-content"><p className="eyebrow">EVALUATION DETAILS</p><h2 id={titleId} tabIndex={-1}>{offer.supplierName}</h2><p className="cmp-secondary">These are the inputs and limitations recorded with this evaluation.</p>
     <section><h3>Eligibility checks</h3>{offer.checks.length > 0 ? <ul className="cmp-checks">{offer.checks.map((check, i) => <li key={i}><div><strong>{check.label}</strong><span className={'status-badge status-' + (check.state === 'pass' ? 'success' : check.state === 'fail' ? 'error' : 'warning')}>{check.state === 'pass' ? 'Pass' : check.state === 'fail' ? 'Fail' : 'Needs review'}</span></div><p>{check.reason}</p></li>)}</ul> : <p className="cmp-secondary">Individual checks were not recorded. Do not infer a pass from their absence.</p>}</section>
     <section><h3>Common comparison scope</h3><dl className="cmp-detail-list"><div><dt>Quantity</dt><dd>{snapshot.quantityLabel}</dd></div><div><dt>Cost basis</dt><dd>{snapshot.costBasis}</dd></div><div><dt>Carbon boundary</dt><dd>{snapshot.carbonBoundary}</dd></div><div><dt>Carbon factor status</dt><dd>{snapshot.factorStatus === 'test_only' ? 'Test-only factors; illustrative estimates' : snapshot.factorStatus === 'approved' ? 'Approved factors recorded with evaluation' : 'Approved compatible factors unavailable'}</dd></div></dl></section>
