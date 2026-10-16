@@ -1,7 +1,7 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace and intake/review/comparison/scenario UI previews, 16 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace and intake/review/comparison/scenario/decision UI previews, 16 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
 the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
 linked validation, unsaved-draft protection and readback after an uncertain save.
@@ -10,7 +10,7 @@ layouts. Desktop quotations use aligned columns; narrow screens use labelled rec
 This is not the complete MVP: quotation upload, Gemini/ADK, human
 quote confirmation, calculations, persisted scenarios and decisions are still to be implemented.
 No cloud resources or deployment have been created by this foundation. Quotation intake, review,
-comparison and scenario components have development-only simulations for design review. They do not upload
+comparison, scenario and decision components have development-only simulations for design review. They do not upload
 files, call AI, persist corrections or change the production case workspace.
 
 ## Local quick start
@@ -125,10 +125,10 @@ supplied demonstration results, never recomputed in the screen. Missing values r
 Test-only carbon values and preference rankings are not live sourcing advice.
 
 Choose a permitted offer using its radio control, then **Review decision** beside the ranked
-results to inspect a local handoff. Choosing an
-alternative eligible offer preserves the original preference winner. This step does not save
-a decision. The independent scenario walkthrough is linked through **Scenario example**;
-persistent decision summaries and backend integration remain separate milestones. An unresolved evaluation or an outdated result blocks advancement.
+results. The decision workspace receives that exact selected offer, evaluation and matching
+explanation. Choosing an alternative preserves the original preference winner. Its simulated
+saved summary can be reopened within the same page session. The independent scenario
+walkthrough is linked through **Scenario example**; durable storage remains pending. An unresolved evaluation or an outdated result blocks advancement.
 Optional explanation requests preserve usable current results and the buyer's selection;
 request progress and recovery are shown with the explanation. Expand supporting explanation
 and provenance details when needed; common comparison scope and blocking reasons stay visible.
@@ -166,12 +166,41 @@ undefined percentages against zero, unknown outcome/readback, and a confirmed sc
 evaluation failed. **Resume evaluation** preserves that existing confirmation. Edits block
 decision handoff until a matching result is applied or the applied settings are restored.
 Offer details retain hard failures; preferences cannot override them. **Review decision**
-shows exact references without saving a decision.
+opens the shared decision workspace with the exact selected offer, applied evaluation and
+frozen baseline. Its reason, save outcomes and summary are explicitly simulated.
 
 See the [proposed scenario API handoff](docs/SCENARIO_CONTRACT.md) for deterministic preview,
 human confirmation, immutable evaluation and recovery dependencies. Presentation types are
 not generated backend contracts. The preview entry and fixtures stay out of the production
 build; new executable tests, screenshots and detailed reports stay outside the repository.
+
+## Decision review and summary UI walkthrough
+
+Open `http://127.0.0.1:5174/decision-preview.html` with the isolated UI preview running.
+For the full in-page handoff, select an offer in the comparison or scenario walkthrough and
+choose **Review decision**. The parent screen and exact selection remain in memory.
+
+Review the selected offer beside the evaluation's preferred offer, inspect the source checks
+and common measurement boundaries, and enter a required human reason. The reason is required
+for the preferred offer as well as an eligible alternative. **Save decision** captures the
+reviewed choice and reason; **Preview controls** supplies its simulated outcome. Saving does
+not place an order or call an agent, backend or browser storage.
+
+A matching receipt shows the immutable summary, original reason, reviewer, time and references.
+Returning to the previous view and reopening the same choice retains it in that page session.
+Later input changes are shown separately; they do not rewrite the saved example. Reloading
+clears these in-memory records and does not demonstrate real persistence.
+
+The standalone examples cover a preferred offer, an alternative, an applied scenario, unknown
+save, known rejection, mismatched receipt, stale inputs, and an acknowledged decision whose
+summary cannot be loaded. Unknown saves retain the same request and require **Check save result**.
+Once a decision ID is acknowledged, recovery uses **Read saved summary** without another save.
+An unresolved decision must be resumed before another choice can start a parallel save.
+
+The [proposed decision API handoff](docs/DECISION_CONTRACT.md) defines human-only saves,
+owner/revision validation, atomic immutable snapshots, idempotent recovery and historical reads.
+The 2,000-character reason budget is a proposed UI limit awaiting backend agreement.
+The preview is excluded from production; new executable tests and QA artifacts stay in OS temp.
 
 ## Checks
 ```powershell
