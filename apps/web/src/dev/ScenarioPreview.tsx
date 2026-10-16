@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
+import { DecisionWalkthrough } from './DecisionPreview';
+import { scenarioDecisionSource } from './decisionFixtures';
+import { sourceKey } from '../features/decisions/model';
+import type { DecisionSource } from '../features/decisions/types';
 import { ScenarioView } from '../features/scenarios/ScenarioView';
 import { makeProposal, policyKey, proposalKey, scenarioLocked, scenarioOfferSelectable, scenarioResultIssue } from '../features/scenarios/model';
 import type { ScenarioBaseline, ScenarioDraft, ScenarioOperation, ScenarioProposal, ScenarioResult } from '../features/scenarios/types';
@@ -11,7 +15,6 @@ interface PreviewState {
   example: ScenarioExample; baseline: ScenarioBaseline; draft: ScenarioDraft; cleanDraft: ScenarioDraft;
   applied: ScenarioResult | null; history: ScenarioResult[]; operation: ScenarioOperation; pending: PendingScenario | null; notice: string;
 }
-interface DecisionContext { scenarioId: string; evaluationId: string; quoteId: string; supplierName: string; baselineId: string; caseRevision: number; confirmedRevisionId: string }
 type LeaveAction = { kind: 'navigate'; target: string } | { kind: 'reset'; example: ScenarioExample };
 
 function initialState(example: ScenarioExample, seed: number): PreviewState {
@@ -33,51 +36,50 @@ function initialState(example: ScenarioExample, seed: number): PreviewState {
 
 export function ScenarioPreview() {
   const [state, setState] = useState(() => initialState('ready', 0));
-  const [decision, setDecision] = useState<DecisionContext | null>(null);
+  const [decisionSessions, setDecisionSessions] = useState<{ key: string; source: DecisionSource }[]>([]);
+  const [activeDecision, setActiveDecision] = useState<string | null>(null);
+  const [pendingDecisionKey, setPendingDecisionKey] = useState<string | null>(null);
   const [leaveAction, setLeaveAction] = useState<LeaveAction | null>(null);
   const controlsTitle = useRef<HTMLHeadingElement>(null);
   const previewDetails = useRef<HTMLDetailsElement>(null);
   const outcomeControls = useRef<HTMLDivElement>(null);
-  const decisionDialog = useRef<HTMLDialogElement>(null);
   const leaveDialog = useRef<HTMLDialogElement>(null);
   const sequence = useRef(0);
   const mutationLock = useRef(false);
   const leaving = useRef(false);
   const locked = scenarioLocked(state.operation);
   const dirty = (policyKey(state.draft) ?? JSON.stringify(state.draft)) !== (policyKey(state.cleanDraft) ?? JSON.stringify(state.cleanDraft));
-  const decisionCurrent = Boolean(decision && state.applied && decision.scenarioId === state.applied.scenarioId && decision.evaluationId === state.applied.snapshot.id && decision.baselineId === state.baseline.snapshot.id && decision.caseRevision === state.baseline.context.currentRevision && scenarioOfferSelectable(state.baseline, state.draft, state.applied, state.operation, decision.quoteId));
   const preparedPending = state.pending ? preparedScenarioResult(state.baseline, state.pending.proposal, state.pending.id, state.pending.scenarioId ?? `demo-confirmed-scenario-${state.pending.id}`) : null;
 
-  useEffect(() => { if (!decisionCurrent) decisionDialog.current?.close(); }, [decisionCurrent]);
   useEffect(() => {
-    if (!dirty && !locked) return;
+    if (!dirty && !locked && !pendingDecisionKey) return;
     const warn = (event: BeforeUnloadEvent) => { if (!leaving.current) { event.preventDefault(); event.returnValue = ''; } };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty, locked]);
+  }, [dirty, locked, pendingDecisionKey]);
   useEffect(() => {
     if (!['running', 'checking'].includes(state.operation.status)) return;
     if (previewDetails.current) previewDetails.current.open = true;
-    if (!decisionDialog.current?.open && !leaveDialog.current?.open) {
+    if (!activeDecision && !leaveDialog.current?.open) {
       outcomeControls.current?.focus(); outcomeControls.current?.scrollIntoView({ block: 'nearest' });
     }
-  }, [state.operation.status, state.pending?.id]);
+  }, [state.operation.status, state.pending?.id, activeDecision]);
 
-  function focusControls() { if (!decisionDialog.current?.open && !leaveDialog.current?.open) controlsTitle.current?.focus(); }
+  function focusControls() { if (!activeDecision && !leaveDialog.current?.open) controlsTitle.current?.focus(); }
   function replaceExample(example: ScenarioExample) {
     const next = initialState(example, ++sequence.current);
     mutationLock.current = scenarioLocked(next.operation);
-    setDecision(null); setLeaveAction(null); setState(next); leaveDialog.current?.close(); focusControls();
+    setActiveDecision(null); setLeaveAction(null); setState(next); leaveDialog.current?.close(); focusControls();
   }
   function requestLeave(action: LeaveAction) {
-    if (action.kind === 'reset' && (locked || mutationLock.current)) return;
-    if (dirty || locked || mutationLock.current) { setLeaveAction(action); leaveDialog.current?.showModal(); }
+    if (action.kind === 'reset' && (locked || mutationLock.current || pendingDecisionKey)) return;
+    if (dirty || locked || mutationLock.current || pendingDecisionKey) { setLeaveAction(action); leaveDialog.current?.showModal(); }
     else if (action.kind === 'reset') replaceExample(action.example);
     else window.location.assign(action.target);
   }
   function confirmLeave() {
     if (!leaveAction) return;
-    if (leaveAction.kind === 'reset') { if (!locked && !mutationLock.current) replaceExample(leaveAction.example); }
+    if (leaveAction.kind === 'reset') { if (!locked && !mutationLock.current && !pendingDecisionKey) replaceExample(leaveAction.example); }
     else { leaving.current = true; window.location.assign(leaveAction.target); }
   }
   function changeDraft(draft: ScenarioDraft) {
@@ -158,31 +160,40 @@ export function ScenarioPreview() {
     setState({ ...state, operation: { id: state.pending.id, status: 'running', confirmedScenarioId: state.pending.scenarioId, message: 'Resume the evaluation for the already confirmed scenario. Choose a simulated outcome above; no second confirmation is created.' }, notice: `The same scenario ${state.pending.scenarioId} and captured policy are used for recovery.` });
   }
   function reviewDecision(scenarioId: string, evaluationId: string, quoteId: string) {
+    if (pendingDecisionKey) { setActiveDecision(pendingDecisionKey); return; }
     const result = state.applied;
     if (!result || scenarioId !== result.scenarioId || evaluationId !== result.snapshot.id || !scenarioOfferSelectable(state.baseline, state.draft, result, state.operation, quoteId)) return;
-    const offer = result.snapshot.offers.find((item) => item.id === quoteId);
-    if (!offer?.confirmedRevisionId) return;
-    setDecision({ scenarioId, evaluationId, quoteId, supplierName: offer.supplierName, baselineId: state.baseline.snapshot.id, caseRevision: state.baseline.context.currentRevision, confirmedRevisionId: offer.confirmedRevisionId });
-    decisionDialog.current?.showModal();
+    const source = scenarioDecisionSource(state.baseline, result, quoteId);
+    const key = sourceKey(source);
+    setDecisionSessions((sessions) => sessions.some((session) => session.key === key) ? sessions : [...sessions, { key, source }]);
+    setActiveDecision(key);
+  }
+  function liveDecisionSource(captured: DecisionSource): DecisionSource {
+    const matches = state.applied !== null && JSON.stringify(captured.scenario?.result) === JSON.stringify(state.applied) && JSON.stringify(captured.scenario?.baseline) === JSON.stringify(state.baseline);
+    const allowed = matches && scenarioOfferSelectable(state.baseline, state.draft, state.applied, state.operation, captured.selectedQuoteId);
+    return { ...captured, context: state.baseline.context, canSave: allowed, blockedReason: allowed ? undefined : 'The applied scenario, draft or available choices changed. Return to the current scenario before starting another save.' };
   }
 
   return <div className="app-shell quotation-preview scenario-preview">
     <a className="skip-link" href="#main">Skip to sourcing scenarios</a>
     <aside className="sidebar" aria-label="Preview navigation">
       <div className="brand"><span className="brand-mark"><Icon name="leaf" /></span><span>GreenProcure<span className="brand-subtitle">Fabric sourcing</span></span></div>
-      <nav className="primary-nav" aria-label="Scenario preview"><p className="nav-label">DESIGN PREVIEW</p>
+      {!activeDecision && <nav className="primary-nav" aria-label="Scenario preview"><p className="nav-label">DESIGN PREVIEW</p>
         <a className="nav-item" href="/quotation-preview.html" onClick={(event) => { event.preventDefault(); requestLeave({ kind: 'navigate', target: '/quotation-preview.html' }); }}><Icon name="fabric" />Quotation walkthrough</a>
         <a className="nav-item" href="/comparison-preview.html" onClick={(event) => { event.preventDefault(); requestLeave({ kind: 'navigate', target: '/comparison-preview.html' }); }}><Icon name="grid" />Comparison example</a>
         <span className="nav-item" aria-current="page"><Icon name="grid" />Scenarios</span>
-      </nav>
-      <div className="sidebar-footer"><Icon name="shield" /><div><strong>Independent synthetic example</strong><p>No signed-in session.<br />No scenario or decision is saved.</p></div></div>
+      </nav>}
+      {activeDecision && <nav className="primary-nav" aria-label="Decision review"><span className="nav-item" aria-current="page"><Icon name="grid" />Decision summary</span></nav>}
+      <div className="sidebar-footer"><Icon name="shield" /><div><strong>Independent synthetic example</strong><p>No signed-in session.<br />No real decision is saved.</p></div></div>
     </aside>
-    <div className="workspace"><header className="topbar"><div className="breadcrumb"><span>Woven fabric · synthetic demo</span><Icon name="chevron" /><span>Explore scenarios</span></div><span className="session-chip">UI preview</span></header>
+    <div className="workspace"><header className="topbar"><div className="breadcrumb"><span>Woven fabric · synthetic demo</span><Icon name="chevron" /><span>{activeDecision ? 'Decision summary' : 'Explore scenarios'}</span></div><span className="session-chip">UI preview</span></header>
       <main id="main" className="main-content" tabIndex={-1}>
+        <div hidden={Boolean(activeDecision)}>
+        {pendingDecisionKey && <div className="alert warning-alert"><div><strong>A decision outcome is unresolved</strong><p>Resume the captured decision before reviewing another choice in this case.</p><button className="button button-secondary" onClick={() => setActiveDecision(pendingDecisionKey)}>Resume unresolved decision</button></div></div>}
         <section className="preview-controls scenario-preview-controls" aria-labelledby="scenario-preview-title">
           <div className="scenario-preview-summary"><h2 id="scenario-preview-title" ref={controlsTitle} tabIndex={-1}>Synthetic scenario preview</h2><p>Independent supplied data; test-only carbon. No calculation, AI call or service save.</p></div>
           <details ref={previewDetails}><summary>Preview controls</summary><div className="preview-control-body">
-            <div className="preview-scenario"><label htmlFor="scenario-example">Scenario example state</label><select id="scenario-example" value={state.example} disabled={locked} onChange={(event) => requestLeave({ kind: 'reset', example: event.target.value as ScenarioExample })}>{scenarioExamples.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><button className="button button-secondary" disabled={locked} onClick={() => requestLeave({ kind: 'reset', example: state.example })}>Reset scenario example</button></div>
+            <div className="preview-scenario"><label htmlFor="scenario-example">Scenario example state</label><select id="scenario-example" value={state.example} disabled={locked || Boolean(pendingDecisionKey)} onChange={(event) => requestLeave({ kind: 'reset', example: event.target.value as ScenarioExample })}>{scenarioExamples.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><button className="button button-secondary" disabled={locked || Boolean(pendingDecisionKey)} onClick={() => requestLeave({ kind: 'reset', example: state.example })}>Reset scenario example</button></div>
             {['running', 'checking'].includes(state.operation.status) && <div ref={outcomeControls} tabIndex={-1} className="preview-outcomes" role="group" aria-label="Simulated scenario outcomes">
               <strong>{state.operation.status === 'checking' ? 'Resolve this same operation:' : 'Choose the simulated outcome:'}</strong>
               <button className="button button-secondary" onClick={resolveSuccess}>{preparedPending ? 'Simulate applied scenario and result' : 'Show unavailable prepared result'}</button>
@@ -196,12 +207,10 @@ export function ScenarioPreview() {
           </div></details>
         </section>
         <ScenarioView baseline={state.baseline} draft={state.draft} applied={state.applied} operation={state.operation} onDraftChange={changeDraft} onApply={apply} onCheckResult={checkResult} onResumeEvaluation={resumeEvaluation} onBack={() => requestLeave({ kind: 'navigate', target: '/comparison-preview.html' })} onReviewDecision={reviewDecision} />
+        </div>
+        {decisionSessions.map((session) => <div key={session.key} hidden={activeDecision !== session.key}><DecisionWalkthrough source={liveDecisionSource(session.source)} onPendingChange={(pending) => setPendingDecisionKey((current) => pending ? session.key : current === session.key ? null : current)} active={activeDecision === session.key} currentCaseRevision={state.baseline.context.currentRevision} onBack={() => { setActiveDecision(null); requestAnimationFrame(() => controlsTitle.current?.focus()); }} /></div>)}
       </main>
     </div>
-    <dialog ref={decisionDialog} className="preview-dialog scenario-preview-dialog" aria-labelledby="scenario-decision-title"><h2 id="scenario-decision-title">Review this scenario decision handoff</h2>
-      {decision && decisionCurrent && <><p className="preview-dialog-note">You selected <strong>{decision.supplierName}</strong>. {decision.quoteId !== state.applied?.snapshot.winnerQuoteId ? 'This is an eligible alternative to the scenario’s preferred offer.' : 'This is the scenario’s preferred offer.'}</p><dl><dt>Scenario</dt><dd>{decision.scenarioId}</dd><dt>Evaluation</dt><dd>{decision.evaluationId}</dd><dt>Frozen baseline</dt><dd>{decision.baselineId}</dd><dt>Quotation</dt><dd>{decision.quoteId}</dd><dt>Confirmed reference</dt><dd>{decision.confirmedRevisionId}</dd><dt>Case revision</dt><dd>{decision.caseRevision}</dd></dl><p className="preview-dialog-note"><strong>No decision has been saved.</strong> A later milestone will collect your reason and explicitly save an immutable decision against these exact references. This example places no order and cannot support a real purchase.</p></>}
-      <button className="button button-primary" onClick={() => decisionDialog.current?.close()}>Return to scenarios</button>
-    </dialog>
-    <dialog ref={leaveDialog} className="preview-dialog scenario-preview-dialog" aria-labelledby="scenario-leave-title"><h2 id="scenario-leave-title">{locked ? 'Leave this unresolved scenario?' : 'Discard these scenario edits?'}</h2><p className="preview-dialog-note">{locked ? 'The captured proposal has an unresolved operation. Leaving clears this in-memory walkthrough; it does not cancel, complete or save a real service operation.' : 'Your un-applied draft edits will be discarded when you leave or reset this example. The original baseline has not changed.'}</p><p className="preview-dialog-note">The destination is an independent example. It will not receive these scenario snapshots or your selection.</p><div className="dialog-actions"><button className="button button-primary" autoFocus onClick={() => leaveDialog.current?.close()}>Keep working</button><button className="button button-secondary" onClick={confirmLeave}>{leaveAction?.kind === 'reset' ? 'Discard edits and reset' : locked ? 'Leave this walkthrough' : 'Discard edits and leave'}</button></div></dialog>
+    <dialog ref={leaveDialog} className="preview-dialog scenario-preview-dialog" aria-labelledby="scenario-leave-title"><h2 id="scenario-leave-title">{locked || pendingDecisionKey ? 'Leave this unresolved scenario?' : 'Discard these scenario edits?'}</h2><p className="preview-dialog-note">{pendingDecisionKey ? 'A decision save or summary read is unresolved. Leaving this page clears its captured request and any in-memory receipt. No real service operation will be cancelled or completed.' : locked ? 'The captured proposal has an unresolved operation. Leaving clears this in-memory walkthrough; it does not cancel, complete or save a real service operation.' : 'Your un-applied draft edits will be discarded when you leave or reset this example. The original baseline has not changed.'}</p><p className="preview-dialog-note">The destination is an independent example. It will not receive these scenario snapshots or your selection.</p><div className="dialog-actions"><button className="button button-primary" autoFocus onClick={() => leaveDialog.current?.close()}>Keep working</button><button className="button button-secondary" onClick={confirmLeave}>{leaveAction?.kind === 'reset' ? 'Discard edits and reset' : locked || pendingDecisionKey ? 'Leave this walkthrough' : 'Discard edits and leave'}</button></div></dialog>
   </div>;
 }
