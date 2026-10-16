@@ -1,10 +1,10 @@
 # Implementation and verification ledger
-**Current state - 16 October 2026:** case workspace, quotation intake and review UI are
-integrated into `dev`. Supplier comparison UI and a proposed API handoff are implemented
-locally on `feat/ui-quote-comparison`, with implementation committed locally after authorized checks.
-The branch was published at its starting baseline only. Real PDF intake, extraction,
-persisted review, evaluation, scenarios/decisions and cloud release remain pending.
-Dated entries preserve the state and evidence at each review.
+**Current state - 16 October 2026:** case workspace, quotation intake, review and comparison UI
+are integrated into `dev`. Scenario exploration UI and a proposed API handoff are implemented
+on `feat/ui-scenarios`, approved for commit packaging and PR delivery into `dev`. The branch was
+published at `dev` baseline `b0caad3971f6f1ec1c744174747ae78305a1ed85` before development.
+Real PDF intake, extraction, persisted review, evaluation, scenarios/decisions and cloud release
+remain pending. Dated entries preserve the state and evidence at each review.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
@@ -18,7 +18,8 @@ Dated entries preserve the state and evidence at each review.
 | Auth/Firestore/Storage | Anonymous Auth + case persistence verified in emulators | Direct client rules deny access; no PDF adapter/cloud verification |
 | Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
 | Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
-| Scenario and decision flow | Specified, not implemented | A/B, C/D, stale/infeasible tests |
+| Scenario UI | Reusable editor/results and independent synthetic walkthrough implemented locally | Frozen baseline, exact priorities, explicit apply and recovery; backend calculations, live preview and persistence remain pending |
+| Final decision flow | Specified, not implemented | Current comparison/scenario previews show unsaved handoff references only |
 | Carbon references | Not supplied/approved | Exact source rows, review notes and licence |
 | Cloud Run/Firebase deployment | Not deployed | URLs, revisions, timestamps |
 | PR checks/previews and Cloud Build | Checks workflow supplied; remote execution/previews/Cloud Build pending | No remote run/deployment claimed |
@@ -759,6 +760,85 @@ Dated entries preserve the state and evidence at each review.
 - Scope remains local UI plus proposed contracts. No backend/live-AI deployment or verification,
   scenario editor, durable decision save, implementation push, PR or merge was performed.
   Next delivery step is a separately authorized feature-branch push and PR review into `dev`.
+
+## Scenario exploration implementation and backward review - 16 October 2026
+
+- User confirmed the comparison review/delivery was complete and authorized the next milestone.
+  Verified comparison PR #3 in origin/dev at b0caad3971f6f1ec1c744174747ae78305a1ed85,
+  updated local dev with git pull --ff-only origin dev, created feat/ui-scenarios and
+  published its upstream immediately. Verified the remote branch matches that baseline.
+  All work stays in C:\AIBuilderCup-MMSquared; implementation remains uncommitted and unpushed.
+- Added reusable TypeScript scenario presentation models, exact decimal percentage validation,
+  an editor with five presets and optional relative limits, a pinned Review/Apply proposal,
+  supplied baseline-versus-scenario differences, offer details and guarded decision handoff.
+  Blank limits are disabled; zero is an active limit. No priority normalization is hidden.
+- Preserved original baseline/candidate references, frozen scoring anchors, metric scopes,
+  confirmed quote revisions, hard eligibility checks and earlier supplied scenario receipts.
+  Relative percentages against zero are unavailable. Scenario thresholds never reinstate
+  failed requirements or rescale a sole feasible offer to 100.
+- Added the independent scenario-preview.html walkthrough with 11 state examples and 15 exact
+  prepared policy/cap combinations. Other valid settings explicitly have no prepared result;
+  the browser does not calculate suppliers, call AI, save a scenario or fabricate a fallback.
+  Results are supplied only after an explicit simulated outcome, not while typing.
+- Unknown operations retain their captured proposal/request and require readback. A confirmed
+  scenario with failed evaluation retains its confirmation and resumes evaluation only.
+  Defensive mismatch/unavailable-result paths preserve that saved reference. Known rejected
+  attempts are distinct from uncertain saves; editing/restoring after an unconfirmed failure
+  clears only that obsolete error so a matching previous result can be chosen again.
+- Worked backwards from PRD FR-16/18 and S5: change a preference, inspect exact proposed
+  settings, confirm deliberately, understand the supplied trade-off, preserve fixed
+  requirements and original baseline, then choose a permitted current result. Refined
+  incomplete-versus-infeasible wording, removed a known-error no-op readback action, made
+  fixed budget/deadline visible, restored result focus and clarified blank-limit instructions.
+  Connected deterministic preview, backend confirmation/evaluation and final decisions remain
+  separate acceptance gates; this branch does not claim those PRD outcomes are complete.
+- Added docs/SCENARIO_CONTRACT.md with proposed deterministic-preview, human-confirmation,
+  immutable evaluation, recovery and ownership contracts for Mạnh. These are not implemented
+  or agreed endpoints; presentation types require mapping to future generated OpenAPI types.
+  The general platform agent remains a separate milestone with human confirmation boundaries.
+- Executed frontend lint, the existing 26 committed frontend tests (excluding the private
+  PDF preflight file), and production build including TypeScript validation; all passed.
+  Production output contains only the normal application and excludes the new preview/fixtures.
+- Private validation passed 114 model assertions and 139 fixture/invariance assertions,
+  including all 15 prepared policy/cap combinations and unsupported-policy rejection.
+  Controller verification passed 36 checks plus 17 prepared-signature cases, with 19 additional
+  fault-injection/navigation checks. Independent live-prop testing passed 12 groups covering
+  foreign-result suppression, stale/revoked context, proposal invalidation, callbacks,
+  duplicate prevention and incomplete-versus-failed-cap presentation.
+- Root interaction verification passed five groups for keyboard/evidence/handoff, 30-click
+  bursts, repeated unknown recovery, decimal validation/known-error recovery and long names.
+  Local interaction checks observed no uncaught browser errors, external/business requests
+  or browser-storage writes. An additional 24 focused browser checks cover the known-rejection restoration refinement.
+- Layout verification passed 110 combinations: 11 states at 1440, 1024, 768, 390 and 320px,
+  normal and doubled text. Six additional long-name layouts passed; independent UI checks
+  covered 23 assertions including proposal Escape, draft restoration and result focus.
+  Actual desktop/mobile/enlarged screenshots were inspected for hierarchy, wrapping and controls.
+- All new executable checks, screenshots and detailed reports stay in OS temporary storage
+  outside the repository. No dependency, backend, generated transport contract, cloud resource
+  or deployment changed. Local Chromium was tested; other browsers, real devices, screen-reader
+  testing and connected backend/live-AI verification were not performed.
+- Ready for user review at http://127.0.0.1:5174/scenario-preview.html. Implementation remains
+  uncommitted; only the initial empty feature branch is on remote. Next after review is
+  separately authorized commit packaging/push. Decision UI remains the next product milestone.
+
+## Scenario commit packaging and delivery - 16 October 2026
+
+- User accepted the scenario readiness review and authorized proceeding with milestone closure.
+  Rechecked the 16-file scope and existing evidence; no new implementation changes were needed.
+  The audit found no private QA artifacts, credentials, dependency changes or unrelated edits.
+- Created four implementation/handoff commits in dependency order:
+  - `f2054d8` - Keep scenario choices tied to their original baseline.
+  - `6bc6e60` - Review priorities and limits before applying a scenario.
+  - `f7dc223` - Explore sourcing scenarios with clear recovery paths.
+  - `b31b8ef` - Define scenario confirmation and recovery for backend handoff.
+- The fifth commit records progress, implementation limits and the completed review evidence.
+  Each commit uses an explicit reviewed file list and passes the staged whitespace check.
+  No private test scripts, inputs, screenshots or detailed reports are included.
+- The application code is unchanged from the verified scenario review. Existing frontend and
+  private browser/model evidence applies; remote PR checks are a separate delivery gate.
+  Publication/PR/merge state must be verified from GitHub rather than inferred from this entry.
+- The next milestone is decision UI plus proposed backend handoff. Begin it from an updated
+  origin/dev after this branch is integrated, and publish its new branch before coding.
 
 ## Per-increment report template
 ### Increment / commit

@@ -2,14 +2,15 @@
 
 **Updated:** 16 October 2026.
 
-**Current status:** case workspace, quotation intake and quotation review UI are integrated
-into `dev`. Supplier comparison UI plus a proposed API handoff are implemented locally for user review
-on `feat/ui-quote-comparison`. Backend evaluation and the connected sourcing journey remain
-pending; this UI branch does not complete the first connected evaluation gate.
+**Current status:** case workspace, quotation intake, quotation review and supplier comparison
+UI are integrated into `dev`. Scenario UI plus a proposed API handoff are implemented locally
+on `feat/ui-scenarios`. Backend evaluation and the connected sourcing journey remain pending;
+the synthetic walkthrough does not complete connected PRD FR-16/18 acceptance.
 
-**Current branch baseline:** `dev` at `f4fafc43ad5c2df436170aa6c530dbc37b7aa2a8`.
-The new feature branch was published at that baseline before development. Its implementation
-is committed locally after the authorized checks; it has not been pushed. Work stays in the single canonical checkout.
+**Current branch baseline:** `dev` at `b0caad3971f6f1ec1c744174747ae78305a1ed85`,
+including comparison PR #3. The scenario branch was published at that baseline before development.
+Its implementation has passed user review and is being delivered through a PR into `dev`.
+Work stays in the single canonical checkout.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
@@ -113,7 +114,7 @@ a valid baseline evaluation can go directly to a decision.
 **User direction, 16 October 2026:** one general agent is available throughout the platform,
 aware of the current screen and workflow, and able to perform relevant authorized actions.
 It is not confined to comparison explanations. Implement this on a separate milestone branch;
-the comparison branch adds no agent code, launcher or nonfunctional placeholder.
+the scenario branch adds no agent code, launcher or nonfunctional placeholder.
 
 - Keep its entry point available across workspace, requirements, intake, review, comparison,
   scenario and decision views. Present the active case/record scope before acting; changing
@@ -258,6 +259,12 @@ panel. This direction does not change the comparison milestone's backend scope.
   a new current decision. No eligible/feasible option gives reasons and actions, not a winner.
 
 ### S5 — Optional scenario exploration
+
+**UI implementation boundary, 16 October 2026:** the current branch implements an independent
+synthetic walkthrough with editable draft, explicit review/application and supplied results.
+It does not calculate a live result as inputs change. Exact prepared signatures are documented
+in README; all other valid policies need the future deterministic preview/evaluation API.
+Presentation types must be mapped to generated contracts after Mạnh agrees the proposed handoff.
 
 **Question:** How would another preference or relative limit change this decision?
 
@@ -424,8 +431,8 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 | Later review integration, separate branch | Connect authorized source access, versioned draft saves and human-only confirmation after the backend contract is agreed |
 | `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
 | `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
-| Current `feat/ui-quote-comparison` | UI plus proposed API handoff: independent synthetic comparison, A/B trade-off, C/D exclusions, missing/stale/recovery states and local choice handoff; connected I2/I3 remain pending |
-| `feat/ui-scenarios` | Explicit scenario application, preserved baseline, Lower Carbon and no feasible option |
+| Merged `feat/ui-quote-comparison` | UI plus proposed API handoff: independent synthetic comparison, A/B trade-off, C/D exclusions, missing/stale/recovery states and local choice handoff; connected I2/I3 remain pending |
+| Current `feat/ui-scenarios` | UI plus proposed [API handoff](SCENARIO_CONTRACT.md): exact priorities, reviewed application, preserved baseline, supplied trade-offs, no-feasible and saved-confirmation recovery; backend preview/evaluation remain pending |
 | `feat/ui-decision-summary` | Human choice/reason, immutable save/reopen and stale-save guards; complete I3 |
 | Future `feat/ui-platform-agent` | General agent available across screens, contextual authorized actions and human-reviewed proposals; separate context/tool contract and backend dependency, not part of comparison |
 | `test/ui-demo-readiness` | Full acceptance journey and failure/accessibility checks; distinguish local evidence from I4 deployed evidence |
