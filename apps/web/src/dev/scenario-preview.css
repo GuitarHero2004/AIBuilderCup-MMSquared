@@ -1,0 +1,19 @@
+.scenario-preview-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--ui-space-4); padding-block: var(--ui-space-3); }
+.scenario-preview-summary h2 { margin: 0; }
+.scenario-preview-summary p { margin-top: var(--ui-space-1); }
+.scenario-preview-controls > details { margin: 0; }
+.scenario-preview-controls > details[open] { grid-column: 1 / -1; margin-top: var(--ui-space-2); }
+.scenario-preview-controls .preview-outcomes:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.scenario-preview-controls .scenario-fixture-details { margin-top: var(--ui-space-3); }
+.scenario-fixture-details p:last-child { margin-bottom: var(--ui-space-2); }
+.scenario-preview-dialog dl { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.scenario-preview-dialog dd { overflow-wrap: anywhere; }
+.scenario-preview-dialog .dialog-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); margin-top: var(--ui-space-5); }
+.scenario-preview-dialog .dialog-actions > .button { margin-top: 0; }
+@media (max-width: 680px) {
+  .scenario-preview-controls { grid-template-columns: minmax(0, 1fr); padding: var(--ui-space-3) var(--ui-space-4); }
+  .scenario-preview-controls > details { margin-top: var(--ui-space-1); }
+  .scenario-preview-dialog dl { grid-template-columns: minmax(0, 1fr); }
+  .scenario-preview-dialog .dialog-actions { flex-direction: column; }
+  .scenario-preview-dialog .dialog-actions > .button { width: 100%; }
+}
