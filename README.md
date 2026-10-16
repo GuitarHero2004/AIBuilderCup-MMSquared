@@ -1,7 +1,7 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace and intake/review UI previews, 16 October 2026.** A visitor can sign in anonymously,
+**Status: local case workspace and intake/review/comparison UI previews, 16 October 2026.** A visitor can sign in anonymously,
 create synthetic sourcing cases and reload their own saved requirements through FastAPI and
 the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
 linked validation, unsaved-draft protection and readback after an uncertain save.
@@ -9,7 +9,7 @@ Workspace and quotation views share consistent controls, status colors, spacing 
 layouts. Desktop quotations use aligned columns; narrow screens use labelled records.
 This is not the complete MVP: quotation upload, Gemini/ADK, human
 quote confirmation, calculations, scenarios and decisions are still to be implemented.
-No cloud resources or deployment have been created by this foundation. Quotation intake and
+No cloud resources or deployment have been created by this foundation. Quotation intake, comparison and
 review components have development-only simulations for design review. They do not upload
 files, call AI, persist corrections or change the production case workspace.
 
@@ -109,6 +109,39 @@ source, draft, human-confirmation and recovery dependencies. The sample PDF is a
 UI asset, excluded from the production build. Test scripts and rendered QA screenshots remain
 outside the committed feature files.
 
+## Supplier comparison UI walkthrough
+
+Open `http://127.0.0.1:5174/comparison-preview.html` with the isolated UI preview running
+(or use its configured port). The quotation preview also links to **Comparison example**.
+This is an independent, labelled synthetic evaluation snapshot, not a calculation from the
+quotation-review PDF or its demonstration confirmation. The comparison uses the canonical
+150 cm fabric-width example; the review PDF uses 152 cm. No browser calculation engine,
+backend evaluation, live factor or model call is connected.
+
+Use **Preview controls** to inspect eligible, incomplete, excluded, stale and recovery states.
+Compare common-basis cost, full-order delivery and estimated logistics emissions; inspect each
+offer's checks and source limitations. The displayed ordering and preference scores are
+supplied demonstration results, never recomputed in the screen. Missing values remain unavailable.
+Test-only carbon values and preference rankings are not live sourcing advice.
+
+Choose a permitted offer using its radio control, then **Review decision** beside the ranked
+results to inspect a local handoff. Choosing an
+alternative eligible offer preserves the original preference winner. This step does not save
+a decision. Scenario editing, persistent decision summaries and backend integration remain
+separate milestones. An unresolved evaluation or an outdated result blocks advancement.
+Optional explanation requests preserve usable current results and the buyer's selection;
+request progress and recovery are shown with the explanation. Expand supporting explanation
+and provenance details when needed; common comparison scope and blocking reasons stay visible.
+
+The future agent is planned as one general assistant across the workspace, aware of the current
+screen, record revisions and unsaved edits, with authorized actions through the planned
+coordinator and specialists. Its implementation is a separate milestone in the
+[UI plan](docs/UI_UX_PLAN.md); it is not connected in this preview.
+
+See the [proposed comparison API handoff](docs/QUOTATION_COMPARISON_CONTRACT.md). The preview
+entry and fixtures are excluded from the default production build. Private test scripts,
+screenshots and detailed reports remain outside the repository.
+
 ## Checks
 ```powershell
 npm run check
@@ -146,7 +179,8 @@ apps/web/                  React + Vite + TypeScript + Tailwind
   src/features/cases/      Case form, validation and saved requirements
   src/features/quotations/ Reusable intake UI; not connected to an API yet
   src/features/quotation-review/ Source, corrections and explicit review UI
-  src/dev/                Development-only intake/review simulations; excluded from app entry
+  src/features/comparison/ Supplier results, provenance and decision handoff UI
+  src/dev/                Development-only intake/review/comparison simulations; excluded from app entry
   src/api/                API client and generated OpenAPI types
   src/auth/               Firebase anonymous identity and App Check
 services/api/
@@ -188,6 +222,7 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
 - [Quotation intake API handoff (proposal)](docs/QUOTATION_INTAKE_CONTRACT.md)
 - [Quotation review API handoff (proposal)](docs/QUOTATION_REVIEW_CONTRACT.md)
+- [Quotation comparison API handoff (proposal)](docs/QUOTATION_COMPARISON_CONTRACT.md)
 - [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)

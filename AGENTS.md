@@ -49,6 +49,10 @@ branch points to the intended baseline. Later implementation commits, pushes and
 follow their respective user authorisation. A new branch at dev's commit has no PR diff yet.
 Finish every development task by working backwards from its PRD outcome,
 refining gaps and rechecking affected behaviour. Keep small corrections on that task's branch.
+Once a milestone is authorized, continue implementation, backward review, refinement and local
+verification until the branch is ready for user review. Do not stop after each routine subtask
+or ask the user to authorize the next planned fix. Pause only for a genuine missing decision
+or blocked dependency; make independent progress while resolving it.
 Leave changes uncommitted until the user asks; commit approval does not imply push approval.
 When authorised, split changes into coherent commits by functionality or section. Write meaningful
 messages that explain what changed and why, without being unnecessarily long. Use mostly
