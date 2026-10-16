@@ -93,6 +93,7 @@ export function QuotationPreview() {
         <p className="nav-label">DESIGN PREVIEW</p>
         <button className="nav-item" onClick={() => requirementsDialog.current?.showModal()}><Icon name="fabric" />Requirements</button>
         {reviewQuote ? <span className="nav-item" aria-current="page"><Icon name="grid" />Quotation review</span> : <a className="nav-item" href="#main" aria-current="page"><Icon name="grid" />Quotations</a>}
+        <a className="nav-item" href="/comparison-preview.html"><Icon name="grid" />Comparison example</a>
       </nav>
       <div className="sidebar-footer"><Icon name="shield" /><div><strong>Synthetic example</strong><p>No signed-in session.<br />Changes last until reload.</p></div></div>
     </aside>
