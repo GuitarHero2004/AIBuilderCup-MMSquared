@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+﻿import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from '../../components/Icon';
 import { formatFileBytes, preflightPdf } from './pdfPreflight';
@@ -129,30 +129,33 @@ function QuotationRow({ item, blocked, runActive, onRefresh, onExtract, onRetryE
   const canReview = item.reviewStatus === 'needs_review' || item.reviewStatus === 'confirmed';
   const canStart = item.processingStatus === 'uploaded' && item.reviewStatus === 'not_ready';
   const canRetry = (item.processingStatus === 'failed' || item.processingStatus === 'interrupted') && item.retryAllowed;
+  const processingTone = item.processingStatus === 'failed' || item.processingStatus === 'interrupted' ? 'error'
+    : item.processingStatus === 'succeeded' ? 'success' : 'info';
+  const reviewTone = item.reviewStatus === 'confirmed' ? 'success' : item.reviewStatus === 'needs_review' ? 'warning' : 'neutral';
 
-  return <li className="intake-quote-row">
-    <div className="intake-document">
+  return <tr className="intake-quote-row" role="row">
+    <th className="intake-document" scope="row" role="rowheader">
       <h3>{item.fileName}</h3>
-      <span className={`badge ${item.source === 'synthetic_sample' ? 'badge-muted' : ''}`}>{item.source === 'synthetic_sample' ? 'Synthetic sample' : 'Uploaded PDF'}</span>
-      <p className="intake-saved-note"><Icon name="check" size={14} /> PDF saved</p>
-      <p className="intake-file-meta">{item.byteSize === null ? 'File size unavailable' : formatFileBytes(item.byteSize)} · {item.pageCount === null ? 'Page count not checked' : `${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}`}</p>
-    </div>
-    <div className="intake-quote-state">
-      <p><span className="intake-state-label">Processing</span><strong>{processingLabels[item.processingStatus]}</strong></p>
-      <p><span className="intake-state-label">Review</span><span>{reviewLabels[item.reviewStatus]}</span></p>
+      <p className="intake-file-meta"><span className="intake-source-label">{item.source === 'synthetic_sample' ? 'Synthetic sample' : 'Uploaded PDF'}</span><span aria-hidden="true"> · </span><span>PDF saved</span></p>
+      <p className="intake-file-meta"><span>{item.byteSize === null ? 'Size unavailable' : formatFileBytes(item.byteSize)}</span><span aria-hidden="true"> · </span><span>{item.pageCount === null ? 'Page count not checked' : `${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}`}</span></p>
+    </th>
+    <td className="intake-quote-state intake-processing-cell" role="cell">
+      <span className="intake-mobile-label" aria-hidden="true">Processing</span>
+      <span className={`status-badge status-${processingTone}`}>{processingLabels[item.processingStatus]}</span>
+      {item.message && <p className="intake-state-note">{item.message}</p>}
+      {item.processingStatus === 'running' && <p className="intake-state-note">Check the recorded status after a connection loss. Completion is not guaranteed.</p>}
+    </td>
+    <td className="intake-quote-state intake-review-cell" role="cell">
+      <span className="intake-mobile-label" aria-hidden="true">Review</span>
+      <span className={`status-badge status-${reviewTone}`}>{reviewLabels[item.reviewStatus]}</span>
       {item.reviewStatus === 'needs_review' && <p className="intake-state-note">{item.missingFieldCount === null
         ? 'Missing information not assessed.'
         : item.missingFieldCount === 0
-          ? 'No missing fields reported. Review is still required.'
+          ? 'No missing fields reported.'
           : `${item.missingFieldCount} ${item.missingFieldCount === 1 ? 'field needs' : 'fields need'} information.`}</p>}
-      {item.message && <p className="intake-state-note">{item.message}</p>}
-      {item.processingStatus === 'running' && <p className="intake-state-note">Check the recorded status after a connection loss. Completion is not guaranteed.</p>}
-      {canRetry && <p className="intake-state-note">Retry starts a new extraction attempt and may use additional allowance.</p>}
-    </div>
-    <div className="intake-row-action">
-      <p className="intake-action-label">{item.reviewStatus === 'confirmed' ? 'Reviewed document' : 'Next step'}</p>
-      {canStart && <p className="intake-action-note">Extract the supplier’s terms, then check them against the PDF.</p>}
-      {item.reviewStatus === 'needs_review' && <p className="intake-action-note">Check the extracted terms against the PDF before confirming.</p>}
+    </td>
+    <td className="intake-row-action" role="cell">
+      <span className="intake-mobile-label" aria-hidden="true">Action</span>
       {!canReview && runActive && item.processingStatus !== 'running' && <p className="intake-action-note">Wait for the current extraction before starting another.</p>}
       {canReview ? onReview
         ? <button type="button" className="button button-secondary" disabled={blocked} onClick={() => onReview(item.id)} aria-label={`${item.reviewStatus === 'confirmed' ? 'View reviewed quotation' : 'Review quotation'} ${item.fileName}`}>{item.reviewStatus === 'confirmed' ? 'View reviewed quotation' : 'Review quotation'} <Icon name="arrow" size={17} /></button>
@@ -165,10 +168,10 @@ function QuotationRow({ item, blocked, runActive, onRefresh, onExtract, onRetryE
             : canRetry && onRetryExtraction
               ? <button type="button" className="button button-secondary" disabled={blocked || runActive} onClick={() => onRetryExtraction(item.id)} aria-label={`Retry extraction of ${item.fileName}`}>Retry extraction</button>
               : <p className="intake-action-note">{canRetry ? 'Extraction retry is not connected yet.' : 'Check the saved status before continuing.'}</p>}
-    </div>
-  </li>;
+      {canRetry && <p className="intake-action-note intake-retry-note">Retry starts a new extraction attempt and may use additional allowance.</p>}
+    </td>
+  </tr>;
 }
-
 export function QuotationIntake(props: QuotationIntakeProps) {
   const { caseInfo, collection, transfer, limits, processingNotice, retentionNotice, onBack, onRefresh } = props;
   const headingId = useId();
@@ -219,7 +222,7 @@ export function QuotationIntake(props: QuotationIntakeProps) {
         <button type="button" className="button button-secondary" onClick={onRefresh} disabled={collection.status === 'loading' || waiting || uncertain}><Icon name="refresh" size={17} /> Refresh list</button>
       </div>
       {collection.status === 'loading' && <p className="intake-empty" role="status">Loading saved quotations…</p>}
-      {(collection.status === 'error' || collection.status === 'unavailable') && <div className="intake-notice intake-notice-warning" role="alert">
+      {(collection.status === 'error' || collection.status === 'unavailable') && <div className={`intake-notice ${collection.status === 'error' ? 'intake-notice-error' : 'intake-notice-warning'}`} role="alert">
         <strong>{collection.status === 'error' ? 'Could not load quotations' : 'Quotation intake is unavailable'}</strong>
         <p>{collection.message ?? 'The saved collection could not be checked. Refresh the list before adding a document.'}</p>
         {collection.quotations.length > 0 && <p>The documents below are from the last successful load. Their current status has not been verified.</p>}
@@ -228,10 +231,14 @@ export function QuotationIntake(props: QuotationIntakeProps) {
         <h3>{waiting || uncertain ? 'The saved result is not yet known' : 'No quotations yet'}</h3>
         <p>{waiting || uncertain ? 'The last loaded list was empty. Resolve the pending upload before adding another document.' : 'Add a PDF or choose a synthetic sample above. A saved document still needs extraction and human review.'}</p>
       </div>}
-      {collection.quotations.length > 0 && <ul className="intake-quote-list">
-        {collection.quotations.map((item) => <QuotationRow key={item.id} item={item} blocked={blocked} runActive={runActive}
-          onRefresh={onRefresh} onExtract={props.onExtract} onRetryExtraction={props.onRetryExtraction} onReview={props.onReview} />)}
-      </ul>}
+      {collection.quotations.length > 0 && <div className="intake-table-frame">
+        <table className="intake-quote-list" role="table" aria-label="Case quotations">
+          <colgroup><col className="intake-document-column" /><col className="intake-processing-column" /><col className="intake-review-column" /><col className="intake-action-column" /></colgroup>
+          <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Document</th><th scope="col" role="columnheader">Processing</th><th scope="col" role="columnheader">Review</th><th scope="col" role="columnheader">Action</th></tr></thead>
+          <tbody role="rowgroup">{collection.quotations.map((item) => <QuotationRow key={item.id} item={item} blocked={blocked} runActive={runActive}
+            onRefresh={onRefresh} onExtract={props.onExtract} onRetryExtraction={props.onRetryExtraction} onReview={props.onReview} />)}</tbody>
+        </table>
+      </div>}
       <p className="intake-collection-note">Uploading or extracting a document does not confirm its terms or make the offer eligible.</p>
     </section>
   );
@@ -256,7 +263,7 @@ export function QuotationIntake(props: QuotationIntakeProps) {
       </details>
     </div>
 
-    {transfer.status !== 'idle' && <div className={`intake-notice ${uncertain || transfer.status === 'error' ? 'intake-notice-warning' : ''}`} role={uncertain || transfer.status === 'error' ? 'alert' : 'status'}>
+    {transfer.status !== 'idle' && <div className={`intake-notice ${transfer.status === 'error' ? 'intake-notice-error' : uncertain ? 'intake-notice-warning' : ''}`} role={uncertain || transfer.status === 'error' ? 'alert' : 'status'}>
       <strong>{transfer.status === 'uploading' ? 'Adding quotation…' : transfer.status === 'checking' ? 'Checking saved quotations…' : uncertain ? 'The save outcome is unclear' : 'Quotation could not be added'}</strong>
       <p>{transfer.message ?? (uncertain ? 'The request may have saved your quotation. Check saved quotations before trying again to avoid creating a duplicate.' : transfer.status === 'error' ? 'Your selection is still here. Resolve the problem, then try again.' : transfer.status === 'checking' ? 'Wait for the saved state before taking another action.' : 'Wait for the response before adding another document.')}</p>
       {(uncertain || transfer.status === 'checking') && <button type="button" className="button button-secondary" onClick={onRefresh} disabled={transfer.status === 'checking'}>Check saved quotations</button>}

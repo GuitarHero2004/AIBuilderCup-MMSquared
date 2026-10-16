@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 import { QuotationIntake } from '../features/quotations/QuotationIntake';
+import { QuotationReviewPreview } from './QuotationReviewPreview';
 import type { IntakeQuotation } from '../features/quotations/types';
 import { fixtureQuote, previewCase, previewLimits, previewSamples, scenarios, scenarioState } from './quotationFixtures';
 import type { Scenario } from './quotationFixtures';
@@ -11,8 +12,8 @@ export function QuotationPreview() {
   const [selectionResetKey, setSelectionResetKey] = useState(0);
   const [notice, setNotice] = useState('Choose a file or a synthetic example to explore the flow.');
   const [reviewQuote, setReviewQuote] = useState<IntakeQuotation | null>(null);
+  const [reviewSessions, setReviewSessions] = useState<IntakeQuotation[]>([]);
   const requirementsDialog = useRef<HTMLDialogElement>(null);
-  const reviewDialog = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const sequence = useRef(0);
@@ -20,6 +21,8 @@ export function QuotationPreview() {
 
   function reset(next: Scenario) {
     setScenario(next);
+    setReviewSessions([]);
+    setReviewQuote(null);
     setState(scenarioState(next));
     setSelectionResetKey((key) => key + 1);
     setNotice('Scenario reset. Previous selections and simulated records were cleared.');
@@ -76,26 +79,27 @@ export function QuotationPreview() {
     setState({ ...state, collection: { ...state.collection, quotations: state.collection.quotations.map((quote) => quote.id === running.id ? {
       ...quote, processingStatus: outcome, reviewStatus: outcome === 'succeeded' ? 'needs_review' : 'not_ready',
       missingFieldCount: null, retryAllowed: outcome !== 'succeeded',
-      message: outcome === 'succeeded' ? 'Illustrative outcome only. This preview does not contain extracted fields.' : 'Illustrative outcome only. The saved record remains available for a deliberate retry.',
+      message: outcome === 'succeeded' ? 'Illustrative outcome only. Open Review quotation for a separate synthetic review walkthrough.' : 'Illustrative outcome only. The saved record remains available for a deliberate retry.',
     } : quote) } });
     setNotice(`Extraction outcome simulated: ${outcome}. No fields were extracted or confirmed.`);
     mainRef.current?.querySelector<HTMLElement>('.intake-collection-panel h2')?.focus();
   }
 
   return <div className="app-shell quotation-preview">
-    <a className="skip-link" href="#main">Skip to quotation intake</a>
+    <a className="skip-link" href="#main">{reviewQuote ? 'Skip to quotation review' : 'Skip to quotation intake'}</a>
     <aside className="sidebar" aria-label="Preview navigation">
-      <div className="brand"><span className="brand-mark"><Icon name="leaf" /></span><span>GreenProcure<span className="brand-subtitle">Sourcing workspace</span></span></div>
+      <div className="brand"><span className="brand-mark"><Icon name="leaf" /></span><span>GreenProcure<span className="brand-subtitle">Fabric sourcing</span></span></div>
       <nav className="primary-nav" aria-label="Case preview">
         <p className="nav-label">DESIGN PREVIEW</p>
         <button className="nav-item" onClick={() => requirementsDialog.current?.showModal()}><Icon name="fabric" />Requirements</button>
-        <a className="nav-item" href="#main" aria-current="page"><Icon name="grid" />Quotations</a>
+        {reviewQuote ? <span className="nav-item" aria-current="page"><Icon name="grid" />Quotation review</span> : <a className="nav-item" href="#main" aria-current="page"><Icon name="grid" />Quotations</a>}
       </nav>
       <div className="sidebar-footer"><Icon name="shield" /><div><strong>Synthetic example</strong><p>No signed-in session.<br />Changes last until reload.</p></div></div>
     </aside>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><span>{previewCase.name}</span><Icon name="chevron" /><span>Quotations</span></div><span className="session-chip">UI preview</span></header>
-      <section className="preview-controls" aria-labelledby="preview-title">
+      <header className="topbar"><div className="breadcrumb"><span>{previewCase.name}</span><Icon name="chevron" /><span>{reviewQuote ? 'Review quotation' : 'Quotations'}</span></div><span className="session-chip">UI preview</span></header>
+      <main id="main" ref={mainRef} className="main-content" tabIndex={-1}>
+      <section className="preview-controls" aria-labelledby="preview-title" hidden={reviewQuote !== null}>
         <div><h2 id="preview-title" ref={titleRef} tabIndex={-1}>Quotation intake · UI preview</h2><p>Synthetic states. No uploads or AI calls. Selected files stay in your browser.</p></div>
         <details>
           <summary>Preview controls</summary>
@@ -117,7 +121,7 @@ export function QuotationPreview() {
         {running && <div className="preview-outcomes" role="group" aria-label="Simulated extraction outcomes"><strong>Choose an extraction result:</strong><button className="button button-secondary" onClick={() => finishExtraction('succeeded')}>Simulate ready for review</button><button className="button button-secondary" onClick={() => finishExtraction('failed')}>Simulate failed extraction</button><button className="button button-secondary" onClick={() => finishExtraction('interrupted')}>Simulate interrupted extraction</button></div>}
         <p className="preview-notice" role="status">{notice}</p>
       </section>
-      <main id="main" ref={mainRef} className="main-content" tabIndex={-1}>
+        <div hidden={reviewQuote !== null}>
         <QuotationIntake caseInfo={previewCase} collection={state.collection} transfer={state.transfer}
           limits={previewLimits} samples={previewSamples} selectionResetKey={selectionResetKey}
           processingNotice="Preview only: no PDF leaves this browser. Connected intake will explain private storage and AI processing before upload."
@@ -130,9 +134,19 @@ export function QuotationPreview() {
           }}
           onExtract={startExtraction} onRetryExtraction={startExtraction}
           onReview={(id) => {
-            setReviewQuote(state.collection.quotations.find((quote) => quote.id === id) ?? null);
-            reviewDialog.current?.showModal();
+            const quote = state.collection.quotations.find((item) => item.id === id);
+            if (!quote) return;
+            setReviewSessions((sessions) => sessions.some((item) => item.id === id) ? sessions : [...sessions, quote]);
+            setReviewQuote(quote);
           }} />
+        </div>
+        {reviewSessions.map((quote) => <div key={quote.id} hidden={reviewQuote?.id !== quote.id}>
+          <QuotationReviewPreview quotationId={quote.id} fileName={quote.fileName} sourceKind={quote.source}
+            active={reviewQuote?.id === quote.id} onBack={() => {
+              setReviewQuote(null);
+              requestAnimationFrame(() => mainRef.current?.querySelector<HTMLElement>('.intake-collection-panel h2')?.focus());
+            }} />
+        </div>)}
       </main>
     </div>
     <dialog ref={requirementsDialog} className="preview-dialog" aria-labelledby="requirements-title">
@@ -140,10 +154,6 @@ export function QuotationPreview() {
       <dl><dt>Case</dt><dd>{previewCase.name}</dd><dt>Fabric</dt><dd>{previewCase.fabricLabel}</dd><dt>Quantity</dt><dd>{previewCase.quantityLabel}</dd><dt>Budget</dt><dd>{previewCase.budgetLabel}</dd><dt>Delivery</dt><dd>{previewCase.deliveryLabel}</dd></dl>
       <p className="preview-dialog-note">Destination: Fictional HCMC buyer facility, Vietnam. The budget covers material and declared delivery charges, excluding tax and duties. Logistics emissions cover the supplier origin facility to the buyer facility, using a well-to-wheel boundary.</p>
       <button className="button button-primary" onClick={() => requirementsDialog.current?.close()}>Return to quotations</button>
-    </dialog>
-    <dialog ref={reviewDialog} className="preview-dialog" aria-labelledby="review-title">
-      <h2 id="review-title">Review screen handoff</h2><p className="preview-dialog-note">{reviewQuote?.fileName}</p><p>The next milestone pairs the source PDF with editable extracted fields and missing-information checks. A person must confirm those fields before comparison.</p><p className="preview-dialog-note">This preview has no source document or extracted fields. Nothing has been confirmed or made eligible for a recommendation.</p>
-      <button className="button button-primary" onClick={() => reviewDialog.current?.close()}>Return to quotations</button>
     </dialog>
   </div>;
 }

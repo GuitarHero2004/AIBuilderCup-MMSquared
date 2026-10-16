@@ -61,7 +61,7 @@ export function CaseForm({ values, onChange, onSave, onCancel, busy, error, unce
     const id = `${prefix}-${key}`;
     const descriptions = [options.unit && `${id}-unit`, options.hint && `${id}-hint`, errors[key] && `${id}-error`].filter(Boolean).join(' ');
     return <div className={options.wide ? 'field field-wide' : 'field'}>
-      <label htmlFor={id}>{fieldLabels[key]}</label>
+      <div className="field-label-row"><label htmlFor={id}>{fieldLabels[key]}</label>{options.unit && <span className="field-label-unit" id={id + '-unit'} aria-hidden="true">· {options.unit}</span>}</div>
       <div className="input-wrap">
         <input
           id={id}
@@ -77,19 +77,19 @@ export function CaseForm({ values, onChange, onSave, onCancel, busy, error, unce
           disabled={busy || uncertain}
           autoComplete="off"
         />
-        {options.unit && <span className="input-unit" id={`${id}-unit`}>{options.unit}</span>}
       </div>
       {options.hint && <p className="field-hint" id={`${id}-hint`}>{options.hint}</p>}
       {errors[key] && <p className="field-error" id={`${id}-error`}>{errors[key]}</p>}
     </div>;
   }
 
-  return <section className="panel form-panel" aria-labelledby="create-title">
+  return <section className="form-page" aria-labelledby="create-title">
     <div className="page-heading">
       <p className="eyebrow">SOURCING CASE</p>
       <h1 id="create-title" tabIndex={-1} data-page-title>Create sourcing case</h1>
       <p className="page-intro">Set quantity, budget and delivery requirements for one fabric order.</p>
     </div>
+    <div className="panel form-panel">
     <div className="preset-note"><Icon name="fabric" /><div><strong>Synthetic demo</strong><p>Prefilled details are fictional. Use synthetic, non-confidential information.</p></div></div>
     <form ref={formRef} onSubmit={submit} noValidate aria-busy={busy}>
       <p className="section-note">All fields below are required.</p>
@@ -147,5 +147,6 @@ export function CaseForm({ values, onChange, onSave, onCancel, busy, error, unce
         <button className="button button-primary" disabled={busy || uncertain} type="submit">{busy ? 'Saving case…' : 'Create sourcing case'}{!busy && <Icon name="arrow" size={17} />}</button>
       </div>
     </form>
+    </div>
   </section>;
 }

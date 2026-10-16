@@ -1,8 +1,9 @@
 # Implementation and verification ledger
-**Current state — 15 October 2026:** local case workspace implemented; quotation-intake UI
-prepared in a separate development-only simulation. Real PDF intake, extraction, review,
-evaluation and cloud release remain pending. Dated entries below distinguish current work
-from earlier verification.
+**Current state - 16 October 2026:** local case workspace implemented; quotation intake and
+review UIs have labelled development-only walkthroughs and proposed API handoffs. The user
+approved five local commits on `feat/ui-quotation-review`; implementation is not pushed or
+merged. Real PDF intake, extraction, persisted review/confirmation, evaluation and cloud
+release remain pending. Dated entries preserve the state and evidence at each review.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
@@ -11,6 +12,7 @@ from earlier verification.
 | Domain calculations | Specified, not implemented | pytest output, commit |
 | Frontend and contracts | Case UI and generated API types implemented | Local lint/typecheck/build/unit checks pass |
 | Quotation intake UI | Reusable components and development simulation prepared | UI checks pass; real upload/extraction and generated quote contracts remain unavailable |
+| Quotation review UI | Source, corrections and confirmation walkthrough implemented locally | Synthetic browser checks pass; private-source access, persisted drafts and server confirmation remain pending |
 | Auth/Firestore/Storage | Anonymous Auth + case persistence verified in emulators | Direct client rules deny access; no PDF adapter/cloud verification |
 | Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
 | Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
@@ -463,6 +465,152 @@ from earlier verification.
   browser verification remains local evidence, not a test suite shipped in these commits.
 - All commits stay on `feat/ui-quotation-intake`. No remote push, pull request, merge,
   deployment or cloud change is authorised by this commit-only request.
+
+## Quotation review UI and backward review - 15 October 2026
+
+- Worked only in `C:\AIBuilderCup-MMSquared`. Preserved the existing workflow-note edits,
+  switched to `dev`, ran `git pull --ff-only origin dev`, and created
+  `feat/ui-quotation-review` at `38e0caded775ab9b1f1ee31295380f4a5be203a1`.
+  Immediately pushed the new branch with upstream tracking under the user's standing
+  instruction; `ls-remote` verified the baseline. Implementation remains uncommitted.
+  No implementation push, PR, merge, backend change or deployment was performed.
+- Added reusable review components with grouped fields, original extraction values, page/
+  excerpt provenance, correction/assumption notes, per-field review and explicit unknowns.
+  Draft save and human confirmation are separate; confirmation pins quote, case and draft
+  revisions. Editing invalidates the affected review and makes an earlier receipt historical.
+  Numeric input, composition totals and total/usable-width consistency receive local feedback;
+  eligibility, cost, carbon and ranking remain backend responsibilities.
+- Added an isolated development walkthrough with eight scenarios and its own labelled
+  two-page synthetic PDF. The 23 source citations were checked against the PDF text and pages;
+  rendered source pages were visually inspected. It is unrelated to the selected intake
+  document and never confirms that intake record. Uploaded-file entry starts with the source
+  unavailable. Pending, rejected, unknown and conflicting results have distinct recovery.
+  Saved demo drafts/receipts survive Back/reopen within the tab; reload/reset clears them.
+- Added `docs/QUOTATION_REVIEW_CONTRACT.md`: a proposal for private source access, versioned
+  corrections, human-only confirmation, owner checks, immutable revisions and mutation
+  readback. It is not an agreed API or backend implementation. Updated README, the UI plan
+  and the standing branch-publication workflow.
+- Worked backwards from FR-04/05/06: inspect the source, preserve what was extracted, correct
+  mistakes, understand remaining gaps, then deliberately confirm the exact saved record.
+  Review caught and fixed stale confirmation context, numeric bounds, assumption provenance
+  loss, incomplete deadline feedback and optional extracted values being cleared without
+  review. Explicitly reviewed unknowns require a note and retain affected blockers; a known
+  failure may be recorded accurately and does not become eligible through confirmation.
+  Added a keyboard shortcut to Save/Confirm, persistent source-unavailable limitations, and
+  explicit notice that this synthetic case requires no certificate evidence.
+- Executed `npm run test --workspace=@greenprocure/web -- --exclude
+  src/features/quotations/pdfPreflight.test.ts`: all 26 existing committed frontend tests
+  passed. Lint and TypeScript checks passed; the final production build passed. Output scans
+  verified that preview execution content and the sample PDF are absent from the production
+  bundle. `git diff --check` passed.
+- New private model checks: 65 passed, including exact decimal boundaries, dates, provenance,
+  reviewed unknowns and cleared optional extraction values. Private browser component checks:
+  22 passed, including stale quote/case/draft confirmation guards, disabled pending actions,
+  dialog focus and the action shortcut at desktop/320px/doubled text.
+- Private browser journeys passed 9 groups and 40 layouts across all eight scenarios at
+  320, 390, 768, 1024 and 1440px. They covered corrections, review resets, 30-click save
+  bursts, rejection, repeated unavailable readback, separate confirmation, historical receipts,
+  retained sessions, conflict comparison/reapply/discard, missing values and source navigation.
+  Final refinement checks passed 2 groups / 16 additional layouts at doubled computed text
+  size, including explicitly reviewed removal of an optional extracted value.
+- Focused uploaded-file/mobile verification passed 35 assertions at 320x800: filename context,
+  separate synthetic evidence, source limitations in the confirmation dialog, preserved
+  pending native-file selection and no false intake confirmation. The existing intake browser
+  regression passed 12 groups / 55 layouts from a temporary copy adapted to the review entry.
+  No uncaught browser errors, business/external requests or persistent browser-storage writes
+  were observed. Desktop/mobile/enlarged-text screenshots were visually inspected.
+- All new executable tests, inputs, screenshots and detailed reports stayed in OS temporary
+  storage outside the repository. Existing excluded intake tests were preserved. The sample
+  PDF and scenario data are runtime assets for the explicitly labelled development UI.
+- Review verdict: ready for user review within UI plus proposed API handoff scope. FR-04,
+  FR-05, FR-06 and I1 remain incomplete as connected product capabilities. No real upload,
+  extraction, private-source authorization, persisted corrections or server confirmation
+  was tested. No live AI, backend/emulator, deployed, real-phone, Safari/Firefox or screen-reader
+  verification was performed for this UI-only change. Browser PDF embedding remains dependent
+  on viewer support, with an open-original link and an explicit fallback.
+- Broader follow-ups: evidence applicability controls, complete cost-adjustment/multi-leg
+  editing, approved factor selection and immutable confirmed-field history. The preview
+  preserves historical receipts but does not retain/browse their old field snapshots.
+  Next: user review at `/quotation-preview.html`, then separately authorized commits/push.
+  Backend integration belongs on its own branch after the contract and baseline are agreed.
+
+## Cross-screen UI consistency refinement - 15 October 2026
+
+- The user requested a thorough consistency pass after identifying misaligned quotation
+  rows. Kept the refinement on the current uncommitted `feat/ui-quotation-review` branch
+  in `C:\AIBuilderCup-MMSquared`; no branch switch, worktree, commit, push or merge.
+- Replaced independently sized intake rows with a semantic four-column table. Every desktop
+  action shares the same width and left edge, including failed quotations. Narrow layouts
+  use labelled records based on available content width. Document metadata is deliberately
+  grouped; separate processing/review badges and actionable failure/unknown/retry text remain.
+- Consolidated typography, spacing, status colors, button sizing, panel/control/dialog
+  corners and modal backdrops. Case form/detail headings now align with the workspace gutter.
+  Draft status stays neutral in list and detail. Saved-case navigation is visible at the top.
+  Inputs place units beside labels without changing the existing accessible field names.
+- Applied global navigation/header wrapping instead of preview-only fixes. Enlarged text
+  now wraps navigation and action groups without splitting ordinary words into narrow
+  fragments. Long case names no longer squeeze the Back button into several tiny lines.
+- Review fields use a quieter unreviewed state. Removed duplicated per-field routine
+  guidance while retaining the checklist, correction/missing-data messages and all gates.
+  Source references, correction panels, notices, action areas and dialogs use shared styles.
+  Review progress reflects marked fields only; it is not eligibility or an AI confidence score.
+  Confirmation receipts use readable local date/time text with a timezone label.
+- Aligned intake/review preview banners within the same content gutter. Synthetic mode,
+  unrelated source evidence and unavailable backend operations remain explicitly disclosed.
+  This pass adds no backend capability and does not connect the preview to real suppliers.
+- Working backwards: the buyer must scan documents and their two distinct states, find the
+  next action, inspect source evidence, correct information, save and deliberately confirm.
+  Independent visual review found issues that no-overflow checks missed: cramped header
+  actions, enlarged navigation/button word breaks and an inherited font reset that made
+  review buttons differ from intake. Those were corrected and rechecked.
+- Verification: 26 existing committed frontend tests passed; lint, TypeScript and production
+  build passed. Private intake refinement checks passed 11 groups; review styling passed
+  72 assertions, then 22 focused final assertions. Exact computed comparison confirmed intake
+  and review buttons share 14px / weight 600 / 19.6px line height / 44px minimum / 6px corners.
+- Independent workspace/create/detail/help verification passed 40 layouts at five widths
+  (1440, 1024, 768, 390, 320), normal and doubled computed text. Seven behavior groups
+  verified labels, validation focus, submission callbacks, busy/uncertain guards, navigation
+  and unit placement. Representative desktop/enlarged-mobile screenshots were inspected.
+- Final private regression passed intake 12 groups / 55 layouts and review 9 groups /
+  40 layouts. Review tests retained separate draft/confirmation, unknown-result recovery,
+  duplicate protection, conflicting revisions, missing information and historical receipts.
+  No uncaught browser errors, unexpected business/external requests or persistent storage
+  writes were observed in these preview regressions. Native selection preservation passed.
+- All new private tests, inputs, screenshots and detailed reports remain in OS temporary
+  storage. No new executable tests or QA screenshots were added to the repository. The
+  existing runtime sample PDF/scenarios remain development-only assets.
+- Ready for user visual review. Browser checks used local Chromium; real-phone, Safari/
+  Firefox and assistive-technology testing remain unperformed. Production backend/auth
+  integration was not rerun for this presentation-only change. Backend quotation features
+  and full PRD completion remain pending. Implementation remains uncommitted.
+
+## Local quotation-review commit series - 16 October 2026
+
+- User authorized the planned five local commits: shared UI consistency; quotation review
+  components; the synthetic walkthrough; proposed API handoff; and project records.
+- Work remains in `C:\AIBuilderCup-MMSquared` on `feat/ui-quotation-review`. No implementation
+  push, PR, merge, deployment or backend change is part of this commit-only step.
+- The first three commits contain the code in dependency order; the last two contain the
+  backend proposal and documentation. Private tests, screenshots and detailed reports remain
+  outside the commits. The labelled sample PDF and scenarios are development runtime assets.
+- Staging identified the PDF being treated as text by local Git settings. Added `.gitattributes`
+  to preserve PDF bytes as binary and verified the staged blob equals the original file.
+  Removed an extra final blank line in the new handoff document; no runtime behavior changed.
+- Independent read-only audit found no accidental credentials/private test artifacts or
+  unsupported backend/live claims in the proposed series.
+- Executed `npm run build` separately at `befde82`, `a44975b` and `99ac236` in the same
+  canonical checkout; all three passed, including TypeScript. Restored the feature branch.
+  The last two commits change documentation only; final app/package/script content matches
+  the successfully built third snapshot.
+- Final `npm run lint` passed. `npm run test --workspace=@greenprocure/web -- --exclude
+  src/features/quotations/pdfPreflight.test.ts` passed all 26 committed frontend tests.
+  The production output contains no development walkthrough content or sample PDF.
+- `git diff --check` passed across the complete committed change. The PDF retained its
+  original bytes after checkout of the intermediate snapshots. The five commits cover
+  23 reviewed files, including the binary-asset attribute correction.
+- This packaging check did not repeat browser, backend/emulator or live-service runs;
+  the earlier UI regression evidence and its limitations remain recorded above.
+- Next: separately authorized implementation push and PR review against `dev`.
 
 ## Per-increment report template
 ### Increment / commit

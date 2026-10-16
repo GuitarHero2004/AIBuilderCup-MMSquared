@@ -1,13 +1,19 @@
 # GreenProcure — user flows and screen plan
 
-**Date:** 14 October 2026
+**Updated:** 16 October 2026.
 
-**Status:** flow specification for team review; Milestone 1 case UI implemented locally,
-with quotation-to-decision workflows still planned. See the implementation ledger for evidence.
+**Current status:** case workspace and quotation intake are integrated into `dev`.
+Quotation review UI plus its proposed API handoff are implemented locally on
+`feat/ui-quotation-review`; the user approved the five local commits on 16 October 2026.
+Backend integration and the connected
+quotation-to-decision journey remain pending. See the implementation ledger for evidence.
 
-**Branch:** `feat/ui-workspace`
+**Current branch baseline:** `dev` at `38e0caded775ab9b1f1ee31295380f4a5be203a1`.
+The feature branch was published at this baseline before development; implementation changes are
+recorded in five local commits. Implementation has not been pushed or merged.
 
-**Baseline checked:** freshly fetched `dev`, `bb31efe3008f9f8bbad32a7d40bc509bfd870509`
+**Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
+at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
 
 ## 1. Purpose and scope
 
@@ -369,9 +375,10 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 | Reviewable task / proposed branch | Outcome and dependency |
 |---|---|
 | `feat/ui-workspace` (merged to `dev`) | Requirements flow and its refinements reviewed and integrated |
-| Current `feat/ui-quotation-intake` | User-approved scope: reusable intake UI, development simulation and concrete API handoff; no backend implementation |
+| `feat/ui-quotation-intake` (integrated into `dev`) | User-approved scope: reusable intake UI, development simulation and concrete API handoff; no backend implementation |
 | Later intake integration, separate branch | Connect real upload/sample path and persisted processing state after collection/upload/run contracts and backend are ready |
-| `feat/ui-quotation-review` | Source-backed corrections, draft save and human confirmation of the latest revision |
+| Current `feat/ui-quotation-review` | UI plus proposed API handoff: synthetic source inspection, corrections, separate draft save/confirmation, and recovery; no backend or live extraction |
+| Later review integration, separate branch | Connect authorized source access, versioned draft saves and human-only confirmation after the backend contract is agreed |
 | `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
 | `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
 | `feat/ui-quote-comparison` | Four offers, actual specialist events, A/B eligibility and C/D exclusions; I2 and comparison portion of I3 |
@@ -388,6 +395,13 @@ committed baseline, preferably integrated into `dev`. Do not silently commit, st
 uncommitted foundations into several branches. Backend work has its own branch and agreed
 owner; this plan does not assign work to Mạnh without agreement.
 
+**New-branch publication rule, 15 October 2026:** before a new milestone, preserve any current
+changes, switch to dev and run `git pull --ff-only origin dev`. Create the milestone branch
+from that updated dev, then immediately `git push -u origin <new-branch>`. The user has given
+standing authorisation for this initial branch push. Verify its remote baseline before building.
+The branch is visible remotely at once; a PR needs new commits relative to dev. Later feature
+commits, pushes and merges retain their respective approval boundaries.
+
 **Intake UI review, 15 October 2026:** `quotation-preview.html` is a separate development
 entry. It covers file preflight, sample selection, distinct upload/extraction/review states,
 uncertain-result recovery, and the case cap. All outcomes are synthetic and memory-only;
@@ -395,6 +409,13 @@ the real case workspace has no link to this preview. Requirements use the suppor
 fabric preset. At the quote cap, the upload form is hidden while retaining pending selection, so review actions are
 easier to reach. The [proposed API handoff](QUOTATION_INTAKE_CONTRACT.md) records outstanding
 backend requirements. This task does not complete FR-03 or PRD I1.
+
+**Review UI scope, 15 October 2026:** the intake Review action opens a separate synthetic
+review workspace. Source evidence belongs to its labelled demonstration PDF; it is never
+passed off as extracted from an uploaded file. Preserve immutable original values, reviewed
+corrections, missing-information blockers and separate saved/confirmed revisions. Follow the
+[proposed review handoff](QUOTATION_REVIEW_CONTRACT.md) before connecting backend actions.
+Local UI behavior does not complete FR-04/FR-05/FR-06 or I1.
 
 Before handing over every development task:
 

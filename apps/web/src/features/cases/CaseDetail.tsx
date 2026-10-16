@@ -11,14 +11,15 @@ export function CaseDetail({ item, onClose }: { item: CaseRead; onClose: () => v
     ? 'Supplier origin facility to buyer facility'
     : requirement.carbon_scope_id;
 
-  return <section className="panel detail-panel" aria-labelledby="case-detail-title">
-    <div className="page-heading">
+  return <section className="detail-page" aria-labelledby="case-detail-title">
+    <header className="page-heading"><div>
       <p className="eyebrow">SAVED REQUIREMENTS · REVISION {item.data_revision}</p>
       <h1 id="case-detail-title" tabIndex={-1} data-page-title>{item.name}</h1>
       <p className="page-intro">Your saved order requirements and comparison scope.</p>
-    </div>
+    </div><button type="button" className="button button-secondary" onClick={onClose}>Back to workspace</button></header>
+    <div className="panel detail-panel">
     <div className="detail-badges">
-      <span className="badge">{statusLabels[item.status]}</span>
+      <span className="status-badge status-neutral">{statusLabels[item.status]}</span>
       {item.is_synthetic_demo && <span className="badge badge-muted">Synthetic demo</span>}
     </div>
     <div className="next-step-note"><Icon name="check" /><div><strong>Requirements saved</strong><p>You can reopen these requirements from your workspace. Editing, quotation upload and comparison are not available in this preview.</p></div></div>
@@ -57,6 +58,6 @@ export function CaseDetail({ item, onClose }: { item: CaseRead; onClose: () => v
       </dl>
     </section>
 
-    <div className="detail-actions"><button type="button" className="button button-secondary" onClick={onClose}>Back to workspace</button></div>
+    </div>
   </section>;
 }
