@@ -2,15 +2,14 @@
 
 **Updated:** 16 October 2026.
 
-**Current status:** case workspace and quotation intake are integrated into `dev`.
-Quotation review UI plus its proposed API handoff are implemented locally on
-`feat/ui-quotation-review`; the user approved the five local commits on 16 October 2026.
-Backend integration and the connected
-quotation-to-decision journey remain pending. See the implementation ledger for evidence.
+**Current status:** case workspace, quotation intake and quotation review UI are integrated
+into `dev`. Supplier comparison UI plus a proposed API handoff are implemented locally for user review
+on `feat/ui-quote-comparison`. Backend evaluation and the connected sourcing journey remain
+pending; this UI branch does not complete the first connected evaluation gate.
 
-**Current branch baseline:** `dev` at `38e0caded775ab9b1f1ee31295380f4a5be203a1`.
-The feature branch was published at this baseline before development; implementation changes are
-recorded in five local commits. Implementation has not been pushed or merged.
+**Current branch baseline:** `dev` at `f4fafc43ad5c2df436170aa6c530dbc37b7aa2a8`.
+The new feature branch was published at that baseline before development. Its implementation
+is committed locally after the authorized checks; it has not been pushed. Work stays in the single canonical checkout.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
@@ -108,6 +107,41 @@ ineligible; confirmation does not mean the offer passes. Users can add another q
 explicitly revise requirements instead of repeatedly reviewing an unfixable offer. A
 confirmed requirement change creates a new baseline family. Scenarios are optional:
 a valid baseline evaluation can go directly to a decision.
+
+### Future general platform agent — separate milestone
+
+**User direction, 16 October 2026:** one general agent is available throughout the platform,
+aware of the current screen and workflow, and able to perform relevant authorized actions.
+It is not confined to comparison explanations. Implement this on a separate milestone branch;
+the comparison branch adds no agent code, launcher or nonfunctional placeholder.
+
+- Keep its entry point available across workspace, requirements, intake, review, comparison,
+  scenario and decision views. Present the active case/record scope before acting; changing
+  screens does not silently retarget a pending request or carry another case's advice across.
+- Pass a bounded context envelope: screen/workflow step, case ID, selected quote ID, evaluation
+  and run IDs where applicable, current/saved case and draft/confirmed-quote revisions,
+  evaluation fingerprint/freshness, pending operation references and unsaved-change state.
+  Unsaved values are explicitly local proposals; never treat them as persisted or confirmed.
+  Send only relevant fields, not the entire DOM, private source documents or credentials.
+- Use the planned coordinator architecture with Quotation and Sourcing Specialists. Screen context informs
+  navigation, record reads, extraction/evaluation requests, explanations, clarification drafts
+  and proposed corrections/scenarios. Backend tool allowlists and available capabilities,
+  not arbitrary model-generated action names, determine what can actually run.
+- Each tool rechecks authenticated identity, owner, record membership, expected revision and
+  capability on the server. Browser context is a hint, not authority. Source text remains
+  untrusted evidence and cannot grant permissions or change the agent's instructions.
+- Show proposed edits with their affected values, evidence/assumptions and consequences for
+  existing results. The user reviews before applying them through the appropriate workflow.
+  Quote confirmation, scenario confirmation and final decision remain explicit human actions
+  through the human-facing guarded routes defined by the architecture; no coordinator/specialist approval tool is added.
+- Show actual safe operation events and result references. Preserve pending request identity
+  across navigation; stale inputs require refreshed context/review, and unknown write outcomes
+  require recorded-state readback before retry. Switching owner clears retained context.
+  Availability does not mean continuous background model execution or invented progress.
+
+The first agent milestone needs an agreed context/tool contract, owner and live integration
+plan. It must show an authorized action and its recovery end to end, rather than only a chat
+panel. This direction does not change the comparison milestone's backend scope.
 
 ## 4. Screen specifications
 
@@ -210,8 +244,16 @@ a valid baseline evaluation can go directly to a decision.
   factor/boundary limitations without burying the main comparison.
 - With a current selectable result: **Review decision**. Secondary action: **Explore scenario**.
   Allow an explicit eligible buyer choice different from the preference winner.
-- If explanation fails, retain actual computed results and show **Explanation unavailable**.
-  Missing approved factors block complete live carbon ranking, even if carbon has zero weight.
+- Keep the main screen compact: case context and current state, a concise comparison-basis
+  summary, the aligned offer table and the next decision action. Put detailed methodology,
+  source provenance and longer explanations in accessible disclosures or details views.
+  Blocking reasons and essential synthetic/stale/unavailable labels remain visible.
+- Explanation is optional supporting detail. A known read-only explanation request bound to
+  this evaluation may be pending, fail or have an unknown outcome without clearing a valid
+  buyer selection or invalidating the matching computed results. Disable duplicate requests
+  and recover that explanation operation separately. Evaluation/refresh uncertainty, stale
+  inputs and denied capabilities still block advancement.
+- Missing approved factors block complete live carbon ranking, even if carbon has zero weight.
 - Outdated results remain inspectable as history; **Re-evaluate** is required before saving
   a new current decision. No eligible/feasible option gives reasons and actions, not a winner.
 
@@ -313,6 +355,7 @@ against results that appear to describe those changes.
 | Scenarios | Deterministic preview, human confirmation and saved evaluation refs | Preview service is designed; public preview contract needs agreement |
 | Decision | Eligible selection, reason, exact evaluation ref, save/read summary | Planned decision routes; uncertain-save/idempotency readback needs agreement |
 | Recovery/activity | Actual run status/events, allowance and retryability | Planned run routes; quota-read/cancel contract not settled |
+| Future general platform agent | Screen/workflow/record/revision context, unsaved proposals and authorized action capabilities | Separate milestone; coordinator/specialist tools and context contract require agreement |
 
 Pydantic/OpenAPI remains the API authority; generate TypeScript rather than hand-writing
 another schema. JSON stays `snake_case`; monetary and physical values retain decimal-string
@@ -377,13 +420,14 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 | `feat/ui-workspace` (merged to `dev`) | Requirements flow and its refinements reviewed and integrated |
 | `feat/ui-quotation-intake` (integrated into `dev`) | User-approved scope: reusable intake UI, development simulation and concrete API handoff; no backend implementation |
 | Later intake integration, separate branch | Connect real upload/sample path and persisted processing state after collection/upload/run contracts and backend are ready |
-| Current `feat/ui-quotation-review` | UI plus proposed API handoff: synthetic source inspection, corrections, separate draft save/confirmation, and recovery; no backend or live extraction |
+| `feat/ui-quotation-review` (merged to `dev`) | UI plus proposed API handoff: synthetic source inspection, corrections, separate draft save/confirmation, and recovery; no backend or live extraction |
 | Later review integration, separate branch | Connect authorized source access, versioned draft saves and human-only confirmation after the backend contract is agreed |
 | `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
 | `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
-| `feat/ui-quote-comparison` | Four offers, actual specialist events, A/B eligibility and C/D exclusions; I2 and comparison portion of I3 |
+| Current `feat/ui-quote-comparison` | UI plus proposed API handoff: independent synthetic comparison, A/B trade-off, C/D exclusions, missing/stale/recovery states and local choice handoff; connected I2/I3 remain pending |
 | `feat/ui-scenarios` | Explicit scenario application, preserved baseline, Lower Carbon and no feasible option |
 | `feat/ui-decision-summary` | Human choice/reason, immutable save/reopen and stale-save guards; complete I3 |
+| Future `feat/ui-platform-agent` | General agent available across screens, contextual authorized actions and human-reviewed proposals; separate context/tool contract and backend dependency, not part of comparison |
 | `test/ui-demo-readiness` | Full acceptance journey and failure/accessibility checks; distinguish local evidence from I4 deployed evidence |
 
 Use C:\AIBuilderCup-MMSquared as the single working folder, per the user's 15 October 2026

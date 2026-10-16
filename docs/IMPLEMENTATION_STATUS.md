@@ -1,9 +1,10 @@
 # Implementation and verification ledger
-**Current state - 16 October 2026:** local case workspace implemented; quotation intake and
-review UIs have labelled development-only walkthroughs and proposed API handoffs. The user
-approved five local commits on `feat/ui-quotation-review`; implementation is not pushed or
-merged. Real PDF intake, extraction, persisted review/confirmation, evaluation and cloud
-release remain pending. Dated entries preserve the state and evidence at each review.
+**Current state - 16 October 2026:** case workspace, quotation intake and review UI are
+integrated into `dev`. Supplier comparison UI and a proposed API handoff are implemented
+locally on `feat/ui-quote-comparison`, with implementation committed locally after authorized checks.
+The branch was published at its starting baseline only. Real PDF intake, extraction,
+persisted review, evaluation, scenarios/decisions and cloud release remain pending.
+Dated entries preserve the state and evidence at each review.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
@@ -13,6 +14,7 @@ release remain pending. Dated entries preserve the state and evidence at each re
 | Frontend and contracts | Case UI and generated API types implemented | Local lint/typecheck/build/unit checks pass |
 | Quotation intake UI | Reusable components and development simulation prepared | UI checks pass; real upload/extraction and generated quote contracts remain unavailable |
 | Quotation review UI | Source, corrections and confirmation walkthrough implemented locally | Synthetic browser checks pass; private-source access, persisted drafts and server confirmation remain pending |
+| Supplier comparison UI | Reusable results view and independent synthetic walkthrough implemented locally | Local interaction/layout checks pass; backend evaluation, real recommendation and final decision save remain pending |
 | Auth/Firestore/Storage | Anonymous Auth + case persistence verified in emulators | Direct client rules deny access; no PDF adapter/cloud verification |
 | Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
 | Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
@@ -611,6 +613,152 @@ release remain pending. Dated entries preserve the state and evidence at each re
 - This packaging check did not repeat browser, backend/emulator or live-service runs;
   the earlier UI regression evidence and its limitations remain recorded above.
 - Next: separately authorized implementation push and PR review against `dev`.
+
+## Supplier comparison UI, backward review and local verification - 16 October 2026
+
+- Verified that `origin/dev` contains the five quotation-review commits through merge
+  `f4fafc43ad5c2df436170aa6c530dbc37b7aa2a8`. In the single `C:\AIBuilderCup-MMSquared`
+  checkout, switched to `dev`, ran `git pull --ff-only origin dev`, created
+  `feat/ui-quote-comparison`, and immediately pushed its starting baseline with upstream.
+  `ls-remote` matched that baseline. No implementation commit, push, PR or merge followed.
+- Continued the agreed UI plus proposed API handoff scope while backend work remains
+  separate. The connected first-evaluation milestone and PRD I1/I2/I3 are not complete.
+- Added reusable comparison presentation types, decimal-string display helpers and guarded
+  selection. The screen renders supplied eligibility, metrics, ranking and winner; it does
+  not calculate procurement outcomes or reorder scores. Per-offer selectable IDs constrain
+  the choices, and stale, foreign-case, inconsistent or unresolved results cannot advance.
+- Added a seven-column desktop comparison with separate ranked, needs-review and ineligible
+  groups, responsive mobile cards, common cost/carbon scope, preference-policy context,
+  missing-value reasons and keyboard-accessible checks/mass/route/factor/provenance details.
+  An eligible alternative choice preserves the preferred offer and opens only a local handoff.
+  No scenario editing, final decision saving, supplier message or purchase occurs.
+- Added `/comparison-preview.html`, linked from the quotation preview, with 15 explicit
+  synthetic scenarios. This independent canonical example uses 150 cm total width, not the
+  review PDF's 152 cm. Its supplied results/reference IDs are never attributed to the user's
+  intake/review actions. The canonical A/B trade-off and C/D exclusions match CALCULATION_SPEC.
+  Alternate singleton/tie/scenario states are labelled. No browser arithmetic engine or live
+  carbon factor is introduced, and no fixture is a fallback for a real service error.
+- The development controller pauses for explicit simulated evaluation/explanation/readback
+  outcomes, retains the same pending operation after lost responses, guards duplicate starts,
+  preserves prior snapshots after failed reads, and verifies references before applying results.
+  Refresh readback preserves the evaluation ID; re-evaluation creates a new supplied snapshot.
+- Worked backwards from FR-13/14/15 and S4: identify comparable confirmed offers, understand
+  exclusions and evidence, inspect the preference result, then choose a permitted current
+  offer for human decision review. The audit caught and fixed missing-factor explanation
+  retries that could describe a nonexistent winner, an enabled no-op refresh button, misleading
+  evaluation labels during explanation requests, and contradictory ranked eligibility checks.
+- Visual review fixed tall mobile cards, inaccurate singleton wording, dialog focus/scroll
+  position, preview branding and a ready-state heading on blocked inputs. Shared controls,
+  status colors, spacing and type scale remain consistent with the previous milestone.
+- Executed `npm run lint`, `npm run typecheck`, and `npm run build`; all passed. The final
+  build includes TypeScript verification. Executed `npm run test --workspace=@greenprocure/web
+  -- --exclude src/features/quotations/pdfPreflight.test.ts`: all 26 committed frontend tests
+  passed. The final production artifact contains no comparison preview entry, fixtures or
+  demonstration execution content. Source/whitespace checks completed before handoff.
+- Private model checks: 57 passed, including exact large decimal-string display, null handling,
+  authoritative order, per-offer capabilities, current revisions, foreign-case references,
+  contradictory checks and explanation-reference matching. Private controller checks:
+  22 assertions passed, covering alternative choice, blocked inputs, absent factors,
+  mismatch rejection, stale recovery and verified-read behavior.
+- Root browser regression: five journey groups passed for choice/handoff, evidence/focus,
+  30-click evaluation bursts, repeated unknown readback, absent-factor explanations and failed
+  refresh recovery. One separate component-boundary group passed for live revision/permission
+  changes, contradictory results and foreign-case suppression. Two final smoke groups passed
+  for cross-preview navigation, blocked heading, branding and unresolved-leave protection.
+  No uncaught browser errors, unexpected business/external requests or browser-storage writes
+  were observed in the interaction checks.
+- Layout regression passed 150 combinations: all 15 scenarios at 1440, 1024, 768, 390 and
+  320px, at normal and doubled computed text size. Independent visual checks passed 13 groups,
+  including long names, Escape focus return and identical desktop action dimensions. Actual
+  desktop/mobile/enlarged screenshots were inspected; overflow checks alone were not used as
+  a visual-quality verdict.
+- All new executable checks, private inputs, screenshots and detailed reports remain in OS
+  temporary storage outside the repository. Runtime demonstration fixtures remain explicitly
+  development-only source. No packages, backend routes, generated API contracts or cloud
+  resources changed. Browser verification used local Chromium; real-device, Safari/Firefox,
+  screen-reader and connected backend/live-AI verification were not performed.
+- Added `docs/QUOTATION_COMPARISON_CONTRACT.md` for proposed evaluation/recommendation reads,
+  operations/recovery, exact snapshots, capabilities, freshness, grounding and owner checks.
+  It requires backend agreement and generated Pydantic/OpenAPI types before integration.
+- Ready for user review on the current branch. Implementation remains uncommitted and unpushed.
+  Next after review: separately authorized coherent commits/push; scenario UI and final-decision
+  workflow remain later branches. Standing instructions now explicitly require continuing
+  coding, backward review and refinement through branch readiness before asking for review.
+
+## Comparison hierarchy and explanation-state refinement - 16 October 2026
+
+- Completed the requested follow-up on `feat/ui-quote-comparison` in the canonical checkout.
+  Kept the existing uncommitted implementation; no branch switch, commit, push or merge.
+- Combined requirements, preference policy and common cost/carbon boundaries into one panel.
+  Made re-evaluation secondary, consolidated repeated synthetic notices, and moved provenance
+  and scoring methodology into an accessible disclosure below the results. Material missing-data,
+  historical, test-factor and exclusion warnings remain visible.
+- Added native radio selection with keyboard navigation. Ranked offers now lead directly to
+  the matched trade-off explanation and buyer decision review before the excluded offers.
+  Longer explanation details are expandable. The initial rendered review still placed the first
+  offer at about 1,136px, so a second refinement moved it to about 853px at 1440px viewport width
+  with preview controls closed; text sizes were not reduced to achieve this.
+- Separated operation kind from its lifecycle state. An optional read-only explanation request
+  preserves matching current results, buyer selection and decision-dialog context through
+  loading, unknown outcome, readback and failure. Evaluation/refresh or unspecified operation
+  kinds retain conservative decision guards. The controller prevents an explanation request
+  from clearing an unresolved evaluation failure. Explanation results still require matching
+  evaluation references; missing-factor retries cannot invent a ranking.
+- Preview controls use a compact disclosure and open/focus when a simulated outcome is needed.
+  Expanded fixture details preserve the independent 150 cm comparison versus 152 cm review
+  example, fictional provenance and absence of actual calculations, AI or persistence.
+- Worked backwards again from FR-13/14/15/18: find comparable offers, understand preference
+  and exclusions, choose a permitted current offer, inspect evidence, and review the exact
+  unsaved handoff. Independent read-only review found no remaining material blocker within
+  this UI plus proposed API-handoff scope. The connected PRD acceptance gates remain pending.
+- Executed `npm run lint`, `npm run build` (including TypeScript validation), and the existing
+  frontend suite with the private PDF preflight file excluded: 26 tests passed. Production
+  artifacts still exclude the comparison preview and supplied fixtures.
+- Private validation passed: 81 model assertions; seven browser journey groups for keyboard
+  selection, choice/handoff, evidence/focus, duplicate starts, unknown/readback recovery,
+  missing factors and optional explanation preservation; two live-prop groups for freshness,
+  capability and foreign-result guards; two cross-preview/leave-protection smoke groups.
+  Interaction checks observed no uncaught errors, external/API requests or browser-storage writes.
+- Rechecked all 150 layout combinations (15 scenarios, five widths from 320 to 1440px,
+  normal and doubled text). Inspected actual desktop, mobile and enlarged-text screenshots.
+  Independent checks also passed 33 controller assertions and 20 layout/keyboard/dialog checks.
+  All new executable checks, screenshots and detailed reports remain outside the repository
+  in OS temporary storage; no new test cases or reports are included in feature files.
+- Recorded the user's future general-agent direction in the UI plan and comparison handoff:
+  one persistent assistant across screens, explicit current record/revision/unsaved-edit context,
+  relevant server-authorized actions through the coordinator/specialists, reviewed proposals,
+  and actual operation events/recovery. Human confirmation and final-decision boundaries remain.
+  No agent control or runtime implementation was added to this branch.
+- Ready for user review at the local comparison preview. Backend evaluation, live AI/factors,
+  scenario editing and durable final decisions remain separate work. The implementation is
+  still uncommitted and unpushed; the remote feature branch remains at its starting baseline.
+
+## Comparison final verification and local commit packaging - 16 October 2026
+
+- User authorized another local verification pass and commits if ready, retaining meaningful
+  functionality-based messages. This authorization does not include pushing or merging.
+- Reran lint, the 26-test committed frontend suite (excluding the private PDF preflight file),
+  and the production build including TypeScript validation; all passed. No application code
+  changed during this packaging pass. The build still contains only the normal application.
+- Reran 81 private model assertions, seven interaction journey groups, two live-prop guard
+  groups and two navigation/recovery smoke groups; all passed. Reran all 150 layout combinations
+  and inspected fresh desktop and enlarged mobile screenshots. Browser interaction checks
+  observed no uncaught errors, external/API calls or browser-storage writes.
+- Independent backward/contract review found no blocker within the agreed comparison UI and
+  proposed API-handoff scope. Clarified that the general-agent coordinator and human-facing
+  confirmation/decision routes are planned architecture, not implemented runtime capabilities.
+- Created four local implementation/handoff commits in dependency order:
+  - `71f5f77` — Keep comparison choices tied to current reviewed results.
+  - `674cf7f` — Make supplier trade-offs easier to compare and choose.
+  - `42e9112` — Add a labelled comparison walkthrough with recovery scenarios.
+  - `053270e` — Define the backend handoff for trustworthy quotation comparisons.
+- The closing documentation commit records this verification, current status, future general
+  agent direction and delivery workflow. Each commit stages only its reviewed file list and
+  passes the staged whitespace check. Private executable tests, screenshots and detailed reports
+  remain outside the repository; no test cases or QA artifacts are included in the commit scope.
+- Scope remains local UI plus proposed contracts. No backend/live-AI deployment or verification,
+  scenario editor, durable decision save, implementation push, PR or merge was performed.
+  Next delivery step is a separately authorized feature-branch push and PR review into `dev`.
 
 ## Per-increment report template
 ### Increment / commit
