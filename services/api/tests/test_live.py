@@ -19,9 +19,12 @@ def test_deployed_foundation_health_and_auth():
     parsed = urlsplit(base_url)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username:
         pytest.fail("LIVE_API_URL must be an explicitly configured HTTPS API origin")
+    expected_ai = os.getenv("LIVE_EXPECT_AI_ENABLED", "false")
+    if expected_ai not in {"true", "false"}:
+        pytest.fail("LIVE_EXPECT_AI_ENABLED must be true or false")
     with httpx.Client(base_url=base_url, timeout=15) as client:
-        health = client.get("/healthz")
+        health = client.get("/api/health")
         assert health.status_code == 200
         assert health.json()["environment"] == "production"
-        assert health.json()["ai_enabled"] is False
+        assert health.json()["ai_enabled"] is (expected_ai == "true")
         assert client.get("/api/v1/cases").status_code == 401

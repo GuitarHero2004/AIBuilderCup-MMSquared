@@ -204,6 +204,7 @@ def create_app(
             request, ApiError(500, "INTERNAL_ERROR", "The request could not be completed.")
         )
 
+    @app.get("/api/health", response_model=Health, include_in_schema=False)
     @app.get("/healthz", response_model=Health)
     def health() -> Health:
         return Health(environment=config.app_env, ai_enabled=config.ai_enabled)
