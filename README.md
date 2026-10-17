@@ -1,13 +1,14 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: connected quotation implementation locally verified, 18 October 2026.**
-The normal React/TypeScript application now connects anonymous sign-in and saved sourcing cases
-to private PDF upload, extraction requests, source inspection, saved corrections and explicit
-human confirmation. The backend stores immutable confirmed revisions and supports recovery
-after uncertain responses. Local verification uses real Firebase emulators; extraction tests
-inject an explicitly separate test provider. An actual Gemini call and a cloud deployment have
-not been verified.
+**Status: live quotation workflow deployed and verified, 18 October 2026.**
+[Open GreenProcure](https://greenprocure-511917.web.app). Firebase Hosting serves the normal
+React/TypeScript app; the FastAPI service runs on Cloud Run in Singapore with Firebase
+anonymous identity and App Check. The hosted journey passed: private PDF upload, real Gemini
+extraction, saved human review, explicit confirmation and reopening after reload. Cross-owner
+access and direct browser database/storage reads were rejected in deployed checks.
+Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
+Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
 Comparison, scenario and decision screens remain development-only simulations. Deterministic
 calculations, approved carbon factors, persisted evaluations/decisions and the planned ADK
