@@ -1,15 +1,15 @@
 # GreenProcure — user flows and screen plan
 
-**Updated:** 16 October 2026.
+**Updated:** 17 October 2026.
 
-**Current status:** case workspace, quotation intake, quotation review and supplier comparison
-UI are integrated into `dev`. Scenario UI plus a proposed API handoff are implemented locally
-on `feat/ui-scenarios`. Backend evaluation and the connected sourcing journey remain pending;
-the synthetic walkthrough does not complete connected PRD FR-16/18 acceptance.
+**Current status:** case workspace, quotation intake, review, comparison and scenario UI
+are integrated into `dev`. Decision review and immutable-summary UI plus a proposed API handoff
+are locally verified and committed on `feat/ui-decision-summary`; implementation has not been pushed. Backend evaluation, durable decisions and the
+connected sourcing journey remain pending; synthetic walkthroughs do not complete FR-18 acceptance.
 
-**Current branch baseline:** `dev` at `b0caad3971f6f1ec1c744174747ae78305a1ed85`,
-including comparison PR #3. The scenario branch was published at that baseline before development.
-Its implementation has passed user review and is being delivered through a PR into `dev`.
+**Current branch baseline:** `dev` at `fa874ead76ea28e5c0f9907298d14852ab17e410`,
+including scenario PR #4 after all three GitHub checks passed. The decision branch was published
+at that baseline before development. Its implementation is now committed locally following user review.
 Work stays in the single canonical checkout.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
@@ -286,6 +286,12 @@ Presentation types must be mapped to generated contracts after Mạnh agrees the
 
 ### S6 — Buyer decision and saved summary
 
+**UI implementation boundary, 16 October 2026:** comparison and scenario walkthroughs pass
+exact in-memory selections into the shared decision review. The standalone decision preview
+supplies independent fixtures. Simulated saving/reopening is temporary; durable storage,
+refresh recovery and owner-enforced server acceptance require the proposed backend handoff.
+
+
 **Question:** What am I choosing, why, and what evidence supports it?
 
 - Show the selected quote, active baseline/scenario, current evaluation, recommendation,
@@ -432,8 +438,8 @@ acceptance gate; a finished screen alone does not demonstrate the connected prod
 | `feat/ui-first-evaluation` | Connect the reviewed quotation to authoritative results; prove PRD I1 end to end |
 | `feat/ui-input-revisions` | Saved-requirement editing, conflicts and stale-result handling with revision-aware API support |
 | Merged `feat/ui-quote-comparison` | UI plus proposed API handoff: independent synthetic comparison, A/B trade-off, C/D exclusions, missing/stale/recovery states and local choice handoff; connected I2/I3 remain pending |
-| Current `feat/ui-scenarios` | UI plus proposed [API handoff](SCENARIO_CONTRACT.md): exact priorities, reviewed application, preserved baseline, supplied trade-offs, no-feasible and saved-confirmation recovery; backend preview/evaluation remain pending |
-| `feat/ui-decision-summary` | Human choice/reason, immutable save/reopen and stale-save guards; complete I3 |
+| Merged `feat/ui-scenarios` | UI plus proposed [API handoff](SCENARIO_CONTRACT.md): exact priorities, reviewed application, preserved baseline, supplied trade-offs, no-feasible and saved-confirmation recovery; backend preview/evaluation remain pending |
+| Current `feat/ui-decision-summary` | UI plus proposed [API handoff](DECISION_CONTRACT.md): exact human choice/reason, simulated immutable save/reopen and stale/unknown-save guards; connected I3 remains pending |
 | Future `feat/ui-platform-agent` | General agent available across screens, contextual authorized actions and human-reviewed proposals; separate context/tool contract and backend dependency, not part of comparison |
 | `test/ui-demo-readiness` | Full acceptance journey and failure/accessibility checks; distinguish local evidence from I4 deployed evidence |
 

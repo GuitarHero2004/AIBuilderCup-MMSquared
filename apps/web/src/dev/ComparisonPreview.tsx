@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
+import { DecisionWalkthrough } from './DecisionPreview';
+import { comparisonDecisionSource } from './decisionFixtures';
+import { sourceKey } from '../features/decisions/model';
+import type { DecisionSource } from '../features/decisions/types';
 import { ComparisonView } from '../features/comparison/ComparisonView';
 import { operationPending, rankingIssue, selectableOffer } from '../features/comparison/model';
 import type { ComparisonContext, ComparisonExplanation, ComparisonOffer, ComparisonOperation, ComparisonSnapshot } from '../features/comparison/types';
@@ -14,7 +18,6 @@ interface ComparisonPreviewState {
   scenario: ComparisonScenario; context: ComparisonContext; snapshot: ComparisonSnapshot | null;
   explanation: ComparisonExplanation; operation: ComparisonOperation; pending: PendingComparison | null; notice: string;
 }
-interface DecisionContext { evaluationId: string; quoteId: string; supplierName: string; confirmedRevisionId: string; inputRevision: number; caseRevision: number }
 interface InspectionContext { evaluationId: string; inputRevision: number; offer: ComparisonOffer }
 const resultScenario = (scenario: ComparisonScenario): ComparisonScenario => ['ready-before-evaluate', 'running', 'uncertain', 'read-error', 'explanation-unavailable', 'mismatch', 'stale'].includes(scenario) ? 'complete' : scenario;
 
@@ -40,13 +43,14 @@ function initialState(scenario: ComparisonScenario, seed: number): ComparisonPre
 export function ComparisonPreview() {
   const [state, setState] = useState(() => initialState('ready-before-evaluate', 0));
   const [inspection, setInspection] = useState<InspectionContext | null>(null);
-  const [decision, setDecision] = useState<DecisionContext | null>(null);
+  const [decisionSessions, setDecisionSessions] = useState<{ key: string; source: DecisionSource }[]>([]);
+  const [activeDecision, setActiveDecision] = useState<string | null>(null);
+  const [pendingDecisionKey, setPendingDecisionKey] = useState<string | null>(null);
   const [leaveTarget, setLeaveTarget] = useState('/quotation-preview.html');
   const controlsTitle = useRef<HTMLHeadingElement>(null);
   const previewDetails = useRef<HTMLDetailsElement>(null);
   const outcomeControls = useRef<HTMLDivElement>(null);
   const inspectionDialog = useRef<HTMLDialogElement>(null);
-  const decisionDialog = useRef<HTMLDialogElement>(null);
   const leaveDialog = useRef<HTMLDialogElement>(null);
   const sequence = useRef(0);
   const mutationLock = useRef(false);
@@ -54,39 +58,34 @@ export function ComparisonPreview() {
   const evaluationStatus = state.operation.kind === 'explanation' ? 'idle' : state.operation.status;
   const canEvaluate = state.scenario !== 'unreviewed-inputs' && !pending;
   const blockedReason = state.scenario === 'unreviewed-inputs' ? 'Review and explicitly confirm at least one quotation revision before evaluating. Uploaded or extracted documents alone are not confirmed inputs.' : null;
-  const decisionCurrent = Boolean(decision && state.snapshot && decision.evaluationId === state.snapshot.id && decision.inputRevision === state.snapshot.inputRevision && decision.caseRevision === state.context.currentRevision && selectableOffer(state.snapshot, state.context, state.operation, decision.quoteId));
 
   useEffect(() => {
-    if (!decisionCurrent) decisionDialog.current?.close();
-  }, [decisionCurrent]);
-  useEffect(() => {
     inspectionDialog.current?.close();
-    decisionDialog.current?.close();
   }, [state.snapshot?.id, state.context.currentRevision, evaluationStatus]);
   useEffect(() => {
-    if (!pending) return;
+    if (!pending && !pendingDecisionKey) return;
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [pending]);
+  }, [pending, pendingDecisionKey]);
 
   useEffect(() => {
     if (!['running', 'checking'].includes(state.operation.status)) return;
     if (previewDetails.current) previewDetails.current.open = true;
-    if (!decisionDialog.current?.open && !inspectionDialog.current?.open && !leaveDialog.current?.open) {
+    if (!activeDecision && !inspectionDialog.current?.open && !leaveDialog.current?.open) {
       outcomeControls.current?.focus();
       outcomeControls.current?.scrollIntoView({ block: 'nearest' });
     }
-  }, [state.operation.status, state.pending?.id]);
+  }, [state.operation.status, state.pending?.id, activeDecision]);
 
   function focusControls() {
-    if (!decisionDialog.current?.open && !inspectionDialog.current?.open && !leaveDialog.current?.open) controlsTitle.current?.focus();
+    if (!activeDecision && !inspectionDialog.current?.open && !leaveDialog.current?.open) controlsTitle.current?.focus();
   }
   function reset(scenario: ComparisonScenario) {
-    if (pending || mutationLock.current) return;
+    if (pending || mutationLock.current || pendingDecisionKey) return;
     const next = initialState(scenario, ++sequence.current);
     mutationLock.current = operationPending(next.operation);
-    setDecision(null); setInspection(null); setState(next); focusControls();
+    setActiveDecision(null); setInspection(null); setState(next); focusControls();
   }
   function begin(kind: PendingComparison['kind']) {
     if (pending || mutationLock.current) return;
@@ -150,7 +149,7 @@ export function ComparisonPreview() {
     focusControls();
   }
   function requestNavigation(target: string) {
-    if (pending || mutationLock.current) { setLeaveTarget(target); leaveDialog.current?.showModal(); }
+    if (pending || mutationLock.current || pendingDecisionKey) { setLeaveTarget(target); leaveDialog.current?.showModal(); }
     else window.location.assign(target);
   }
   function requestBack() { requestNavigation('/quotation-preview.html'); }
@@ -162,34 +161,43 @@ export function ComparisonPreview() {
     inspectionDialog.current?.showModal();
   }
   function reviewDecision(evaluationId: string, quoteId: string) {
+    if (pendingDecisionKey) { setActiveDecision(pendingDecisionKey); return; }
     const snapshot = state.snapshot;
     if (!snapshot || snapshot.id !== evaluationId || !selectableOffer(snapshot, state.context, state.operation, quoteId)) return;
-    const offer = snapshot.offers.find((item) => item.id === quoteId);
-    if (!offer?.confirmedRevisionId) return;
-    setDecision({ evaluationId, quoteId, supplierName: offer.supplierName, confirmedRevisionId: offer.confirmedRevisionId, inputRevision: snapshot.inputRevision, caseRevision: state.context.currentRevision });
-    decisionDialog.current?.showModal();
+    const source = comparisonDecisionSource(state.context, snapshot, quoteId, state.explanation);
+    const key = sourceKey(source);
+    setDecisionSessions((sessions) => sessions.some((session) => session.key === key) ? sessions : [...sessions, { key, source }]);
+    setActiveDecision(key);
+  }
+  function liveDecisionSource(captured: DecisionSource): DecisionSource {
+    const matches = state.snapshot !== null && JSON.stringify(captured.evaluation) === JSON.stringify(state.snapshot);
+    const allowed = matches && state.snapshot !== null && selectableOffer(state.snapshot, state.context, state.operation, captured.selectedQuoteId);
+    return { ...captured, context: state.context, canSave: allowed, blockedReason: allowed ? undefined : 'The comparison or its available choices changed. Return to its current state before starting another save.' };
   }
 
   return <div className="app-shell quotation-preview comparison-preview">
     <a className="skip-link" href="#main">Skip to quotation comparison</a>
     <aside className="sidebar" aria-label="Preview navigation">
       <div className="brand"><span className="brand-mark"><Icon name="leaf" /></span><span>GreenProcure<span className="brand-subtitle">Fabric sourcing</span></span></div>
-      <nav className="primary-nav" aria-label="Comparison preview">
+      {!activeDecision && <nav className="primary-nav" aria-label="Comparison preview">
         <p className="nav-label">DESIGN PREVIEW</p>
         <a className="nav-item" href="/quotation-preview.html" onClick={(event) => { event.preventDefault(); requestBack(); }}><Icon name="fabric" />Quotation walkthrough</a>
         <span className="nav-item" aria-current="page"><Icon name="grid" />Comparison</span>
         <a className="nav-item" href="/scenario-preview.html" onClick={(event) => { event.preventDefault(); requestNavigation('/scenario-preview.html'); }}><Icon name="grid" />Scenario example</a>
-      </nav>
-      <div className="sidebar-footer"><Icon name="shield" /><div><strong>Independent synthetic example</strong><p>No signed-in session.<br />No decision is saved.</p></div></div>
+      </nav>}
+      {activeDecision && <nav className="primary-nav" aria-label="Decision review"><span className="nav-item" aria-current="page"><Icon name="grid" />Decision summary</span></nav>}
+      <div className="sidebar-footer"><Icon name="shield" /><div><strong>Independent synthetic example</strong><p>No signed-in session.<br />No real decision is saved.</p></div></div>
     </aside>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><span>Woven fabric · synthetic demo</span><Icon name="chevron" /><span>Compare quotations</span></div><span className="session-chip">UI preview</span></header>
+      <header className="topbar"><div className="breadcrumb"><span>Woven fabric · synthetic demo</span><Icon name="chevron" /><span>{activeDecision ? 'Decision summary' : 'Compare quotations'}</span></div><span className="session-chip">UI preview</span></header>
       <main id="main" className="main-content" tabIndex={-1}>
+        <div hidden={Boolean(activeDecision)}>
+        {pendingDecisionKey && <div className="alert warning-alert"><div><strong>A decision outcome is unresolved</strong><p>Resume the captured decision before reviewing another choice in this case.</p><button className="button button-secondary" onClick={() => setActiveDecision(pendingDecisionKey)}>Resume unresolved decision</button></div></div>}
         <section className="preview-controls comparison-preview-controls" aria-labelledby="comparison-preview-title">
           <div className="comparison-preview-summary"><h2 id="comparison-preview-title" ref={controlsTitle} tabIndex={-1}>Synthetic comparison preview</h2>
-            <p>Independent synthetic data; test-only carbon. No calculation, AI call or decision save.</p></div>
+            <p>Independent synthetic data; test-only carbon. No live calculation, AI call or durable decision save.</p></div>
           <details ref={previewDetails}><summary>Preview controls</summary><div className="preview-control-body">
-            <div className="preview-scenario"><label htmlFor="comparison-scenario">Comparison scenario</label><select id="comparison-scenario" value={state.scenario} disabled={pending} onChange={(event) => reset(event.target.value as ComparisonScenario)}>{comparisonScenarios.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><button className="button button-secondary" disabled={pending} onClick={() => reset(state.scenario)}>Reset comparison scenario</button></div>
+            <div className="preview-scenario"><label htmlFor="comparison-scenario">Comparison scenario</label><select id="comparison-scenario" value={state.scenario} disabled={pending || Boolean(pendingDecisionKey)} onChange={(event) => reset(event.target.value as ComparisonScenario)}>{comparisonScenarios.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><button className="button button-secondary" disabled={pending || Boolean(pendingDecisionKey)} onClick={() => reset(state.scenario)}>Reset comparison scenario</button></div>
             {['running', 'checking'].includes(state.operation.status) && <div ref={outcomeControls} tabIndex={-1} className="preview-outcomes" role="group" aria-label="Simulated comparison outcomes">
               <strong>{state.operation.status === 'checking' ? 'Resolve this same operation:' : 'Choose the simulated outcome:'}</strong>
               <button className="button button-secondary" onClick={resolveSuccess}>Simulate {state.pending?.kind === 'explanation' ? 'matching explanation' : state.pending?.kind === 'refresh' ? 'verified read' : 'saved evaluation'}</button>
@@ -206,6 +214,8 @@ export function ComparisonPreview() {
         </section>
         <ComparisonView context={state.context} snapshot={state.snapshot} explanation={state.explanation} operation={state.operation} canEvaluate={canEvaluate} evaluationBlockedReason={blockedReason}
           onEvaluate={() => begin('evaluation')} onCheckResult={checkResult} onBack={requestBack} onInspectQuotation={inspectQuotation} onRequestExplanation={() => begin('explanation')} onReviewDecision={reviewDecision} />
+        </div>
+        {decisionSessions.map((session) => <div key={session.key} hidden={activeDecision !== session.key}><DecisionWalkthrough source={liveDecisionSource(session.source)} onPendingChange={(pending) => setPendingDecisionKey((current) => pending ? session.key : current === session.key ? null : current)} active={activeDecision === session.key} currentCaseRevision={state.context.currentRevision} onBack={() => { setActiveDecision(null); requestAnimationFrame(() => controlsTitle.current?.focus()); }} /></div>)}
       </main>
     </div>
     <dialog ref={inspectionDialog} className="preview-dialog comparison-inspection-dialog" aria-labelledby="comparison-inspection-title">
@@ -216,17 +226,9 @@ export function ComparisonPreview() {
         <p className="comparison-dialog-note">Case context and source limitations remain attached to the evaluation. The review walkthrough is a separate example and cannot change this snapshot.</p></>}
       <button className="button button-primary" onClick={() => inspectionDialog.current?.close()}>Return to comparison</button>
     </dialog>
-    <dialog ref={decisionDialog} className="preview-dialog comparison-decision-dialog" aria-labelledby="comparison-decision-title">
-      <h2 id="comparison-decision-title">Review this decision handoff</h2>
-      {decision && decisionCurrent && <><p className="preview-dialog-note">You selected <strong>{decision.supplierName}</strong> from the current supplied evaluation. {decision.quoteId !== state.snapshot?.winnerQuoteId ? 'This is an eligible alternative to the supplied first-ranked offer.' : 'This is the supplied first-ranked offer.'}</p>
-        <dl><dt>Evaluation</dt><dd>{decision.evaluationId}</dd><dt>Quotation</dt><dd>{decision.quoteId}</dd><dt>Confirmed reference</dt><dd>{decision.confirmedRevisionId}</dd><dt>Input revision</dt><dd>{decision.inputRevision}</dd><dt>Current case revision</dt><dd>{decision.caseRevision}</dd></dl>
-        <p className="comparison-dialog-note"><strong>No decision has been saved.</strong> This is a local handoff preview. A separate milestone will collect the decision reason and explicitly save an immutable decision against these exact references. Scenario editing is also a later workflow.</p>
-        <p className="comparison-dialog-note">Test-only carbon figures and synthetic records cannot support a real purchase. Closing this dialog returns to the comparison without recording a purchase or approval.</p></>}
-      <button className="button button-primary" onClick={() => decisionDialog.current?.close()}>Return to comparison</button>
-    </dialog>
     <dialog ref={leaveDialog} className="preview-dialog" aria-labelledby="comparison-leave-title">
       <h2 id="comparison-leave-title">Leave this unresolved walkthrough?</h2>
-      <p className="preview-dialog-note">The simulated operation has no confirmed outcome yet. Leaving clears this in-memory comparison. No real service operation will be cancelled or completed.</p>
+      <p className="preview-dialog-note">{pendingDecisionKey ? "A decision save or summary read is unresolved. Leaving this page clears its captured request and any in-memory receipt." : "The simulated comparison operation has no confirmed outcome yet. Leaving clears this in-memory comparison."} No real service operation will be cancelled or completed.</p>
       <p className="comparison-dialog-note">The next page is an independent demonstration; it will not receive this comparison or your selection.</p>
       <div className="comparison-dialog-actions"><button className="button button-primary" autoFocus onClick={() => leaveDialog.current?.close()}>Stay with this result</button><a className="button button-secondary" href={leaveTarget}>{leaveTarget === '/scenario-preview.html' ? 'Leave for scenario example' : 'Leave for quotation walkthrough'}</a></div>
     </dialog>

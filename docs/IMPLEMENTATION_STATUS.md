@@ -1,10 +1,10 @@
 # Implementation and verification ledger
-**Current state - 16 October 2026:** case workspace, quotation intake, review and comparison UI
-are integrated into `dev`. Scenario exploration UI and a proposed API handoff are implemented
-on `feat/ui-scenarios`, approved for commit packaging and PR delivery into `dev`. The branch was
-published at `dev` baseline `b0caad3971f6f1ec1c744174747ae78305a1ed85` before development.
-Real PDF intake, extraction, persisted review, evaluation, scenarios/decisions and cloud release
-remain pending. Dated entries preserve the state and evidence at each review.
+**Current state - 17 October 2026:** case workspace, quotation intake, review, comparison and
+scenario UI are integrated into `dev`. Decision review/summary UI and a proposed API handoff
+are committed locally on `feat/ui-decision-summary`; implementation has not been pushed. The branch was
+published from `fa874ead76ea28e5c0f9907298d14852ab17e410` before coding. Real PDF intake,
+extraction, persisted review, evaluation, scenarios/decisions and cloud release remain pending.
+Dated entries preserve the state and evidence at each review.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
@@ -19,10 +19,10 @@ remain pending. Dated entries preserve the state and evidence at each review.
 | Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
 | Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
 | Scenario UI | Reusable editor/results and independent synthetic walkthrough implemented locally | Frozen baseline, exact priorities, explicit apply and recovery; backend calculations, live preview and persistence remain pending |
-| Final decision flow | Specified, not implemented | Current comparison/scenario previews show unsaved handoff references only |
+| Final decision UI | Review/immutable summary and in-memory recovery walkthrough implemented and locally verified | Exact comparison/scenario handoff; server-owned durable save/reopen remains pending |
 | Carbon references | Not supplied/approved | Exact source rows, review notes and licence |
 | Cloud Run/Firebase deployment | Not deployed | URLs, revisions, timestamps |
-| PR checks/previews and Cloud Build | Checks workflow supplied; remote execution/previews/Cloud Build pending | No remote run/deployment claimed |
+| PR checks/previews and Cloud Build | GitHub checks passed on scenario PR #4; cloud previews/Cloud Build pending | Checks and security scan passed at cf2c53d; no deployment claimed |
 | Security and quotas | Token/owner checks and atomic two-case cap verified locally | Full AI quotas and public abuse controls pending |
 | Submission readiness | Not established | All incognito live smoke checks |
 
@@ -839,6 +839,92 @@ remain pending. Dated entries preserve the state and evidence at each review.
   Publication/PR/merge state must be verified from GitHub rather than inferred from this entry.
 - The next milestone is decision UI plus proposed backend handoff. Begin it from an updated
   origin/dev after this branch is integrated, and publish its new branch before coding.
+
+
+## Decision UI implementation and backward review - 16 October 2026
+
+- Delivered the scenario milestone as five coherent commits: f2054d8, 6bc6e60, f7dc223,
+  b31b8ef and cf2c53d. Pushed the feature branch, opened PR #4 and verified all three
+  GitHub checks passed at cf2c53d82cecaee2dbdd3e48cf5d69b23795f677. Merged with the
+  commit history preserved into dev at fa874ead76ea28e5c0f9907298d14852ab17e410.
+  PR: https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/4.
+- Updated local dev using git pull --ff-only origin dev, created feat/ui-decision-summary
+  from that merged baseline and published its upstream immediately before development.
+  All work remains in C:\AIBuilderCup-MMSquared. New decision implementation is uncommitted
+  and unpushed; the remote branch contains only the approved starting baseline.
+- Added reusable TypeScript decision presentation types, source/proposal/receipt validation,
+  mandatory human reason and review/immutable-summary UI. Selected offers remain distinct from
+  the evaluation preference winner and original scenario baseline. Existing source details,
+  common measurement boundaries, fixed requirements and recorded limitations stay accessible.
+  No cost, carbon, score or supplier ranking is calculated in the browser.
+- Replaced comparison/scenario handoff placeholders with the shared in-page decision workspace.
+  Each handoff captures the exact selected quote revision, evaluation, policy and applicable
+  baseline/scenario. Back/reopen preserves the parent view, draft, unresolved request and
+  verified receipt in that page session. An unresolved decision must be resumed before another
+  choice can create a parallel save. The standalone walkthrough has ten labelled examples.
+- Added simulated explicit save, matching/mismatched receipt, conclusive rejection, lost
+  response, unavailable readback, acknowledged-ID/summary-unavailable, historical summary,
+  refresh failure and reopen paths. Unknown outcomes retain the same captured request.
+  A known saved ID permits only reading that existing record, never a replacement save.
+  Later source changes remain separate from the immutable saved snapshot.
+- Worked backwards from PRD FR-18, schema section 23 and S6: review an eligible current offer,
+  explain every human choice, save deliberately and reopen exactly what was decided. Refined
+  live source/permission invalidation, foreign-case data suppression, hidden pending-session
+  navigation/reset guards, saved-versus-unknown wording and duplicate prevention. Missing
+  optional recommendation text does not block a valid human choice.
+- Refined selected/preferred metrics, source dialogs and focus, policy percentage formatting,
+  long names/reasons, narrow/enlarged layouts and status/action consistency. The reason and Save
+  area sit beside requirements on desktop and stack on narrow or enlarged views. Fixed a
+  character-counter overflow exposed by a long reason at 320px with doubled text.
+- Added docs/DECISION_CONTRACT.md as a proposed backend handoff: authenticated ownership,
+  exact revision/fingerprint checks, human-only save authority, atomic server-built immutable
+  summaries, idempotent committed replay, exact-ID recovery and separate historical context.
+  The proposed 2,000-Unicode-code-point reason budget needs backend agreement. Presentation
+  types are not generated transport DTOs; all decision endpoints remain unimplemented.
+- Executed npm run lint, npm run test --workspace=@greenprocure/web --
+  --exclude src/features/quotations/pdfPreflight.test.ts, and npm run build. Lint, all 26
+  existing committed frontend tests, TypeScript and production build passed. The excluded
+  private PDF test predates this task. Production output contains the normal index and assets;
+  decision previews/fixtures are not included.
+- Private verification passed 112 model assertions, 29 focused UI assertions and 65 controller/
+  integration checks. An independent audit passed 11 live-prop view groups and three controller
+  context groups, including foreign-context suppression and same-revision capability changes.
+  Browser checks observed no uncaught errors, external/business API requests or storage writes.
+- Layout verification passed 100 combinations: ten states at 1440, 1024, 768, 390 and 320px,
+  normal and doubled text. An additional extreme-name/long-reason check passed at 320px/200%.
+  Actual desktop, saved, recovery, scenario/mobile and enlarged screenshots were inspected for
+  hierarchy, wrapping, control sizing and alignment, beyond automated overflow assertions.
+- New executable tests, test inputs, screenshots and detailed reports remain in OS temporary
+  storage outside the repository. No dependencies, backend, generated API types, cloud resources
+  or deployments changed. Verification used local Chromium; other browsers, real devices,
+  screen-reader testing, durable persistence and connected backend/live-AI were not verified.
+- Ready for user review at http://127.0.0.1:5174/decision-preview.html and through Review decision
+  in the comparison/scenario previews. This completes the local UI and handoff scope only;
+  connected FR-18/I3 acceptance still requires backend implementation and integration.
+  Next step is user review, followed by separately authorized commit packaging and publication.
+
+
+## Decision commit packaging - 17 October 2026
+
+- User authorized local commits after the readiness review. Rechecked the 17-file scope,
+  staged only explicit functionality groups, and verified each staged file list before commit.
+  No private test scripts, inputs, screenshots, detailed reports or unrelated files are included.
+- Created four implementation/handoff commits in dependency order:
+  - `43a38ee` - Keep decisions tied to the exact reviewed offer and reason.
+  - `dd203ef` - Review buyer choices and reopen decision summaries.
+  - `9c2dd8a` - Connect comparison and scenario choices to decision review.
+  - `a80bb2c` - Define decision saving and recovery for backend handoff.
+- The fifth commit records the implementation progress, walkthrough instructions, remaining
+  integration limits and verified review evidence. Messages include a concise explanation of
+  the behavior and purpose. Staged whitespace checks pass for each committed group.
+- Packaging removed surplus end-of-file blank lines in the view and handoff document; no
+  application behavior changed. The completed local lint/build/unit/private browser evidence
+  above still applies. No additional live/backend or cloud verification was performed.
+- Decision implementation is committed locally on feat/ui-decision-summary. No implementation
+  push, PR, merge or deployment was performed. The upstream remains at the previously published
+  starting baseline; the next delivery step is a separately authorized push and PR review.
+- Durable decision storage, generated API integration and connected FR-18 acceptance remain
+  pending. The in-memory walkthrough and proposed API handoff do not establish those outcomes.
 
 ## Per-increment report template
 ### Increment / commit
