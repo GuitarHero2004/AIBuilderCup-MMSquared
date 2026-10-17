@@ -1,0 +1,19 @@
+.cq-notice, .cq-replay, .cq-availability { margin-block: var(--ui-space-4); overflow-wrap: anywhere; }
+.cq-replay { padding: 1rem; border: 1px solid var(--border); border-radius: var(--ui-radius-panel); }
+.cq-replay p { margin: 0 0 0.75rem; }
+.cq-availability { color: var(--secondary); font-size: 0.875rem; line-height: 1.6; }
+.cq-activity { padding: 1.25rem; margin-top: 1.25rem; }
+.cq-activity h2 { font-size: 1.125rem; margin: 0 0 0.75rem; }
+.cq-activity ol { padding-left: 1.25rem; }
+.cq-activity li { padding: 0.5rem; overflow-wrap: anywhere; }
+.cq-activity time { display: block; color: var(--secondary); font-size: 0.8125rem; }
+.cq-conflict-dialog { max-width: min(48rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; }
+.cq-conflict-rows section { border-top: 1px solid var(--border); padding-block: 0.75rem; }
+.cq-conflict-rows h3 { font-size: 1rem; }
+.cq-conflict-rows dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 0.5rem 1rem; }
+.cq-conflict-rows dd { margin: 0; overflow-wrap: anywhere; }
+.cq-conflict-rows small { display: block; color: var(--secondary); margin-top: 0.25rem; }
+.intake-synthetic-declaration { display: flex; align-items: flex-start; gap: 0.625rem; margin: 1rem 0; font-size: 0.875rem; line-height: 1.5; }
+.intake-synthetic-declaration input { width: 1rem; min-width: 1rem; height: 1rem; margin-top: 0.1875rem; }
+.intake-upload-options.intake-upload-only { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 540px) { .cq-conflict-rows dl { grid-template-columns: minmax(0, 1fr); } }

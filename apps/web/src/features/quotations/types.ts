@@ -51,6 +51,10 @@ export interface QuotationIntakeProps {
   transfer: IntakeTransfer;
   limits: IntakeLimits;
   samples: IntakeSample[];
+  showSamples?: boolean;
+  requireSyntheticDeclaration?: boolean;
+  uploadUnavailableReason?: string;
+  extractionUnavailableReason?: string;
   processingNotice: string;
   retentionNotice: string;
   selectionResetKey?: number | string;

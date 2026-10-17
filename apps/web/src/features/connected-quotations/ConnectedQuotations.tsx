@@ -1,0 +1,324 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
+import type { ApiClient } from '../../api/client';
+import { ApiError } from '../../api/client';
+import type { CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
+import { QuotationIntake } from '../quotations/QuotationIntake';
+import { QuotationReview } from '../quotation-review/QuotationReview';
+import type { ReviewDocument, ReviewDraft, ReviewDraftField, ReviewOperation } from '../quotation-review/types';
+import type { IntakeTransfer } from '../quotations/types';
+import { draftIssues, intakeCase, intakeQuote, reviewDraft, reviewFields, toSaveDraft } from './adapters';
+import './connected-quotations.css';
+
+type Pending = { key: string; kind: 'upload' | 'save' | 'confirm' | 'extract'; quoteId?: string; sourceHash?: string; file?: File; revision?: number; body?: SaveDraft | ConfirmQuote | ExtractRequest };
+export type QuotationNavigationGuard = ((proceed: () => void) => void) | null;
+interface Props { api: ApiClient; ownerId: string; item: CaseRead; onBack: () => void; onCaseChanged: (item: CaseRead) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>; onBusy: (busy: boolean) => void }
+const reason = (error: unknown) => error instanceof ApiError ? `${error.message}${error.requestId ? ` Reference: ${error.requestId}.` : ''}` : 'The result could not be checked. Keep this view open and try checking the recorded state again.';
+const stale = (error: unknown) => error instanceof ApiError && ['STALE_CASE_REVISION', 'STALE_DRAFT_REVISION', 'SOURCE_REFERENCE_CHANGED'].includes(error.code);
+const uncertain = (error: unknown) => !(error instanceof ApiError) || error.outcomeUnknown;
+const copy = (draft: ReviewDraft) => structuredClone(draft);
+
+function readPending(storageKey: string): Pending | null {
+  try {
+    const raw = sessionStorage.getItem(storageKey), value: unknown = raw ? JSON.parse(raw) : null;
+    if (value && typeof value === 'object' && 'key' in value && typeof value.key === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(value.key) && 'kind' in value && ['upload','save','confirm','extract'].includes(String(value.kind))) {
+      const candidate = value as Pending;
+      if ((!candidate.quoteId && candidate.kind === 'upload') || candidate.quoteId && /^[a-f0-9]{32}$/.test(candidate.quoteId)) return { key: candidate.key, kind: candidate.kind, quoteId: candidate.quoteId };
+    }
+  } catch { /* An invalid opaque reference cannot authorize recovery. */ }
+  return null;
+}
+function assertCurrentQuote(current: QuoteRead, previous: QuoteRead) {
+  if (current.id !== previous.id || current.case_id !== previous.case_id || current.source_file.sha256 !== previous.source_file.sha256 || current.draft_revision < previous.draft_revision || current.case_data_revision < previous.case_data_revision) throw new ApiError('The current draft identity or revision could not be verified. Keep your edits and check again.', 'INVALID_RESPONSE');
+}
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(',')}}`;
+  return JSON.stringify(value) ?? 'null';
+}
+function assertReceiptBinding(receipt: MutationReceipt, attempt: Pending) {
+  if (receipt.state !== 'committed' || !receipt.quote) return;
+  const quote = receipt.quote;
+  if (attempt.sourceHash && quote.source_file.sha256 !== attempt.sourceHash) throw new ApiError('The receipt refers to a different source PDF.', 'INVALID_RESPONSE', undefined, true);
+  if (attempt.kind === 'upload' && attempt.revision !== undefined && (quote.case_data_revision !== attempt.revision + 1 || quote.draft_revision !== 0 || quote.status !== 'uploaded' || quote.source_extraction_run_id !== null)) throw new ApiError('The upload receipt did not match the submitted case revision.', 'INVALID_RESPONSE', undefined, true);
+  if (attempt.body && attempt.kind !== 'extract' && 'source_extraction_run_id' in attempt.body) {
+    const input = attempt.body, caseStep = quote.case_data_revision - input.expected_case_revision, draftStep = quote.draft_revision - input.expected_draft_revision;
+    const revisionsMatch = attempt.kind === 'confirm' ? caseStep === 1 && draftStep === 0 : [0, 1].includes(caseStep) && caseStep === draftStep;
+    if ('draft_data' in input && (canonical(quote.draft_data) !== canonical(input.draft_data) || canonical(quote.review_decisions) !== canonical(input.review_decisions))) throw new ApiError('The saved values did not match this submitted draft. Check the operation before continuing.', 'INVALID_RESPONSE', undefined, true);
+    if (!revisionsMatch || quote.source_extraction_run_id !== input.source_extraction_run_id) throw new ApiError('The receipt did not match the submitted draft and extraction revision. Check the recorded operation again.', 'INVALID_RESPONSE', undefined, true);
+  }
+}
+export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged, navigationGuardRef, onBusy }: Props) {
+  const storageKey = `greenprocure:pending-quotation:${ownerId}:${item.id}`;
+  const [pending, setPending] = useState<Pending | null>(() => readPending(storageKey));
+  const [collection, setCollection] = useState<QuoteList | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [transfer, setTransfer] = useState<IntakeTransfer>(() => pending ? { status: 'uncertain', message: 'An earlier operation needs readback. Check its recorded result before adding or changing quotations. Unsaved browser edits were not stored.' } : { status: 'idle' });
+  const [selected, setSelected] = useState<QuoteRead | null>(null);
+  const [draft, setDraft] = useState<ReviewDraft>({});
+  const [saved, setSaved] = useState<ReviewDraft>({});
+  const [operation, setOperation] = useState<ReviewOperation>({ status: 'idle' });
+  const [sourceState, setSource] = useState<ReviewDocument & { identity?: string }>({ fileName: '', url: null, pageCount: null, availability: 'loading' });
+  const [busy, setBusy] = useState(false);
+  const [canCloseAttempt, setCanCloseAttempt] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [selectionReset, setSelectionReset] = useState(0);
+  const [events, setEvents] = useState<RunEvents | null>(null);
+  const [run, setRun] = useState<RunRead | null>(null);
+  const [conflict, setConflict] = useState<QuoteRead | null>(null);
+  const [showConflict, setShowConflict] = useState(false);
+  const [leave, setLeave] = useState<{ proceed: () => void } | null>(null);
+  const [sourceRetry, setSourceRetry] = useState(0);
+  const mounted = useRef(true);
+  const lock = useRef(false);
+  const pendingRef = useRef<Pending | null>(pending);
+  const readGeneration = useRef(0);
+  const discardDialog = useRef<HTMLDialogElement>(null);
+  const conflictDialog = useRef<HTMLDialogElement>(null);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const blocked = busy || pending !== null;
+  const issues = selected ? draftIssues(selected, draft, dirty) : [];
+
+  const remember = useCallback((value: Pending | null) => {
+    pendingRef.current = value; setPending(value); if (!value) setCanCloseAttempt(false);
+    try {
+      if (value) sessionStorage.setItem(storageKey, JSON.stringify({ key: value.key, kind: value.kind, quoteId: value.quoteId }));
+      else sessionStorage.removeItem(storageKey);
+    } catch { /* In-memory recovery remains available when browser storage is denied. */ }
+  }, [storageKey]);
+  const applyQuote = useCallback((quote: QuoteRead) => {
+    setSelected(quote); const next = reviewDraft(quote); setDraft(next); setSaved(copy(next)); setConflict(null); setOperation({ status: 'idle' });
+  }, []);
+  const readCollection = useCallback(() => {
+    const generation = ++readGeneration.current;
+    return Promise.all([api.listQuotes(item.id), api.getCase(item.id)]).then(([quotes, currentCase]) => {
+      if (!mounted.current || generation !== readGeneration.current) return;
+      if (quotes.case_id !== item.id || currentCase.id !== item.id) throw new ApiError('The saved case identity did not match this view.', 'INVALID_RESPONSE');
+      setCollection(quotes); setLoadError(null); onCaseChanged(currentCase);
+    }).catch(error => { if (mounted.current && generation === readGeneration.current) setLoadError(reason(error)); })
+      .finally(() => { if (mounted.current && generation === readGeneration.current) setLoading(false); });
+  }, [api, item.id, onCaseChanged]);
+  const refreshCollection = useCallback(() => { setLoading(true); setLoadError(null); return readCollection(); }, [readCollection]);
+  useEffect(() => {
+    mounted.current = true;
+    void readCollection();
+    return () => { mounted.current = false; readGeneration.current += 1; };
+  }, [readCollection]);
+  useEffect(() => { onBusy(blocked); return () => onBusy(false); }, [blocked, onBusy]);
+  useEffect(() => {
+    if (!dirty && !blocked) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty, blocked]);
+  useEffect(() => {
+    navigationGuardRef.current = (proceed) => {
+      if (lock.current || pendingRef.current) { setNotice('Check the current operation before leaving this case.'); return; }
+      if (dirty) setLeave({ proceed }); else proceed();
+    };
+    return () => { navigationGuardRef.current = null; };
+  }, [dirty, navigationGuardRef]);
+  useEffect(() => {
+    const element = discardDialog.current;
+    if (leave) { element?.showModal(); element?.querySelector<HTMLButtonElement>('button')?.focus(); }
+    else element?.close();
+  }, [leave]);
+  useEffect(() => {
+    const element = conflictDialog.current;
+    if (showConflict) { element?.showModal(); element?.querySelector<HTMLButtonElement>('button')?.focus(); }
+    else element?.close();
+  }, [showConflict]);
+  const sourceQuoteId = selected?.id, sourceHash = selected?.source_file.sha256, sourceFileName = selected?.source_file.name ?? '', sourcePages = selected?.source_file.pages ?? null;
+  const sourceIdentity = `${sourceQuoteId ?? ''}:${sourceHash ?? ''}`;
+  const source: ReviewDocument = sourceState.identity === sourceIdentity ? sourceState : { fileName: sourceFileName, pageCount: sourcePages, url: null, availability: 'loading' };
+  useEffect(() => {
+    if (!sourceQuoteId) return;
+    let active = true, objectUrl: string | null = null;
+    void api.getDocument(item.id, sourceQuoteId).then(blob => {
+      if (!active) return; objectUrl = URL.createObjectURL(blob);
+      setSource({ identity: sourceIdentity, fileName: sourceFileName, pageCount: sourcePages, url: objectUrl, availability: 'ready' });
+    }).catch(error => { if (active) setSource({ identity: sourceIdentity, fileName: sourceFileName, pageCount: sourcePages, url: null, availability: 'unavailable', message: reason(error) }); });
+    return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [api, item.id, sourceQuoteId, sourceIdentity, sourceFileName, sourcePages, sourceRetry]);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-page-title]')?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [selected?.id]);
+
+  async function refreshEvents(result: RunRead) {
+    setRun(result);
+    try { const next = await api.getRunEvents(item.id, result.id); if (mounted.current && next.run_id === result.id) setEvents(next); } catch { if (mounted.current) setEvents(null); }
+  }
+  async function acceptReceipt(receipt: MutationReceipt, attempt: Pending): Promise<boolean> {
+    if (receipt.request_key !== attempt.key || receipt.kind !== attempt.kind || attempt.quoteId && receipt.quote_id && receipt.quote_id !== attempt.quoteId || receipt.quote && receipt.quote.case_id !== item.id) throw new ApiError('The operation receipt did not match the submitted request. Check the recorded result again.', 'INVALID_RESPONSE', undefined, true);
+    assertReceiptBinding(receipt, attempt);
+    if (receipt.state === 'committed' && receipt.quote) {
+      setNotice(attempt.kind === 'confirm' ? '' : attempt.kind === 'save' ? 'Your draft was saved. Confirm this saved revision only after reviewing its information and limitations.' : 'The PDF was saved privately. Start extraction when you are ready.');
+      remember(null); setTransfer({ status: 'idle' }); setOperation({ status: 'idle' });
+      if (attempt.kind === 'upload') setSelectionReset(v => v + 1);
+      else {
+        applyQuote(receipt.quote);
+        // The receipt acknowledges this operation. Read the current version separately;
+        // a later saved draft must never be replaced by an old idempotency result.
+        try {
+          const current = await api.getQuote(item.id, receipt.quote.id);
+          assertCurrentQuote(current, receipt.quote);
+          if (mounted.current) { applyQuote(current); if (current.draft_revision !== receipt.quote.draft_revision) setNotice('Your earlier operation was saved. A newer draft is now displayed and needs its own review.'); }
+        } catch (error) {
+          if (mounted.current) { setOperation({ status: 'conflict', message: 'Your operation was recorded, but the current draft could not be checked. Refresh the saved draft before another change.' }); setLoadError(reason(error)); }
+        }
+      }
+      await refreshCollection(); return true;
+    }
+    if (receipt.state === 'rejected' || receipt.state === 'interrupted') {
+      remember(null); setTransfer({ status: 'error', message: receipt.error?.message ?? 'The server recorded that the operation did not complete. Review the saved state before retrying.' }); setOperation({ status: 'error', message: receipt.error?.message ?? 'The operation was not committed. Your edits are still here.' }); await refreshCollection(); return true;
+    }
+    setTransfer({ status: 'uncertain', message: 'The server has recorded this operation but has not confirmed its result. Check again; completion is not guaranteed.' });
+    setOperation({ status: 'uncertain', action: attempt.kind === 'confirm' ? 'confirm' : 'save', message: 'The operation is recorded but no committed result is available. Check the same operation again.' }); return false;
+  }
+  async function acceptRun(result: RunRead, attempt: Pending) {
+    if (result.request_key !== attempt.key || result.quote_id !== attempt.quoteId || attempt.body && (result.expected_case_revision !== attempt.body.expected_case_revision || result.expected_draft_revision !== attempt.body.expected_draft_revision)) throw new ApiError('The extraction result did not match this request.', 'INVALID_RESPONSE', undefined, true);
+    await refreshEvents(result);
+    if (!mounted.current) return;
+    if (result.status === 'running') setTransfer({ status: 'uncertain', message: 'Extraction is recorded as running. Check the saved status again. A connection loss does not guarantee background completion.' });
+    else { remember(null); setTransfer({ status: 'idle' }); setNotice(['awaiting_review','succeeded'].includes(result.status) ? 'Gemini returned a saved draft. Review it against the source PDF before confirming.' : result.error?.message ?? `Extraction ${result.status.replaceAll('_', ' ')}. Your PDF remains saved.`); }
+    await refreshCollection();
+  }
+  async function loadConflict(error: unknown) {
+    setOperation({ status: 'conflict', message: `${reason(error)} Your local edits are retained. Load and compare the current saved draft before continuing.` });
+    if (selected) try { const latest = await api.getQuote(item.id, selected.id); assertCurrentQuote(latest, selected); if (mounted.current) setConflict(latest); } catch (readError) { if (mounted.current) setNotice(reason(readError)); }
+    await refreshCollection();
+  }
+  async function perform(attempt: Pending) {
+    if (lock.current) return;
+    lock.current = true; setBusy(true); remember(attempt); setNotice('');
+    if (attempt.kind === 'upload') setTransfer({ status: 'uploading' });
+    else if (attempt.kind === 'extract') { setTransfer({ status: 'checking', message: 'The extraction request has been sent. Wait for its recorded result; this can take up to two minutes.' }); setEvents(null); setRun(null); }
+    else setOperation({ status: attempt.kind === 'save' ? 'saving' : 'confirming', action: attempt.kind });
+    try {
+      if (attempt.kind === 'extract') { const result = await api.extractQuote(item.id, attempt.body as ExtractRequest, attempt.key); if (mounted.current) await acceptRun(result, attempt); }
+      else {
+        const result = attempt.kind === 'upload' ? await api.uploadQuote(item.id, attempt.file!, attempt.revision!, attempt.key)
+          : attempt.kind === 'save' ? await api.saveDraft(item.id, attempt.quoteId!, attempt.body as SaveDraft, attempt.key)
+          : await api.confirmQuote(item.id, attempt.quoteId!, attempt.body as ConfirmQuote, attempt.key);
+        if (mounted.current) await acceptReceipt(result, attempt);
+      }
+    } catch (error) {
+      if (!mounted.current) return;
+      if (uncertain(error)) { setTransfer({ status: 'uncertain', message: reason(error) }); setOperation({ status: 'uncertain', action: attempt.kind === 'confirm' ? 'confirm' : 'save', message: reason(error) }); }
+      else {
+        remember(null);
+        if (stale(error) && selected) await loadConflict(error);
+        else { setTransfer({ status: 'error', message: reason(error) }); setOperation({ status: 'error', message: reason(error) }); if (stale(error)) await refreshCollection(); }
+      }
+    } finally { lock.current = false; if (mounted.current) setBusy(false); }
+  }
+  async function checkSaved() {
+    const attempt = pendingRef.current;
+    if (lock.current) return;
+    if (!attempt) { await refreshCollection(); return; }
+    lock.current = true; setBusy(true); setTransfer({ status: 'checking' }); setOperation({ status: 'checking', action: attempt.kind === 'confirm' ? 'confirm' : 'save' });
+    try {
+      if (attempt.kind === 'extract') { const result = await api.getRunOperation(item.id, attempt.key); if (mounted.current) await acceptRun(result, attempt); }
+      else {
+        const result = attempt.kind === 'upload' ? await api.getIntakeOperation(item.id, attempt.key) : await api.getReviewOperation(item.id, attempt.quoteId!, attempt.key);
+        if (mounted.current) await acceptReceipt(result, attempt);
+      }
+    } catch (error) {
+      if (error instanceof ApiError && ['INTAKE_NOT_FOUND', 'REVIEW_OPERATION_NOT_FOUND', 'RUN_NOT_FOUND'].includes(error.code)) setCanCloseAttempt(true);
+      if (mounted.current) { const message = `${reason(error)} No new request has been submitted. A missing record does not prove that the earlier request failed.`; setTransfer({ status: 'uncertain', message }); setOperation({ status: 'uncertain', action: attempt.kind === 'confirm' ? 'confirm' : 'save', message }); }
+    } finally { lock.current = false; if (mounted.current) setBusy(false); }
+  }
+  async function closeAttempt() {
+    const attempt = pendingRef.current; if (!attempt || lock.current || !canCloseAttempt) return;
+    lock.current = true; setBusy(true); let recorded = false;
+    try {
+      const result = await api.closeOperation(item.id, attempt.key, { kind: attempt.kind, quote_id: attempt.quoteId ?? null });
+      if (!mounted.current) return;
+      if (result.request_key !== attempt.key || result.kind !== attempt.kind || attempt.quoteId && result.quote_id !== attempt.quoteId) throw new ApiError('The recovery result did not match this operation.', 'INVALID_RESPONSE', undefined, true);
+      if (result.state === 'cancelled') { remember(null); setTransfer({ status: 'idle' }); setOperation({ status: 'idle' }); setNotice('The server closed this unresolved attempt. It cannot commit later. Your saved quotations and any edits still in this tab remain available.'); await refreshCollection(); }
+      else recorded = true;
+    } catch (error) { if (mounted.current) { setTransfer({ status: 'uncertain', message: reason(error) }); setOperation({ status: 'uncertain', message: reason(error) }); } }
+    finally { lock.current = false; if (mounted.current) setBusy(false); }
+    if (recorded && mounted.current) await checkSaved();
+  }
+  async function openReview(quoteId: string) {
+    if (lock.current || pendingRef.current) return;
+    lock.current = true; setBusy(true); setNotice('');
+    try { const quote = await api.getQuote(item.id, quoteId); if (!mounted.current) return; if (quote.case_id !== item.id || quote.id !== quoteId || !quote.draft_data) throw new ApiError('The saved review draft is not available.', 'INVALID_RESPONSE'); applyQuote(quote); }
+    catch (error) { if (mounted.current) setNotice(reason(error)); }
+    finally { lock.current = false; if (mounted.current) setBusy(false); }
+  }
+  function startExtraction(quoteId: string) {
+    if (!collection?.capabilities.extraction_enabled || lock.current || pendingRef.current || loading || loadError) return;
+    const quote = collection.items.find(q => q.id === quoteId); if (!quote) return;
+    void perform({ kind: 'extract', key: crypto.randomUUID(), quoteId, body: { intent: 'extract_quote', quote_id: quoteId, expected_case_revision: collection.case_data_revision, expected_draft_revision: quote.draft_revision } });
+  }
+  function changeField(id: string, patch: Partial<ReviewDraftField>) {
+    if (lock.current || pendingRef.current || operation.status === 'conflict' || !draft[id]) return;
+    const current = draft[id], next = { ...current, ...patch };
+    if (patch.value !== undefined && patch.value !== current.value || patch.note !== undefined && patch.note !== current.note || patch.basis !== undefined && patch.basis !== current.basis) next.reviewed = false;
+    const updated = { ...draft, [id]: next };
+    if (patch.value !== undefined && patch.value !== current.value) {
+      const dependents = ['commercial.cost_basis_id', 'commercial.included_charges', 'commercial.excluded_charges'].includes(id) ? ['commercial.cost_basis_reviewed']
+        : ['supply_chain.production_lead_time_days', 'supply_chain.shipping_lead_time_days', 'supply_chain.end_to_end_lead_time_days', 'supply_chain.lead_time_basis'].includes(id) ? ['supply_chain.lead_time_basis_reviewed']
+          : id.startsWith('supply_chain.legs[') ? ['supply_chain.route_complete'] : [];
+      for (const dependent of dependents) if (updated[dependent]) updated[dependent] = { ...updated[dependent], reviewed: false, value: '', note: '', basis: 'assumption' };
+    }
+    setDraft(updated); setOperation({ status: 'idle' });
+  }
+  function saveDraft() {
+    if (!selected || !dirty || blocked || operation.status === 'conflict' || issues.some(i => i.kind === 'validation' && i.blocksConfirmation)) return;
+    try { void perform({ kind: 'save', key: crypto.randomUUID(), quoteId: selected.id, sourceHash: selected.source_file.sha256, body: toSaveDraft(selected, draft) }); }
+    catch (error) { setOperation({ status: 'error', message: (error as Error).message }); }
+  }
+  function confirm() {
+    if (!selected?.source_extraction_run_id || dirty || blocked || operation.status === 'conflict' || issues.some(i => i.blocksConfirmation) || selected.confirmation?.is_current) return;
+    void perform({ kind: 'confirm', key: crypto.randomUUID(), quoteId: selected.id, sourceHash: selected.source_file.sha256, body: { expected_case_revision: selected.case_data_revision, expected_draft_revision: selected.draft_revision, source_extraction_run_id: selected.source_extraction_run_id, acknowledge_review: true } });
+  }
+  async function compareConflict() {
+    if (lock.current || pendingRef.current || !selected) return;
+    if (!conflict) {
+      lock.current = true; setBusy(true);
+      try { const latest = await api.getQuote(item.id, selected.id); assertCurrentQuote(latest, selected); if (mounted.current) { setConflict(latest); setShowConflict(true); } }
+      catch (error) { if (mounted.current) setNotice(reason(error)); }
+      finally { lock.current = false; if (mounted.current) setBusy(false); }
+    } else setShowConflict(true);
+  }
+  function resolveConflict(keep: boolean) {
+    if (!conflict) return;
+    const latest = reviewDraft(conflict), next = copy(latest);
+    if (keep) for (const [path, entry] of Object.entries(draft)) if (next[path] && JSON.stringify(entry) !== JSON.stringify(saved[path])) next[path] = { ...entry, reviewed: false };
+    // Any requirement/source revision change requires renewed human checks.
+    if (keep) for (const value of Object.values(next)) value.reviewed = false;
+    setSelected(conflict); setSaved(latest); setDraft(next); setConflict(null); setShowConflict(false); setOperation({ status: 'idle' }); setNotice(keep ? 'Your edits were reapplied to the current draft. Review the fields again, save, then explicitly confirm.' : 'Your local edits were discarded and the current saved draft is displayed.');
+  }
+  function requestLeave(proceed: () => void) { navigationGuardRef.current?.(proceed); }
+  const selectedFields = selected ? reviewFields(selected) : [];
+  const conflictingFields = conflict ? selectedFields.filter(field => JSON.stringify(draft[field.id]) !== JSON.stringify(saved[field.id]) || JSON.stringify(reviewDraft(conflict)[field.id]) !== JSON.stringify(saved[field.id])) : [];
+  return <>
+    {notice && <div className="alert info-alert cq-notice" role="status">{notice}</div>}
+    {selected ? <>
+      <QuotationReview quote={{ id: selected.id, supplierName: selected.draft_data?.supplier_name ?? 'Supplier not identified', caseName: item.name, caseRevision: selected.case_data_revision, savedDraftRevision: selected.draft_revision, extractionLabel: 'Check each extracted value and citation against the original PDF.' }}
+        fields={selectedFields} draft={draft} issues={issues} document={source} dirty={dirty} operation={busy && operation.status === 'idle' ? { status: 'checking' } : operation}
+        confirmation={selected.confirmation ? { draftRevision: selected.confirmation.draft_revision, confirmedAt: selected.confirmation.confirmed_at, reviewerLabel: 'You, in this private session' } : null}
+        onFieldChange={changeField} onSave={saveDraft} onConfirm={confirm} onCheckSaved={() => { void checkSaved(); }} onResolveConflict={() => { void compareConflict(); }}
+        onBack={() => requestLeave(() => { setSelected(null); setDraft({}); setSaved({}); setOperation({ status: 'idle' }); void refreshCollection(); })}
+        onNext={() => requestLeave(() => { setSelected(null); setDraft({}); setSaved({}); void refreshCollection(); })} />
+      {source.availability === 'unavailable' && <button className="button button-secondary" disabled={busy} onClick={() => setSourceRetry(v => v + 1)}>Retry loading the original PDF</button>}
+    </> : <QuotationIntake caseInfo={intakeCase(item, collection?.case_data_revision)} collection={{ status: loading ? 'loading' : loadError ? 'error' : collection ? 'ready' : 'unavailable', quotations: collection?.items.map(intakeQuote) ?? [], message: loadError ?? undefined }} transfer={transfer}
+      limits={{ maxQuotes: collection?.limits.maximum_quotes_per_case ?? 4, maxFileBytes: collection?.limits.maximum_file_bytes ?? 10485760, maxPages: collection?.limits.maximum_pdf_pages ?? 10 }} samples={[]} showSamples={false} requireSyntheticDeclaration
+      uploadUnavailableReason={collection && !collection.capabilities.upload_enabled ? collection.capabilities.upload_reason ?? 'PDF upload is unavailable until private storage is configured.' : undefined}
+      extractionUnavailableReason={collection && !collection.capabilities.extraction_enabled ? collection.capabilities.extraction_reason ?? 'Gemini extraction is unavailable until the model connection is configured.' : undefined}
+      processingNotice={collection?.data_handling.processing_notice ?? 'The processing policy is unavailable until the saved collection is loaded.'} retentionNotice={collection?.data_handling.retention_notice ?? 'The retention policy has not been checked.'} selectionResetKey={selectionReset}
+      onBack={() => requestLeave(onBack)} onRefresh={() => { void checkSaved(); }}
+      onUpload={file => { if (collection?.capabilities.upload_enabled && !loading && !loadError && !pendingRef.current && !lock.current) void perform({ kind: 'upload', key: crypto.randomUUID(), file, revision: collection.case_data_revision }); }} onUseSample={() => { /* No synthetic sample endpoint is advertised. */ }}
+      onExtract={collection?.capabilities.extraction_enabled ? startExtraction : undefined} onRetryExtraction={collection?.capabilities.extraction_enabled ? startExtraction : undefined} onReview={quoteId => { void openReview(quoteId); }} />}
+    {pending && !busy && (pending.file || pending.body) && <section className="cq-replay"><p>If the recorded result is still unavailable, you can resend the exact same request. Its existing request key prevents a second saved operation.</p><button className="button button-secondary" onClick={() => { void perform(pending); }}>Retry the same request</button></section>}
+    {pending && canCloseAttempt && <section className="cq-replay"><p>No operation record was found. Close this unresolved attempt to prevent a late request from saving. This does not cancel a model call that is already recorded.</p><button className="button button-secondary" disabled={busy} onClick={() => { void closeAttempt(); }}>Close unresolved attempt</button></section>}
+    {(run || events) && <section className="panel cq-activity" aria-labelledby="quotation-activity-title"><h2 id="quotation-activity-title">Recorded extraction activity</h2>{run && <p>Run {run.id.slice(0, 8)} · {run.status.replaceAll('_', ' ')} · {run.model_call_count} model {run.model_call_count === 1 ? 'call' : 'calls'}</p>}{events?.items.length ? <ol>{events.items.map(event => <li key={event.sequence}><span>{event.message}</span><time dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleTimeString()}</time></li>)}</ol> : <p>Detailed activity is unavailable. Only the stored run status is shown.</p>}</section>}
+    <p className="cq-availability">Quotation confirmation records your review. Cost comparison, carbon estimates, scenarios and final decisions are not connected yet.</p>
+    <dialog ref={discardDialog} className="discard-dialog" aria-labelledby="quotation-discard-title" onCancel={event => { event.preventDefault(); setLeave(null); }}><h2 id="quotation-discard-title">Discard unsaved review changes?</h2><p>Your last saved draft remains available. The changes in this browser have not been saved.</p><div className="dialog-actions"><button className="button button-secondary" onClick={() => setLeave(null)}>Keep editing</button><button className="button button-danger" onClick={() => { const proceed = leave?.proceed; setLeave(null); proceed?.(); }}>Discard changes</button></div></dialog>
+    <dialog ref={conflictDialog} className="discard-dialog cq-conflict-dialog" aria-labelledby="quotation-conflict-title" onCancel={event => { event.preventDefault(); setShowConflict(false); }}><h2 id="quotation-conflict-title">Compare the current saved draft</h2><p>Your local edits have not overwritten the saved version. Keeping them requires renewed review against the current case and source.</p><div className="cq-conflict-rows">{conflictingFields.map(field => <section key={field.id}><h3>{field.label}</h3><dl><dt>Your local value</dt><dd>{draft[field.id]?.value || 'Unknown'}<small>{draft[field.id]?.note || 'No review note'}</small></dd><dt>Current saved value</dt><dd>{conflict ? reviewDraft(conflict)[field.id]?.value || 'Unknown' : 'Unavailable'}<small>{conflict ? reviewDraft(conflict)[field.id]?.note || 'No review note' : ''}</small></dd></dl></section>)}</div><div className="dialog-actions"><button className="button button-secondary" onClick={() => setShowConflict(false)}>Keep both for now</button><button className="button button-secondary" onClick={() => resolveConflict(false)}>Discard my edits and use latest</button><button className="button button-primary" onClick={() => resolveConflict(true)}>Keep my edits on the latest draft</button></div></dialog>
+  </>;
+}

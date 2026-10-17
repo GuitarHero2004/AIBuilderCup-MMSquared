@@ -1,4 +1,4 @@
-﻿import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { hasFieldEvidence } from './model';
 import type { QuotationReviewProps, ReviewDraftField, ReviewField, ReviewGroup } from './types';
@@ -48,12 +48,12 @@ export function QuotationReview(props: QuotationReviewProps) {
   const reviewedCount = fields.filter((field) => draft[field.id]?.reviewed).length;
   const receiptCurrent = confirmation !== null && confirmation.draftRevision === quote.savedDraftRevision && !dirty;
   const canConfirm = !operationBusy && !dirty && blockingIssues.length === 0 && !receiptCurrent;
-  const canSave = !operationBusy && dirty;
+  const canSave = !operationBusy && dirty && !issues.some(issue => issue.kind === 'validation' && issue.blocksConfirmation);
   const documentReady = sourceDocument.availability === 'ready' && Boolean(sourceDocument.url);
   const pageKnown = typeof selectedPage === 'number' && selectedPage >= 1 && (sourceDocument.pageCount === null || selectedPage <= sourceDocument.pageCount);
   const sourceUrl = sourceDocument.url ? `${sourceDocument.url.split('#')[0]}${pageKnown ? `#page=${selectedPage}` : ''}` : null;
   const gateMessage = operationBusy ? 'Resolve the current operation before saving or confirming again.'
-    : dirty ? 'Save your changes before confirming the latest revision.'
+    : dirty && !canSave ? 'Correct invalid field formats before saving your changes.' : dirty ? 'Save your changes before confirming the latest revision.'
       : receiptCurrent ? 'This saved revision has already been confirmed. Later edits require a new confirmation.'
         : blockingIssues.length > 0 ? `${blockingIssues.length} review ${blockingIssues.length === 1 ? 'issue needs' : 'issues need'} attention before confirmation.`
           : 'The saved draft is ready for your explicit confirmation. This does not determine eligibility.';
