@@ -1,4 +1,4 @@
-﻿import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Icon } from '../../components/Icon';
 import { formatFileBytes, preflightPdf } from './pdfPreflight';
@@ -19,8 +19,8 @@ const reviewLabels: Record<IntakeQuotation['reviewStatus'], string> = {
   confirmed: 'Confirmed by buyer',
 };
 
-function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample }: Pick<QuotationIntakeProps,
-  'limits' | 'samples' | 'transfer' | 'onUpload' | 'onUseSample'> & { disabled: boolean }) {
+function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample, requireSyntheticDeclaration, showSamples = true }: Pick<QuotationIntakeProps,
+  'limits' | 'samples' | 'transfer' | 'onUpload' | 'onUseSample' | 'requireSyntheticDeclaration' | 'showSamples'> & { disabled: boolean }) {
   const inputId = useId();
   const sampleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -31,6 +31,7 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
   const [selectionLimit, setSelectionLimit] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sample, setSample] = useState('');
+  const [syntheticDeclared, setSyntheticDeclared] = useState(false);
   const selectedSample = samples.find((item) => item.id === sample);
   const limitChanged = file !== null && selectionLimit !== limits.maxFileBytes;
   const validationError = limitChanged ? 'The file limit changed. Recheck the selected PDF against the current limit.' : error;
@@ -42,7 +43,7 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
 
   async function selectFile(selected: File | null) {
     const version = ++selectionVersion.current;
-    setFile(selected);
+    setFile(selected); setSyntheticDeclared(false);
     setSelectionLimit(selected ? limits.maxFileBytes : null);
     setError(null);
     setChecking(selected !== null);
@@ -66,7 +67,7 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
 
   function submitFile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (disabled || checking || submitted.current) return;
+    if (disabled || checking || submitted.current || (requireSyntheticDeclaration && !syntheticDeclared)) return;
     if (!file || validationError) {
       if (!file) setError('Choose a quotation PDF before uploading.');
       inputRef.current?.focus();
@@ -83,7 +84,7 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
     onUseSample(selectedSample.id);
   }
 
-  return <div className="intake-upload-options">
+  return <div className={`intake-upload-options${showSamples ? '' : ' intake-upload-only'}`}>
     <form className="intake-upload-form" onSubmit={submitFile} aria-label="Upload a quotation PDF" noValidate>
       <label className="intake-input-label" htmlFor={inputId}>Quotation PDF</label>
       <p className="intake-field-hint" id={`${inputId}-hint`}>Digital Vietnamese or English PDF, up to {formatFileBytes(limits.maxFileBytes)} and {limits.maxPages} pages.</p>
@@ -93,16 +94,17 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
       <div id={`${inputId}-validation`} className={validationError ? 'intake-file-feedback intake-file-error' : 'intake-file-feedback'} aria-live="polite">
         {checking && !limitChanged ? 'Checking the file header and size…' : validationError ? <span role="alert">{validationError}</span> : file ? <><strong>{file.name}</strong> · {formatFileBytes(file.size)}<br />Basic file checks passed. The full document still needs validation after upload.</> : 'Choose a file to check it before upload.'}
       </div>
+      {requireSyntheticDeclaration && <label className="intake-synthetic-declaration"><input type="checkbox" checked={syntheticDeclared} disabled={disabled} onChange={event => setSyntheticDeclared(event.target.checked)} /><span>I confirm this is a synthetic, non-confidential quotation for the demo.</span></label>}
       <div className="intake-upload-actions">
         {limitChanged && <button className="button button-secondary" type="button" disabled={disabled} onClick={() => { void selectFile(file); }}>Recheck selected PDF</button>}
-        <button className="button button-primary" type="submit" disabled={disabled || checking || !file || !!validationError}>
+        <button className="button button-primary" type="submit" disabled={disabled || checking || !file || !!validationError || (requireSyntheticDeclaration && !syntheticDeclared)}>
           <Icon name="plus" /> Upload quotation
         </button>
         {file && <button className="button intake-clear-action" type="button" disabled={disabled} onClick={() => clearFileSelection(true)}>Clear selected PDF</button>}
       </div>
     </form>
 
-    <form className="intake-sample-form" onSubmit={submitSample} aria-label="Use a synthetic quotation sample">
+    {showSamples && <form className="intake-sample-form" onSubmit={submitSample} aria-label="Use a synthetic quotation sample">
       <label className="intake-input-label" htmlFor={sampleId}>Or use a synthetic sample</label>
       <p className="intake-field-hint" id={`${sampleId}-hint`}>Synthetic examples for exploring document review.</p>
       <select id={sampleId} value={sample} disabled={disabled || samples.length === 0} aria-describedby={`${sampleId}-hint ${sampleId}-description`}
@@ -117,15 +119,15 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
         {selectedSample ? <><strong>{selectedSample.fileName}</strong><br />{selectedSample.description}</> : samples.length === 0 ? 'No sample PDFs are available.' : 'Select a sample to see its document details.'}
       </p>
       <button className="button button-secondary" type="submit" disabled={disabled || checking || !selectedSample}>Use synthetic sample</button>
-    </form>
+    </form>}
   </div>;
 }
 
-function QuotationRow({ item, blocked, runActive, onRefresh, onExtract, onRetryExtraction, onReview }: {
+function QuotationRow({ item, blocked, runActive, onRefresh, onExtract, onRetryExtraction, onReview, extractionUnavailableReason }: {
   item: IntakeQuotation;
   blocked: boolean;
   runActive: boolean;
-} & Pick<QuotationIntakeProps, 'onRefresh' | 'onExtract' | 'onRetryExtraction' | 'onReview'>) {
+} & Pick<QuotationIntakeProps, 'onRefresh' | 'onExtract' | 'onRetryExtraction' | 'onReview' | 'extractionUnavailableReason'>) {
   const canReview = item.reviewStatus === 'needs_review' || item.reviewStatus === 'confirmed';
   const canStart = item.processingStatus === 'uploaded' && item.reviewStatus === 'not_ready';
   const canRetry = (item.processingStatus === 'failed' || item.processingStatus === 'interrupted') && item.retryAllowed;
@@ -162,12 +164,12 @@ function QuotationRow({ item, blocked, runActive, onRefresh, onExtract, onRetryE
         : <p className="intake-action-note">Quotation review is not connected yet.</p>
         : canStart ? onExtract
           ? <button type="button" className="button button-secondary" disabled={blocked || runActive} onClick={() => onExtract(item.id)} aria-label={`Extract information from ${item.fileName}`}>Extract information</button>
-          : <p className="intake-action-note">Extraction is not connected yet.</p>
+          : <p className="intake-action-note">{extractionUnavailableReason ?? 'Extraction is not connected yet.'}</p>
           : item.processingStatus === 'running'
             ? <button type="button" className="button button-secondary" disabled={blocked} onClick={onRefresh} aria-label={`Check status of ${item.fileName}`}>Check status</button>
             : canRetry && onRetryExtraction
               ? <button type="button" className="button button-secondary" disabled={blocked || runActive} onClick={() => onRetryExtraction(item.id)} aria-label={`Retry extraction of ${item.fileName}`}>Retry extraction</button>
-              : <p className="intake-action-note">{canRetry ? 'Extraction retry is not connected yet.' : 'Check the saved status before continuing.'}</p>}
+              : <p className="intake-action-note">{canRetry ? extractionUnavailableReason ?? 'Extraction retry is not connected yet.' : 'Check the saved status before continuing.'}</p>}
       {canRetry && <p className="intake-action-note intake-retry-note">Retry starts a new extraction attempt and may use additional allowance.</p>}
     </td>
   </tr>;
@@ -199,7 +201,7 @@ export function QuotationIntake(props: QuotationIntakeProps) {
           : 'Add a quotation'}</h2>
         <span className="badge badge-muted">Up to {limits.maxQuotes} per case</span>
       </div>
-      <p className="intake-section-intro">{full && ready ? 'The quotation limit for this case has been reached.' : addOpen ? 'Use synthetic, non-confidential documents. Save each PDF, extract its information, then review it.' : 'Expand to choose a PDF or synthetic sample. Collapsing keeps your selection.'}</p>
+      <p className="intake-section-intro">{full && ready ? 'The quotation limit for this case has been reached.' : addOpen ? 'Use synthetic, non-confidential documents. Save each PDF, extract its information, then review it.' : props.showSamples === false ? 'Expand to choose a PDF. Collapsing keeps your selection.' : 'Expand to choose a PDF or synthetic sample. Collapsing keeps your selection.'}</p>
       {full && ready && <p className="intake-limit-note" role="status">This case has {limits.maxQuotes} quotations. Review the existing documents to continue.</p>}
       {runActive && ready && <p className="intake-limit-note">An extraction is already running. Check its status before starting another document.</p>}
       {!ready && <p className="intake-limit-note">Adding documents is unavailable until the quotation list can be checked.</p>}
@@ -207,7 +209,8 @@ export function QuotationIntake(props: QuotationIntakeProps) {
         // A background collection refresh must not hide the form while the buyer is editing.
         if (!addExpanded) setAddDisclosure({ resetKey: props.selectionResetKey, expanded: true });
       }}>
-        <UploadPane key={props.selectionResetKey} {...props} disabled={blocked || full || runActive} />
+        {props.uploadUnavailableReason && <p className="intake-limit-note">{props.uploadUnavailableReason}</p>}
+        <UploadPane key={props.selectionResetKey} {...props} disabled={blocked || full || runActive || !!props.uploadUnavailableReason} />
         <details className="intake-data-notice">
           <summary>Document processing and access</summary>
           <p>{processingNotice}</p><p>{retentionNotice}</p>
@@ -229,14 +232,14 @@ export function QuotationIntake(props: QuotationIntakeProps) {
       </div>}
       {ready && collection.quotations.length === 0 && <div className="intake-empty"><Icon name="fabric" size={28} />
         <h3>{waiting || uncertain ? 'The saved result is not yet known' : 'No quotations yet'}</h3>
-        <p>{waiting || uncertain ? 'The last loaded list was empty. Resolve the pending upload before adding another document.' : 'Add a PDF or choose a synthetic sample above. A saved document still needs extraction and human review.'}</p>
+        <p>{waiting || uncertain ? 'The last loaded list was empty. Resolve the pending upload before adding another document.' : props.showSamples === false ? 'Add a synthetic PDF above. A saved document still needs extraction and human review.' : 'Add a PDF or choose a synthetic sample above. A saved document still needs extraction and human review.'}</p>
       </div>}
       {collection.quotations.length > 0 && <div className="intake-table-frame">
         <table className="intake-quote-list" role="table" aria-label="Case quotations">
           <colgroup><col className="intake-document-column" /><col className="intake-processing-column" /><col className="intake-review-column" /><col className="intake-action-column" /></colgroup>
           <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Document</th><th scope="col" role="columnheader">Processing</th><th scope="col" role="columnheader">Review</th><th scope="col" role="columnheader">Action</th></tr></thead>
           <tbody role="rowgroup">{collection.quotations.map((item) => <QuotationRow key={item.id} item={item} blocked={blocked} runActive={runActive}
-            onRefresh={onRefresh} onExtract={props.onExtract} onRetryExtraction={props.onRetryExtraction} onReview={props.onReview} />)}</tbody>
+            extractionUnavailableReason={props.extractionUnavailableReason} onRefresh={onRefresh} onExtract={props.onExtract} onRetryExtraction={props.onRetryExtraction} onReview={props.onReview} />)}</tbody>
         </table>
       </div>}
       <p className="intake-collection-note">Uploading or extracting a document does not confirm its terms or make the offer eligible.</p>
@@ -246,7 +249,7 @@ export function QuotationIntake(props: QuotationIntakeProps) {
   return <section className="intake-page" aria-labelledby={headingId}>
     <header className="intake-page-heading">
       <button type="button" className="button button-secondary intake-back" onClick={onBack} disabled={waiting}>Back to requirements</button>
-      <p className="eyebrow">QUOTATIONS · REQUIREMENTS REVISION {caseInfo.revision}</p>
+      <p className="eyebrow">QUOTATIONS · CASE REVISION {caseInfo.revision}</p>
       <h1 id={headingId} tabIndex={-1} data-page-title>Quotations for {caseInfo.name}</h1>
       <p className="page-intro">Collect supplier documents, then review their interpreted terms before comparing offers.</p>
     </header>

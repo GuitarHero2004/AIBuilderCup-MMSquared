@@ -10,7 +10,7 @@ const nullableText = (value: unknown): value is string | null => value === null 
 
 export function isCaseRead(value: unknown): value is CaseRead {
   if (!record(value) || !text(value.id) || !/^[a-f0-9]{32}$/.test(value.id) || !text(value.name)
-    || value.status !== 'draft' || value.data_revision !== 1 || value.schema_version !== '2.0'
+    || !['draft', 'collecting_quotes', 'reviewing_quotes', 'ready', 'decided', 'archived'].includes(String(value.status)) || !Number.isInteger(value.data_revision) || Number(value.data_revision) < 1 || value.schema_version !== '2.0'
     || value.is_synthetic_demo !== true || !timestamp(value.created_at) || !timestamp(value.updated_at)) return false;
   const requirement = value.requirement;
   if (!record(requirement) || !decimal(requirement.quantity) || !decimal(requirement.maximum_budget_amount)

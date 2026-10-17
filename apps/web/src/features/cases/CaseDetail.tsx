@@ -2,9 +2,9 @@ import type { CaseRead } from '../../api/types';
 import { Icon } from '../../components/Icon';
 import { formatDecimal } from './format';
 
-const statusLabels: Record<CaseRead['status'], string> = { draft: 'Draft case' };
+const statusLabels: Record<CaseRead['status'], string> = { draft: 'Draft case', collecting_quotes: 'Collecting quotations', reviewing_quotes: 'Reviewing quotations', ready: 'Reviewed quotations', decided: 'Decision saved', archived: 'Archived' };
 
-export function CaseDetail({ item, onClose }: { item: CaseRead; onClose: () => void }) {
+export function CaseDetail({ item, onClose, onQuotations }: { item: CaseRead; onClose: () => void; onQuotations?: () => void }) {
   const requirement = item.requirement;
   const textile = requirement.textile_specification;
   const carbonScope = requirement.carbon_scope_id === 'origin_facility_to_buyer_facility_v1'
@@ -22,8 +22,9 @@ export function CaseDetail({ item, onClose }: { item: CaseRead; onClose: () => v
       <span className="status-badge status-neutral">{statusLabels[item.status]}</span>
       {item.is_synthetic_demo && <span className="badge badge-muted">Synthetic demo</span>}
     </div>
-    <div className="next-step-note"><Icon name="check" /><div><strong>Requirements saved</strong><p>You can reopen these requirements from your workspace. Editing, quotation upload and comparison are not available in this preview.</p></div></div>
+    <div className="next-step-note"><Icon name="check" /><div><strong>Requirements saved</strong><p>Add quotation PDFs, extract their information and review the saved drafts. Editing requirements and comparing offers are not connected yet.</p></div></div>
 
+    {onQuotations && <div className="section-actions"><button className="button button-primary" onClick={onQuotations}>Open quotations<Icon name="arrow" size={17} /></button></div>}
     <section className="detail-section" aria-labelledby="detail-order-title">
       <h2 className="section-heading" id="detail-order-title">Order and delivery</h2>
       <dl className="detail-grid">

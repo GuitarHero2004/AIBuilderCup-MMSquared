@@ -1,5 +1,6 @@
 """Application factory: construction/OpenAPI export does not contact Google services."""
 
+import inspect
 import logging
 from contextlib import asynccontextmanager
 from threading import Lock
@@ -14,11 +15,14 @@ from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
 from app.adapters.firestore_cases import FirestoreCaseRepository
+from app.adapters.firestore_quotations import FirestoreQuotationRepository
 from app.config import Settings
 from app.errors import ApiError, ErrorDetail, ErrorEnvelope
 from app.models.cases import CaseCreate, CaseList, CaseRead
+from app.routes.quotations import quotation_router
 from app.security import FirebaseIdentityVerifier, IdentityVerifier, Principal
 from app.services.cases import CaseRepository, CaseService
+from app.services.quotations import QuotationRepository, QuotationService
 
 logger = logging.getLogger("greenprocure.api")
 
@@ -27,7 +31,7 @@ class Health(BaseModel):
     status: Literal["ok"] = "ok"
     environment: Literal["local", "production"]
     storage: Literal["firestore"] = "firestore"
-    ai_enabled: Literal[False] = False
+    ai_enabled: bool = False
 
 
 def get_principal(
@@ -57,47 +61,100 @@ def get_case_service(request: Request) -> CaseService:
     )
 
 
+def get_quotation_service(request: Request) -> QuotationService:
+    with request.app.state.resource_lock:
+        settings = request.app.state.settings
+        if request.app.state.quotation_repository is None:
+            request.app.state.quotation_repository = FirestoreQuotationRepository(settings)
+        if request.app.state.document_store is None:
+            from app.adapters.quotation_documents import QuotationDocumentStore
+
+            request.app.state.document_store = QuotationDocumentStore(settings)
+        if request.app.state.extraction_provider is None:
+            from app.adapters.gemini_quotation import GeminiQuotationProvider
+
+            request.app.state.extraction_provider = GeminiQuotationProvider(settings)
+    return QuotationService(
+        request.app.state.quotation_repository,
+        settings,
+        request.app.state.document_store,
+        request.app.state.extraction_provider,
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
     repository: CaseRepository | None = None,
     identity_verifier: IdentityVerifier | None = None,
+    quotation_repository: QuotationRepository | None = None,
+    document_store=None,
+    extraction_provider=None,
 ) -> FastAPI:
     config = settings or Settings()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         yield
-        for resource in (app.state.case_repository, app.state.identity_verifier):
+        for resource in (
+            app.state.case_repository,
+            app.state.identity_verifier,
+            app.state.quotation_repository,
+            app.state.document_store,
+            app.state.extraction_provider,
+        ):
             close = getattr(resource, "close", None)
             if close:
-                close()
+                result = close()
+                if inspect.isawaitable(result):
+                    await result
 
     app = FastAPI(
         title="GreenProcure API",
         version="0.1.0",
         lifespan=lifespan,
         description=(
-            "Synthetic case foundation. Extraction, agents and evaluation are not implemented."
+            "Private synthetic quotation intake, direct Gemini extraction and human review. "
+            "Evaluation and agent orchestration are not implemented."
         ),
         responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 422, 429, 503)},
     )
     app.state.settings = config
     app.state.case_repository = repository
     app.state.identity_verifier = identity_verifier
+    app.state.quotation_repository = quotation_repository
+    app.state.document_store = document_store
+    app.state.extraction_provider = extraction_provider
     app.state.resource_lock = Lock()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.allowed_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Authorization", "Content-Type", "X-Firebase-AppCheck"],
+        allow_methods=["GET", "POST", "PATCH"],
+        allow_headers=["Authorization", "Content-Type", "X-Firebase-AppCheck", "Idempotency-Key"],
         expose_headers=["X-Request-ID"],
     )
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):
         request.state.request_id = uuid4().hex
+        if request.method in {"POST", "PATCH"} and not request.headers.get(
+            "content-type", ""
+        ).lower().startswith("multipart/form-data"):
+            # Bound actual JSON bytes before Pydantic parsing, including chunked requests.
+            body = bytearray()
+            async for chunk in request.stream():
+                if len(body) + len(chunk) > 512 * 1024:
+                    return error_response(
+                        request,
+                        ApiError(
+                            413,
+                            "REQUEST_TOO_LARGE",
+                            "The request is too large. Shorten review notes.",
+                        ),
+                    )
+                body.extend(chunk)
+            request._body = bytes(body)
         response = await call_next(request)
         response.headers["X-Request-ID"] = request.state.request_id
         return response
@@ -110,6 +167,7 @@ def create_app(
                 message=error.message,
                 retryable=error.retryable,
                 request_id=request_id,
+                run_id=error.run_id,
             )
         )
         return JSONResponse(
@@ -148,7 +206,7 @@ def create_app(
 
     @app.get("/healthz", response_model=Health)
     def health() -> Health:
-        return Health(environment=config.app_env)
+        return Health(environment=config.app_env, ai_enabled=config.ai_enabled)
 
     @app.get("/api/v1/cases", response_model=CaseList)
     def list_cases(
@@ -173,4 +231,5 @@ def create_app(
     ) -> CaseRead:
         return service.get(principal, case_id)
 
+    app.include_router(quotation_router(get_principal, get_quotation_service))
     return app

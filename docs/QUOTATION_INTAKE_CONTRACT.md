@@ -1,3 +1,6 @@
+> Implementation update, 18 October 2026: the connected milestone now has authoritative
+> Pydantic/OpenAPI routes. See [the implemented contract](QUOTATION_LIVE_CONTRACT.md).
+> The original proposal below is retained for design history; it is not the current wire schema.
 # Quotation intake: proposed API handoff
 
 **Status:** proposal for Minh and Mạnh to review; not an agreed or implemented API.

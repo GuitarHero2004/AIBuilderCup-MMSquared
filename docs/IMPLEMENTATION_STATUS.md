@@ -1,30 +1,33 @@
 # Implementation and verification ledger
-**Current state - 17 October 2026:** case workspace, quotation intake, review, comparison and
-scenario UI are integrated into `dev`. Decision review/summary UI and a proposed API handoff
-are committed locally on `feat/ui-decision-summary`; implementation has not been pushed. The branch was
-published from `fa874ead76ea28e5c0f9907298d14852ab17e410` before coding. Real PDF intake,
-extraction, persisted review, evaluation, scenarios/decisions and cloud release remain pending.
-Dated entries preserve the state and evidence at each review.
+**Current state - 18 October 2026:** the case workspace and quotation intake/review,
+comparison, scenario and decision UI milestones are integrated into `dev`. The connected
+quotation milestone is locally verified and packaged on `feat/live-quotation-intake`.
+The user authorized commits, publication and PR merge, followed by a Google setup branch.
+Publication and remote checks are the next delivery gate recorded below. This branch started
+from updated `dev` at `3a85601e7a72295f8ac43ea636923c788f82aab0`.
+Local emulator tests cover private PDF intake, persisted review and human confirmation with
+an injected test provider. Actual Gemini execution and deployment remain unverified.
+Dated entries preserve the evidence and delivery state at each earlier review.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository and teammate access | Existing repository; access not changed | Team grants/reviews collaborator access |
-| App manifests / locked dependencies | Created and locally installed | Root npm workspace/lock, API pyproject/uv.lock |
-| Domain calculations | Specified, not implemented | pytest output, commit |
-| Frontend and contracts | Case UI and generated API types implemented | Local lint/typecheck/build/unit checks pass |
-| Quotation intake UI | Reusable components and development simulation prepared | UI checks pass; real upload/extraction and generated quote contracts remain unavailable |
-| Quotation review UI | Source, corrections and confirmation walkthrough implemented locally | Synthetic browser checks pass; private-source access, persisted drafts and server confirmation remain pending |
-| Supplier comparison UI | Reusable results view and independent synthetic walkthrough implemented locally | Local interaction/layout checks pass; backend evaluation, real recommendation and final decision save remain pending |
-| Auth/Firestore/Storage | Anonymous Auth + case persistence verified in emulators | Direct client rules deny access; no PDF adapter/cloud verification |
-| Gemini PDF extraction | Not live-verified | Model/location, sample, measured latency |
-| Coordinator + two specialist agents | Designed, not wired | Actual run/tool trace and tests |
-| Scenario UI | Reusable editor/results and independent synthetic walkthrough implemented locally | Frozen baseline, exact priorities, explicit apply and recovery; backend calculations, live preview and persistence remain pending |
-| Final decision UI | Review/immutable summary and in-memory recovery walkthrough implemented and locally verified | Exact comparison/scenario handoff; server-owned durable save/reopen remains pending |
-| Carbon references | Not supplied/approved | Exact source rows, review notes and licence |
-| Cloud Run/Firebase deployment | Not deployed | URLs, revisions, timestamps |
-| PR checks/previews and Cloud Build | GitHub checks passed on scenario PR #4; cloud previews/Cloud Build pending | Checks and security scan passed at cf2c53d; no deployment claimed |
-| Security and quotas | Token/owner checks and atomic two-case cap verified locally | Full AI quotas and public abuse controls pending |
-| Submission readiness | Not established | All incognito live smoke checks |
+| Repository and teammate access | Existing repository; access not changed | One checkout at C:\AIBuilderCup-MMSquared |
+| App manifests / locked dependencies | Existing foundation extended with pinned PDF/storage/Gemini packages | Root npm lock and API uv.lock |
+| Domain calculations | Specified, not implemented | Cost, mass, eligibility, ranking and carbon engine remain pending |
+| Frontend and contracts | Normal app connected to quotation APIs | Generated Pydantic/OpenAPI TypeScript types; local checks |
+| Quotation intake | Private upload, list and original-source readback implemented | Real Auth/Firestore/Storage emulator checks; deployed smoke pending |
+| Quotation review | Saved corrections and immutable human confirmation implemented | Revision/ownership/idempotency/recovery checks; production verification pending |
+| Supplier comparison | Local UI and labelled synthetic walkthrough | Deterministic backend evaluations and real recommendation pending |
+| Auth/Firestore/Storage | Anonymous identity, cases and quotations verified in emulators | Direct browser database/bucket access denied; cloud integration not verified |
+| Gemini PDF extraction | Bounded provider adapter implemented | Injected-provider and SDK tests pass; actual model/location/PDF accuracy unverified |
+| Coordinator + two specialist agents | Designed, not wired | This branch uses a direct provider with no agent identity |
+| Scenario UI | Local editor/results and synthetic walkthrough | Backend calculations, confirmation and persistence pending |
+| Final decision UI | Local review/summary walkthrough integrated into dev | Durable server-owned save/reopen pending |
+| Carbon references | Not supplied/approved | Exact source rows, review notes and licence required |
+| Cloud Run/Firebase deployment | Not deployed | User is preparing selected Firebase project; release smoke pending |
+| PR checks/previews and Cloud Build | Earlier UI milestones integrated; current implementation unpublished | Cloud Build and deployed previews pending |
+| Security and quotas | Local owner/revision checks, request bounds, quotas, kill switch and concurrency leases | Deployed App Check, model budget and storage checks pending |
+| Submission readiness | Not established | Full workflow, live evidence and incognito release verification required |
 
 ## Documentation review — 4 October 2026
 - Changed: PRD v2.1, architecture, shared context, decision log and references for the requested
@@ -925,6 +928,109 @@ Dated entries preserve the state and evidence at each review.
   starting baseline; the next delivery step is a separately authorized push and PR review.
 - Durable decision storage, generated API integration and connected FR-18 acceptance remain
   pending. The in-memory walkthrough and proposed API handoff do not establish those outcomes.
+
+## Connected quotation implementation and backward review - 18 October 2026
+
+- Verified decision PR #5 was integrated into dev, updated the sole checkout with
+  `git pull --ff-only origin dev`, created `feat/live-quotation-intake` and published its
+  upstream before implementation. Baseline: `3a85601e7a72295f8ac43ea636923c788f82aab0`.
+  All implementation remains uncommitted in C:\AIBuilderCup-MMSquared. No implementation
+  push, merge or deployment was performed.
+- Connected the normal React/TypeScript app to private PDF intake, original-source access,
+  direct extraction requests, editable review, saved drafts and explicit human confirmation.
+  Existing comparison/scenario/decision walkthroughs remain simulations, with unavailable
+  connected actions clearly identified. The production build includes only the normal app.
+- Added Pydantic contracts, authenticated FastAPI routes, owner-scoped Firestore transactions
+  and private Storage adapters. Generated TypeScript matches the implemented OpenAPI.
+  Atomic capacity/revision checks enforce four quotations per case; source generation/hash
+  checks bind downloads to the original. The 10 MiB/ten-page PDF parser runs in a bounded child.
+  Multipart and JSON stream bytes are bounded before parsing.
+- Preserved validated raw extraction separately from edited drafts and immutable confirmations.
+  Confirmations record the reviewer, time, source hash, successful extraction reference,
+  reviewed values/provenance and unresolved issues. Editing reviewed inputs clears current
+  confirmation; earlier snapshots remain readable. Unknown values retain downstream blockers.
+  Known unsuitable facts may be confirmed as accurate; malformed values cannot.
+- Added idempotent receipts, exact response/revision/source checks, stale-edit comparison and
+  deliberate rebase, lost-response readback and reload recovery. Browser session storage holds
+  request-reference metadata only. After a named missing-record lookup, an explicit server
+  cancellation marker prevents a late original request from committing; bare absence never
+  silently unlocks another mutation. Foreign/mismatched responses preserve the local buffer.
+- Added the direct Google Cloud Gemini adapter with nullable structured extraction, untrusted
+  PDF instructions, no tools, one model call without automatic SDK retries, and bounded time.
+  Token/model metadata comes only from SDK response metadata; unavailable usage stays unknown.
+  Digital-text excerpts are checked before display. No fabricated citation, factor approval,
+  human confirmation or fixture fallback is accepted from model output.
+- The total extraction deadline, persisted leases, visitor/global generation budgets, shared
+  active-run cap and kill switch bound new work. Expired/crashed/cancelled requests preserve
+  the PDF and reconcile to interruption; late results cannot mutate the draft.
+  A retry may consume another allowance; exactly-once provider billing is not claimed.
+- Locked google-genai 2.31.0, google-cloud-storage 3.17.1, pypdf 6.21.1 and
+  python-multipart 0.0.32. The installed Google SDK's enterprise/Google Cloud option and
+  explicit ADC/project/location path were inspected. This increment does not implement ADK.
+- Worked backwards from FR-03/04/05/06: retain the PDF, reject unsupported input, expose actual
+  extraction state, inspect evidence, preserve corrections, confirm deliberately and reopen
+  the saved result. Refined composition/date validation, review-dependency invalidation,
+  successful-versus-latest extraction references, mismatched receipts, missing-request recovery,
+  duplicate notices and truthful source copy. Sample loading, multilingual extraction-quality
+  evaluation, evidence-applicability workflow, deterministic eligibility/calculations and the
+  general agent remain separate PRD acceptance gates; these requirements are not marked complete.
+- Executed `node scripts/python.mjs test`: **69 passed, 3 skipped**. The skips are two opt-in
+  emulator checks and one deployed smoke. Ran the emulator checks separately with
+  `RUN_EMULATOR_TESTS=1 python -m pytest tests/test_emulator.py -q -p no:cacheprovider`:
+  **2 passed**, including actual anonymous tokens, owner isolation and direct browser
+  Firestore/Storage read/write denials.
+- Executed the private connected/lifecycle suites through pytest against real emulators:
+  **11 passed** in the final combined run. Coverage includes upload/source retrieval,
+  owner denial, limits, same-key replay, review/confirmation/restart persistence, historical
+  snapshots, provider failures, concurrent starts, quotas, deadline/cancellation recovery,
+  global limits, malformed values, actual body bounds and missing-request fences.
+  Extraction used an explicitly injected no-network test provider, not Gemini.
+- Private PDF/provider tests: **33 passed**, including parser rejection, actual Storage
+  emulator I/O, SDK call arguments, schema/evidence guards, no retry/fallback and metadata
+  separation. The Storage emulator does not enforce every production generation precondition;
+  SDK arguments are checked with mocks, and deployed atomicity/privacy remains unverified.
+- Executed frontend lint, typecheck, unit tests and production build: all passed.
+  **31 unit tests** comprise 26 tracked tests and five pre-existing ignored PDF-preflight
+  checks. Backend Ruff lint/format and `node scripts/contracts.mjs --check` passed.
+  The existing OpenAPI-path test was updated for the implemented routes.
+- Private Chromium checks passed the full upload/extract/source/edit/save/confirm/reload
+  journey, unsaved-navigation protection, lost-response receipt recovery, missing-upload
+  reload/cancellation with late-request rejection, adversarial receipts and concurrent-edit
+  conflict/rebase. Six layouts (1440, 390 and 320px, normal/doubled text) passed overflow checks.
+  Actual desktop/mobile/enlarged screenshots were inspected for hierarchy, wrapping and controls.
+  The final source-panel copy no longer claims a live model call merely from screen context.
+- All newly created executable tests, test inputs, screenshots and detailed QA reports remain
+  in OS temporary storage outside the repository. No private credentials or test artifacts
+  were added to the feature. The test-provider API was stopped after verification; the ordinary
+  emulator-backed API was restored and `/healthz` confirms `ai_enabled: false`.
+- Read-only checks of the selected Google project verified Firebase association, billing,
+  the active Web app and default Firestore Native database in Singapore. Anonymous sign-in
+  was off and Storage had no bucket at the check. User setup and later rechecks are recorded
+  in `LIVE_QUOTATION_SETUP.md`; no cloud resources/settings were changed by this increment.
+  The initial App Check integration now uses reCAPTCHA Enterprise rather than the previously
+  unconfigured v3 provider.
+- Ready for local user review of this implementation. Actual Gemini model/location/permissions,
+  extraction accuracy, production Storage behavior, App Check, retention configuration and
+  deployed incognito smoke remain unverified. Cloud configuration and release are separate
+  steps; local emulator success is not full MVP or submission readiness.
+
+## Quotation commit packaging - 18 October 2026
+
+- The user approved committing, pushing and merging this milestone into dev, then branching
+  from updated dev to inspect Google setup. Rechecked the complete 38-file scope, staged
+  explicit file lists and verified each staged diff. No new executable tests, screenshots,
+  private supplier inputs, credentials or runtime artifacts are included.
+- Packaged five functionality/documentation groups. The first four commits are:
+  - `24f4687` - Keep quotation files private and validate extracted terms.
+  - `4829eae` - Preserve quotation reviews through saves and interruptions.
+  - `90149f8` - Connect quotation upload, review and confirmation in the workspace.
+  - `6e51006` - Prepare Firebase verification and Google connection settings.
+- The closing documentation commit records the implemented contract, local verification,
+  setup guidance and delivery state. No application behavior changed during packaging;
+  the completed local evidence above still applies. Whitespace checks passed.
+- Publication/PR checks and merge must be verified at the final commit before starting
+  `feat/google-cloud-setup` from updated dev. Google inspection is read-only at this step;
+  no deployment, billing/IAM change or actual model call is claimed by this packaging entry.
 
 ## Per-increment report template
 ### Increment / commit
