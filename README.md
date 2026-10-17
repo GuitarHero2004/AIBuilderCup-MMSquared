@@ -1,17 +1,22 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: local case workspace and intake/review/comparison/scenario/decision UI previews, 16 October 2026.** A visitor can sign in anonymously,
-create synthetic sourcing cases and reload their own saved requirements through FastAPI and
-the Firebase emulators. The responsive UI now has focused workspace/create/detail/help views,
-linked validation, unsaved-draft protection and readback after an uncertain save.
-Workspace and quotation views share consistent controls, status colors, spacing and responsive
-layouts. Desktop quotations use aligned columns; narrow screens use labelled records.
-This is not the complete MVP: quotation upload, Gemini/ADK, human
-quote confirmation, calculations, persisted scenarios and decisions are still to be implemented.
-No cloud resources or deployment have been created by this foundation. Quotation intake, review,
-comparison, scenario and decision components have development-only simulations for design review. They do not upload
-files, call AI, persist corrections or change the production case workspace.
+**Status: connected quotation implementation locally verified, 18 October 2026.**
+The normal React/TypeScript application now connects anonymous sign-in and saved sourcing cases
+to private PDF upload, extraction requests, source inspection, saved corrections and explicit
+human confirmation. The backend stores immutable confirmed revisions and supports recovery
+after uncertain responses. Local verification uses real Firebase emulators; extraction tests
+inject an explicitly separate test provider. An actual Gemini call and a cloud deployment have
+not been verified.
+
+Comparison, scenario and decision screens remain development-only simulations. Deterministic
+calculations, approved carbon factors, persisted evaluations/decisions and the planned ADK
+coordinator/specialists are still pending. The extraction adapter calls Gemini directly; it
+does not establish that the full agent architecture or competition MVP is complete.
+
+Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for implemented behavior,
+the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
+[verification ledger](docs/IMPLEMENTATION_STATUS.md) for executed checks and remaining gates.
 
 ## Local quick start
 Install Node.js 24 (npm 11 or 12), Python 3.12 and Java 21+ first; Java 22 was used locally.
@@ -49,6 +54,28 @@ Use synthetic data only. Cases survive page/API reloads while emulators are runn
 emulator data is temporary and is discarded on shutdown. Clearing browser data loses the
 anonymous identity. `/healthz` reports process/config liveness, not dependency readiness.
 
+## Connected quotation workflow
+
+In the normal app, open a saved case and choose its quotations. Upload a synthetic,
+non-confidential PDF, then inspect the saved source. The server enforces four quotes per case,
+10 MiB per PDF and ten pages. Source files are private; browser database and bucket access
+are denied.
+
+Extraction is disabled in the ordinary emulator configuration. To verify the real provider,
+first complete the [live setup prerequisites](docs/LIVE_QUOTATION_SETUP.md) and configure a
+supported Google Cloud model/location with the intended personal project identity. Failed or
+unavailable AI never silently produces sample results. Once extraction succeeds, review fields
+beside the PDF, save corrections and then explicitly confirm the saved revision. Acknowledged
+unknowns remain blockers for later evaluation; confirmation does not make an offer eligible.
+
+Unknown upload/save/confirmation responses preserve their request reference for readback.
+After a reload, only request metadata is restored; unsaved PDF or draft content is not stored
+in browser session storage. A missing request can be explicitly closed with a server-side
+marker before starting new work. Existing recorded operations must be recovered.
+
+The walkthroughs below remain independent, labelled design simulations. Their preview controls
+do not operate on the connected case or its saved quotations.
+
 ## Quotation intake UI review
 
 From the repository root, after `npm ci`, start the isolated UI preview:
@@ -74,9 +101,8 @@ must come from the server. Browser checks do not validate page count, encryption
 
 The intake-specific test scripts, test inputs and screenshots are kept locally and are not
 included in this branch's committed files. Executed results are recorded in the
-[verification ledger](docs/IMPLEMENTATION_STATUS.md). See
-[the proposed API handoff](docs/QUOTATION_INTAKE_CONTRACT.md) for missing endpoints,
-owner checks, duplicate prevention, disclosure and integration dependencies.
+[verification ledger](docs/IMPLEMENTATION_STATUS.md). The [original API handoff](docs/QUOTATION_INTAKE_CONTRACT.md) records the design proposal;
+the [connected contract](docs/QUOTATION_LIVE_CONTRACT.md) describes implemented endpoints.
 
 ## Quotation review UI walkthrough
 
