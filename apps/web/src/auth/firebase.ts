@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getToken, initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { getToken, initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import type { AppConfig } from '../config/environment';
 import { ApiError, createApiClient } from '../api/client';
@@ -10,7 +10,7 @@ export function initializeSession(config: AppConfig) {
   }
   const app = initializeApp(config.firebase);
   const appCheck = config.environment === 'production' && config.appCheckSiteKey
-    ? initializeAppCheck(app, { provider: new ReCaptchaV3Provider(config.appCheckSiteKey), isTokenAutoRefreshEnabled: true })
+    ? initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(config.appCheckSiteKey), isTokenAutoRefreshEnabled: true })
     : undefined;
   const auth = getAuth(app);
   if (config.environment === 'local' && config.authEmulatorUrl) {
