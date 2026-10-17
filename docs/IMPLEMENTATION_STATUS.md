@@ -1,33 +1,29 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** the case workspace and quotation intake/review,
-comparison, scenario and decision UI milestones are integrated into `dev`. The connected
-quotation milestone is locally verified and packaged on `feat/live-quotation-intake`.
-The user authorized commits, publication and PR merge, followed by a Google setup branch.
-Publication and remote checks are the next delivery gate recorded below. This branch started
-from updated `dev` at `3a85601e7a72295f8ac43ea636923c788f82aab0`.
-Local emulator tests cover private PDF intake, persisted review and human confirmation with
-an injected test provider. Actual Gemini execution and deployment remain unverified.
-Dated entries preserve the evidence and delivery state at each earlier review.
+**Current state - 18 October 2026:** quotation delivery was merged into `dev` through
+[PR #6](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/6) after all three
+GitHub checks passed (merge `2e2818d331f25fa2ea07e53ad6331654f0c2c3a1`).
+The active branch is `feat/google-cloud-setup`. This increment is packaged in four approved
+local commits; its remote branch remains at the published dev baseline. Google resources and
+real Gemini extraction are verified. The final hosted quotation journey and deployed
+owner/App Check/privacy checks passed.
+Dated entries below preserve evidence at each earlier review; later entries supersede their
+then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository and teammate access | Existing repository; access not changed | One checkout at C:\AIBuilderCup-MMSquared |
-| App manifests / locked dependencies | Existing foundation extended with pinned PDF/storage/Gemini packages | Root npm lock and API uv.lock |
-| Domain calculations | Specified, not implemented | Cost, mass, eligibility, ranking and carbon engine remain pending |
-| Frontend and contracts | Normal app connected to quotation APIs | Generated Pydantic/OpenAPI TypeScript types; local checks |
-| Quotation intake | Private upload, list and original-source readback implemented | Real Auth/Firestore/Storage emulator checks; deployed smoke pending |
-| Quotation review | Saved corrections and immutable human confirmation implemented | Revision/ownership/idempotency/recovery checks; production verification pending |
-| Supplier comparison | Local UI and labelled synthetic walkthrough | Deterministic backend evaluations and real recommendation pending |
-| Auth/Firestore/Storage | Anonymous identity, cases and quotations verified in emulators | Direct browser database/bucket access denied; cloud integration not verified |
-| Gemini PDF extraction | Bounded provider adapter implemented | Injected-provider and SDK tests pass; actual model/location/PDF accuracy unverified |
-| Coordinator + two specialist agents | Designed, not wired | This branch uses a direct provider with no agent identity |
-| Scenario UI | Local editor/results and synthetic walkthrough | Backend calculations, confirmation and persistence pending |
-| Final decision UI | Local review/summary walkthrough integrated into dev | Durable server-owned save/reopen pending |
+| Repository | Single checkout and published Google setup branch | `C:\AIBuilderCup-MMSquared`; four local commits, publication pending |
+| App and contracts | React/TypeScript quotation workflow connected to FastAPI | Generated contracts; locked packages; prior local/CI checks passed |
+| Quotation intake/review | Private PDF intake, saved corrections and immutable human confirmation implemented | Hosted upload, real extraction, saved review, confirmation and reopen passed |
+| Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
+| Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
+| App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
+| Cloud Build/Run/Hosting | Dedicated identities, guarded build/release scripts and production configuration prepared | Final API revision and Hosting release verified; public asset hashes match |
+| Security/quotas | Owner/revision validation, private files, App Check, model kill switch and concurrency limits | 10 generations/user/day; 100 globally/day; 2 active globally; deployed isolation checks passed |
+| Domain calculations | Specified, not implemented | Cost, mass, eligibility, ranking and carbon engine pending |
+| Comparison/scenarios/decisions | Labelled development UI walkthroughs | Backend evaluations, scenario persistence and durable decisions pending |
+| ADK coordinator and specialists | Designed, not wired | Current extraction uses a direct Gemini adapter |
 | Carbon references | Not supplied/approved | Exact source rows, review notes and licence required |
-| Cloud Run/Firebase deployment | Not deployed | User is preparing selected Firebase project; release smoke pending |
-| PR checks/previews and Cloud Build | Earlier UI milestones integrated; current implementation unpublished | Cloud Build and deployed previews pending |
-| Security and quotas | Local owner/revision checks, request bounds, quotas, kill switch and concurrency leases | Deployed App Check, model budget and storage checks pending |
-| Submission readiness | Not established | Full workflow, live evidence and incognito release verification required |
+| Submission readiness | Full competition MVP not complete | Live quotation release verified; calculation/agent/decision work remains |
 
 ## Documentation review — 4 October 2026
 - Changed: PRD v2.1, architecture, shared context, decision log and references for the requested
@@ -1031,6 +1027,152 @@ Dated entries preserve the evidence and delivery state at each earlier review.
 - Publication/PR checks and merge must be verified at the final commit before starting
   `feat/google-cloud-setup` from updated dev. Google inspection is read-only at this step;
   no deployment, billing/IAM change or actual model call is claimed by this packaging entry.
+
+## Quotation merge and Google setup audit - 18 October 2026
+
+- Published five approved commits: `24f4687`, `4829eae`, `90149f8`, `6e51006` and
+  `a4f19a3`. Opened [PR #6](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/6)
+  and verified the remote head was `a4f19a3420500e1de33cde73e07a4e3d62565b9f`.
+- Both push and pull-request Checks jobs, plus GitGuardian Security Checks, succeeded.
+  The Linux CI jobs installed locked dependencies and passed lint/typecheck/unit/build,
+  generated-contract checks and isolated emulator integration.
+  [PR validation run](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/actions/runs/39056403330).
+- Merged using the exact expected head SHA and the merge method, preserving all five commits.
+  Verified GitHub reported merged at `2e2818d331f25fa2ea07e53ad6331654f0c2c3a1`.
+  No protection settings or review policies were bypassed or changed.
+- With a clean working tree, switched to dev, ran `git pull --ff-only origin dev`, created
+  `feat/google-cloud-setup`, pushed its upstream immediately and verified the remote branch
+  matches the merged baseline. No duplicate checkout or worktree was created.
+- Read-only cloud inspection used the personal account explicitly for `greenprocure-511917`.
+  Verified active project/Firebase/Web app, enabled billing, default Standard/Native Firestore
+  in Singapore, enabled model API and an existing Hosting site with no release.
+- Anonymous Auth remains disabled; Storage has no buckets. App Check, reCAPTCHA Enterprise,
+  Cloud Run, Cloud Build, Artifact Registry and Firebase Storage APIs are not enabled.
+  Firestore rules are already deployed and deny every direct-client read/write; no Storage
+  rules release exists. App Check provider/key reads returned SERVICE_DISABLED, so their
+  configuration remains unverified rather than proven absent.
+  The existing Firebase Admin and Compute default service accounts are not a configured
+  application runtime identity. A chosen model/location and real provider test remain pending.
+- Existing repository files supply a non-root single-service Dockerfile, Hosting configuration,
+  deny-direct-client database/storage rules and production environment validation. Cloud Build/
+  Cloud Run deployment configuration, selected runtime identity/permissions and production
+  frontend/backend configuration are not yet prepared.
+- Updated `LIVE_QUOTATION_SETUP.md` with observed readiness and remaining setup. These new
+  branch documentation edits remain uncommitted for review. No application code changed,
+  cloud setting/API was enabled, resource was provisioned, IAM/billing was changed or model
+  was called during this audit. Earlier local and newly successful remote checks remain the
+  implementation evidence; no new deployment verification is claimed.
+- Next step: complete Anonymous Auth, private Singapore Storage and Enterprise App Check,
+  prepare the explicit runtime/build configuration, then obtain the required cloud-change
+  authorization for provisioning and deployment. Inspect actual model/location access and
+  run a deployed owner-isolation/source/review/confirmation smoke before claiming readiness.
+
+## Authorized Google setup and live release - 18 October 2026
+
+- Completed setup in the existing personal project `greenprocure-511917`, always selecting
+  `anhminhnts2004@gmail.com` explicitly. Billing was already enabled. On refresh, Anonymous
+  Auth and the Cloud Run/Build/Registry APIs were enabled; retained the existing Firebase
+  app and Singapore Firestore. Enabled App Check/reCAPTCHA Enterprise, created the private
+  Singapore quotation bucket, deployed deny-direct-client Storage rules and registered an
+  Enterprise Web score key for the two Hosting domains. No default ADC/login was changed.
+- Added dedicated runtime/build service accounts. Runtime permissions cover Firestore,
+  model prediction, Firebase user verification and create/get/delete on the quotation
+  bucket. Build permissions cover log writing, source reads and image publication in the
+  project's Docker repository. Created a private Singapore build-source bucket. No
+  service-account keys or broad Editor grants were created; test impersonation used the
+  selected personal identity and short-lived tokens in memory.
+- Actual private Storage/Firestore checks passed **10 assertions**: upload and hashed
+  readback, real create-only precondition conflict, generation mismatch, unauthenticated
+  source denial, Firestore write/read/version and exact synthetic test cleanup. This
+  closes the production precondition/privacy gap left by emulator-only evidence.
+- The first real Gemini requests exposed unsupported null-only schema/grammar complexity,
+  followed by envelope-prefixed citation paths. Simplified only the generation grammar,
+  kept strict server validation and rejected application-owned cost/carbon basis IDs.
+  Prompt `quotation_pdf_v2` specifies relative citations; canonicalization accepts only the
+  known envelope prefix before exact membership/duplicate validation.
+- Actual final-adapter extraction using `gemini-3.1-flash-lite` at `global` passed all ten
+  smoke checks in **5.22 seconds**: changed PDF price **USD 3.20/metre**, **145 GSM**, 17
+  matched citations, missing transport left unknown and PDF approval instructions ignored.
+  Actual usage was 2,424 input + 1,177 output tokens. The earlier base response (2.85/130)
+  was validated retrospectively after the parser fix; it was not a fresh final-adapter
+  success. The subsequent hosted test is recorded separately below. Earlier failed
+  attempts are not counted as clean end-to-end passes; there was no fixture fallback.
+- Private provider checks passed **50**, then the expanded schema/authority suite passed
+  **21** including the two additional application-basis guards. The latter overlaps the
+  former suite and is not an additional 21 distinct cases. Backend tests passed **69**
+  with three opt-in skips. Two private production health-alias tests and **27** release
+  script/configuration checks passed. Ruff, format, generated-contract equivalence and
+  production TypeScript/Vite build passed. All new executable tests/input PDFs, detailed
+  results and screenshots remain in OS temp, outside this checkout.
+- Production release helpers validate the intended project/account, source allowlist,
+  runtime settings and immutable build image. Browser build explicitly clears local
+  emulator/debug variables. Hosting publication validates the public build receipt,
+  exact file hashes and Google upload hosts before finalizing and releasing.
+- Final Cloud Build: `95cc74d4-e93f-4739-a559-5ba86b341905`.
+  Final image digest: `sha256:8f03e32d3c329b5764d5ed3ce78cf564797692bb69cd04f591937fe45bf79396`.
+  Verified all 21 staged source hashes match the final API working tree.
+  Cloud Run revision `greenprocure-api-00002-2xp` serves 100% of traffic at
+  `https://greenprocure-api-694155506378.asia-southeast1.run.app`.
+- Google public routing returned a branded 404 for `/healthz` while internal container
+  probes and business routes worked. Added `/api/health` as a public alias excluded from
+  OpenAPI, preserving local/probe compatibility. The deployed opt-in smoke passed **1**
+  with `RUN_LIVE_TESTS=1`, `LIVE_EXPECT_AI_ENABLED=true` and the exact API URL: health 200,
+  production/AI configuration correct, unauthenticated business request 401. Existing
+  Starlette/httpx test deprecation warning remains.
+- Firebase Hosting release `1792261911497000`, version `36d4aa427f1cee41`, is live at
+  **https://greenprocure-511917.web.app**. Three public asset hashes match the reviewed
+  build receipt; the fourth published file is that public receipt. Only the normal
+  React application is published, without development preview/test pages.
+- Production uses mandatory Firebase identity/App Check/owner checks, private source
+  storage, 10 extractions per visitor/day, 100 globally/day and two active extractions.
+  Cloud Run is bounded to two instances, 1 CPU/1 GiB each, concurrency four, 180-second
+  HTTP timeout and scale-to-zero. Model timeout is 90 seconds. These are usage/resource
+  controls, not a monetary spending cap. Data is stored in Singapore; the upload notice
+  discloses global model processing and no automatic retention cleanup.
+- Hosted Chromium journey passed at approximately **01:32 Vietnam time**, using fresh
+  genuine anonymous/Auth App Check sessions, with no mock routes or debug token. Created
+  a synthetic case, uploaded a private PDF and made exactly **one actual Gemini call**:
+  USD 2.85/metre and 130 GSM correctly extracted, unknown transport preserved, no automatic
+  approval. Reviewed 36 fields with explicit unknown notes, saved draft revision 2,
+  confirmed through the dialog and reopened the current immutable confirmation after reload.
+  Actual model metadata: `gemini-3.1-flash-lite`, 2,424 input + 1,177 output tokens.
+- Deployed browser security checks passed: absent App Check returned 403
+  `APP_CHECK_REQUIRED`, invalid App Check returned 403 `INVALID_APP_CHECK`. A second fresh
+  visitor could list its own workspace but received 404 for the first visitor's case,
+  quotation and source. Direct Firestore and Firebase Storage reads returned 403. The
+  authenticated PDF API returned 200 with `Cache-Control: private, no-store`.
+  No JavaScript errors occurred. Actual 1440px/390px screenshots were inspected for
+  hierarchy, wrapping and control alignment; neither viewport overflowed. Confirmation
+  screenshots caught the brief follow-up readback notice; subsequent reload verified
+  the persisted confirmed record. Browser contexts were closed, without saving tokens.
+- Final scope review found only the expected source/configuration/documentation changes,
+  no secrets or private test artifacts, and no staged files. The API source hashes and
+  published static asset hashes match the respective reviewed builds. `git diff --check`
+  and generated TypeScript contract equivalence passed. Setup is ready for user review.
+- Work backwards from the PRD: this release establishes the live quotation input/review
+  foundation. Deterministic cost/mass/carbon/eligibility/ranking, approved factor rows,
+  persisted comparisons/scenarios/decisions and the ADK coordinator/specialists are still
+  pending. This is not a completed competition MVP. At this release review, Google branch
+  changes were uncommitted and unpushed; subsequent commit packaging is recorded below.
+
+## Google setup commit packaging - 18 October 2026
+
+- The user approved the four proposed commit groups and their exact messages. Rechecked
+  the expected 16-file scope, staged explicit paths, inspected each staged group and
+  verified whitespace checks. No credentials, local environment copies, generated builds,
+  synthetic PDF inputs, screenshots or private test scripts are included.
+- Created these local implementation commits:
+  - `69ea55f` - Fix live Gemini extraction while preserving human review.
+  - `5c2504c` - Add a working health check for the deployed API.
+  - `04afd55` - Add verified Google builds and production deployment controls.
+- The closing documentation commit is **Record the verified live quotation workflow and
+  remaining MVP work**. It includes the README, live setup guide and this ledger.
+- Packaging changed no runtime behavior; the previous unit/provider/release and actual
+  hosted-browser evidence above remains applicable. No model calls or deployment reruns
+  were needed. The already deployed API and frontend are unchanged by these Git commits.
+- This approval is commit-only. No push, pull request or merge was performed. Publish the
+  four commits when authorized, verify remote checks, then proceed from an approved dev
+  baseline for the calculation/eligibility milestone.
 
 ## Per-increment report template
 ### Increment / commit
