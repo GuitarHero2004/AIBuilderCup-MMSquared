@@ -114,9 +114,26 @@ def test_composition_sum_and_duplicate_names(client, payload):
     assert client.post("/api/v1/cases", json=payload, headers=headers()).status_code == 422
 
 
-def test_openapi_exposes_real_contract_without_agents(client):
+def test_openapi_exposes_implemented_quotation_contract(client):
     schema = client.get("/openapi.json").json()
-    assert set(schema["paths"]) == {"/healthz", "/api/v1/cases", "/api/v1/cases/{case_id}"}
+    assert set(schema["paths"]) == {
+        "/healthz",
+        "/api/v1/cases",
+        "/api/v1/cases/{case_id}",
+        "/api/v1/cases/{case_id}/quotes",
+        "/api/v1/cases/{case_id}/quote-intakes/{request_key}",
+        "/api/v1/cases/{case_id}/quotation-operations/{request_key}/cancel",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}/document",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}/draft",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}/confirm",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}/review-operations/{request_key}",
+        "/api/v1/cases/{case_id}/quotes/{quote_id}/revisions/{revision_id}",
+        "/api/v1/cases/{case_id}/agent-runs",
+        "/api/v1/cases/{case_id}/run-operations/{request_key}",
+        "/api/v1/cases/{case_id}/runs/{run_id}",
+        "/api/v1/cases/{case_id}/runs/{run_id}/events",
+    }
     models = schema["components"]["schemas"]
     assert models["CaseCreate"]["additionalProperties"] is False
     assert models["Requirement"]["properties"]["quantity"]["type"] == "string"
