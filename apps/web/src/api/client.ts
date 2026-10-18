@@ -1,5 +1,6 @@
-import type { CaseCreate, CaseList, CaseRead, QuoteList, QuoteRead, MutationReceipt, OperationRead, SaveDraft, ConfirmQuote, ExtractRequest, RunRead, RunEvents, CloseOperation, OperationResolution } from './types';
+import type { CaseCreate, CaseList, CaseRead, CaseComparison, QuoteList, QuoteRead, MutationReceipt, OperationRead, SaveDraft, ConfirmQuote, ExtractRequest, RunRead, RunEvents, CloseOperation, OperationResolution } from './types';
 import { isCaseList, isCaseRead } from './response';
+import { isCaseComparison } from '../features/connected-comparison/response';
 import { isQuoteList, isQuoteRead, isMutationReceipt, isOperationRead, isRunRead, isRunEvents, isOperationResolution } from '../features/connected-quotations/response';
 
 export class ApiError extends Error {
@@ -53,6 +54,7 @@ export function createApiClient(baseUrl: string, authHeaders: () => Promise<Reco
     listCases: () => request<CaseList>('/api/v1/cases', 'GET', isCaseList),
     getCase: (caseId: string) => request<CaseRead>(casePath(caseId), 'GET', isCaseRead),
     createCase: (input: CaseCreate) => request<CaseRead>('/api/v1/cases', 'POST', isCaseRead, { body: input, cases: true }),
+    getComparison: (caseId: string) => request<CaseComparison>(`${casePath(caseId)}/comparison`, 'GET', (value): value is CaseComparison => isCaseComparison(value) && value.case_id === caseId),
     listQuotes: (caseId: string) => request<QuoteList>(`${casePath(caseId)}/quotes`, 'GET', isQuoteList),
     getQuote: (caseId: string, quoteId: string) => request<QuoteRead>(quotePath(caseId, quoteId), 'GET', isQuoteRead),
     uploadQuote: (caseId: string, file: File, revision: number, key: string) => {
