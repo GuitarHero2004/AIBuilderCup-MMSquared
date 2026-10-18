@@ -1,26 +1,32 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: reduced hosted demo deployed and verified, 18 October 2026.**
+**Status: Luma deployed; hosted functional journey verified, 19 October 2026.**
 [Open GreenProcure](https://greenprocure-511917.web.app). Firebase Hosting serves the normal
 React/TypeScript app; FastAPI runs on Cloud Run in Singapore with Firebase anonymous identity
-and App Check. The hosted journey passed: two private PDF uploads and real Gemini extractions,
-explicit human reviews/confirmations, deterministic comparison, and an immutable buyer
-selection note reopened unchanged after reload. Comparison and selection made no AI calls.
-Missing App Check was rejected with 403; a second owner received 404 on all four tested read
-routes. Earlier deployed checks also rejected direct browser database/storage access.
+and App Check. On 19 October, the hosted sourcing journey passed two private PDF uploads,
+real Gemini extractions, explicit human reviews/confirmations, deterministic comparison,
+and an immutable buyer selection reopened unchanged. The comparison retained the exact
+USD 3,500 / three-day trade-off. Comparison and selection made no AI calls.
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-The current hosted release uses API revision `greenprocure-api-00007-8x8` and
-Hosting version `2e435930a985410d`, from merged source `4c4d8b6`.
-The contextual Google ADK assistant (PR #14) and workspace UI refinements (PR #15)
-are both deployed. A fresh hosted rehearsal passed on 18 October at 23:22 Vietnam time:
-two real Gemini extractions, explicit review/confirmation, comparison, immutable selection
-save/reopen and one real assistant explanation of the saved selection. The assistant
-used four model calls and two tool calls; comparison and selection used no AI.
-The published asset hashes match the reviewed build; desktop/mobile screenshots were inspected.
-See the verification ledger for exact evidence and boundaries.
+The frontend release includes Luma through
+[PR #17](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/17), source `aeb7381`,
+on Firebase Hosting version `76e1c96ca463770d`. All five content asset hashes and
+`release.json` match the reviewed production build. The corrected API from
+[PR #18](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/18), source `15d59e4`,
+runs as `greenprocure-api-00009-bbf` at 100% traffic. Public health returned 200 with
+production Firestore and AI enabled.
+
+The final hosted journey verified procurement, the corrected saved-selection explanation
+(four model calls, two tool calls), and workspace navigation (two model calls). The initial
+grounding failure and its correction remain recorded in the verification ledger. The automated
+run stopped at an outdated button label after reaching the correct case; screenshot review
+confirmed the expected reviewed quotations, with no browser exceptions. This is verified
+functional evidence, not a claim that the entire automated run passed. Separate security
+checks passed all 14 reads: the owner's empty workspace returned 200, seven reads without
+App Check returned 403, and six reads of another owner's records returned 404.
 
 The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
 evaluations, scenarios, enterprise/supplier accounts and private invitations remain deferred.
@@ -33,7 +39,7 @@ Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for impl
 the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md) for executed checks and remaining gates.
 
-## Luma workspace assistant - release approved
+## Luma workspace assistant - deployed and functionally verified
 
 `feat/luma-workspace-assistant` adds Luma, Quill and Sage with distinct icons, a floating
 launcher, workspace navigation from Home/Help or any case, and team/context dialog views.
@@ -41,10 +47,11 @@ Workspace questions read the current owner's saved case catalog and propose veri
 current-case questions retain detailed saved-record help. No screenshot capture or unsaved
 field values are sent. Existing save/discard and operation-recovery guards still apply.
 
-Full project checks and 41 private local browser groups passed. One bounded live Google ADK
-navigation check also passed using synthetic in-memory context. The user approved committing, pushing, merging and deploying these Luma changes on
-19 October; the hosted release above remains the last verified release until verification completes. The local preview
-uses real Firebase emulators and explicit no-network AI doubles.
+Full project checks and 41 private local browser groups passed. Bounded live Google ADK
+adapter checks also passed. Hosted workspace navigation and the corrected saved-case
+assistant are verified. Local browser verification uses real Firebase
+emulators and explicit no-network AI doubles. The [verification ledger](docs/IMPLEMENTATION_STATUS.md)
+distinguishes those checks from actual hosted model calls.
 
 ## Local quick start
 Install Node.js 24 (npm 11 or 12), Python 3.12 and Java 21+ first; Java 22 was used locally.

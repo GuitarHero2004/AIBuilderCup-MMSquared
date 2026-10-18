@@ -1,11 +1,18 @@
 # GreenProcure — user flows and screen plan
 
-**Updated:** 18 October 2026.
+**Updated:** 19 October 2026.
 
-**Current status:** the guided quotation-to-saved-selection flow, contextual Google ADK
-assistant and workspace refinements are deployed and verified. Assistant PR #14 and UI PR #15
-are included in released source `4c4d8b6`. The verification ledger records the exact cloud
-release and the fresh hosted rehearsal, completed at 23:22 Vietnam time on 18 October 2026.
+**Current status:** the guided sourcing demo and Luma workspace assistant are deployed.
+Frontend [PR #17](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/17), source
+`aeb7381`, is on Hosting `76e1c96ca463770d`. The API grounding correction in
+[PR #18](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/18), source `15d59e4`,
+is deployed as `greenprocure-api-00009-bbf`. Health and exact frontend content checks passed.
+The final 19 October hosted journey verified procurement, workspace navigation and the corrected
+saved-selection explanation. Its automated run stopped at an outdated button label after
+successful navigation; screenshot review confirmed the expected reviewed quotations.
+Separate corrected-API security checks passed all 14 reads, covering the owner's empty
+workspace, missing App Check and another owner's records. The ledger preserves the initial
+grounding failure, correction and precise verification boundaries.
 
 **Completed workspace milestone:** desktop navigation/topbar stay visible while content scrolls;
 Create and Refresh belong to their respective page/list contexts; Help explains the actual
@@ -14,13 +21,13 @@ by a hosted flow using real Gemini, human confirmation, comparison, saved select
 real assistant answer. Carbon estimates/ranking, scenarios, enterprise/supplier access,
 private invitations and component BOM sourcing remain future product scope.
 
-**Next increment, locally verified:** Luma's floating launcher is available across the app.
+**Luma workspace milestone, deployed:** Luma's floating launcher is available across the app.
 The Workspace view reads the private saved-case catalog and offers direct/AI-assisted navigation;
 Current case preserves precise saved-record help. Luma, Quill and Sage have distinct SVG marks.
 Team/context details share the accessible assistant dialog. Screen capture is not used, and
 unsaved values are not sent. All existing edit, confirmation and recovery controls remain in
-charge. The user approved release from `feat/luma-workspace-assistant` on 19 October;
-implementation verification is complete and deployment verification remains pending.
+charge. Hosted workspace navigation and the corrected saved-case assistant passed on
+19 October. PR #18 preserves strict grounding checks while constraining provider output.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.

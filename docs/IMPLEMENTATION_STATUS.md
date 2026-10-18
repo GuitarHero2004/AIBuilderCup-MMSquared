@@ -1,38 +1,103 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** the guided sourcing demo, contextual Google ADK
-assistant and workspace UI refinements are deployed and verified at
-[GreenProcure](https://greenprocure-511917.web.app). UI [PR #15](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/15)
-merged as `4c4d8b6` after all three remote checks passed, including assistant PR #14.
-Cloud Run revision `greenprocure-api-00007-8x8` serves 100% of traffic; Firebase Hosting
-version `2e435930a985410d` is live.
+**Current state - 19 October 2026:** Luma and its saved-case grounding correction are
+deployed at [GreenProcure](https://greenprocure-511917.web.app). Frontend PR #17, source
+`aeb7381`, remains on Firebase Hosting `76e1c96ca463770d`. Corrected API PR #18, source
+`15d59e4`, is deployed as `greenprocure-api-00009-bbf` at 100% traffic. Public health and
+exact published-frontend checks passed. The final hosted functional journey is verified,
+and separate read-only security checks passed all 14 reads against the corrected API.
 
-A fresh hosted rehearsal passed at 23:22 Vietnam time: two sample PDF uploads, two real
-Gemini extractions, explicit guided reviews/confirmations, deterministic cost/delivery
-comparison, immutable buyer-selection save/reopen and one real ADK assistant explanation.
-Missing App Check and another owner's access were rejected on the tested comparison/selection
-reads. The approved reduced demo is ready to record. Carbon estimates/ranking, scenarios,
-enterprise/supplier accounts, private invitations and component BOM sourcing remain deferred.
-Video, deck and submission acceptance remain separate from this application verification.
-The Luma workspace-assistant increment is locally verified on its separate branch.
-The user approved commit, push, merge and deployment on 19 October; hosted verification is pending.
+The final 19 October hosted run verified two real Gemini extractions, explicit review and
+confirmation, comparison with the USD 3,500 / three-day trade-off, immutable selection
+save/reopen, the corrected contextual explanation and workspace navigation. Ten functional
+checks were true; no browser exceptions occurred. The automated run stopped at an outdated
+quotation-button label after asserting the correct destination. Screenshot review confirmed
+the expected reviewed rows. Its raw result remains failed, and its security tail did not run;
+a separate read-only security check then passed. The initial grounding failure and subsequent
+correction remain recorded below rather than being presented as an entirely successful run.
+Carbon estimates/ranking, scenarios, enterprise/supplier accounts, private invitations
+and component BOM sourcing remain deferred. Video, deck and submission acceptance are separate.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; assistant and UI merged and deployed | `C:\AIBuilderCup-MMSquared`; released source `4c4d8b6`; verification record on a separate documentation branch |
-| App and contracts | Guided UI, generated contracts and trade-off verified | Full branch checks, 11 local browser groups and fresh hosted journey passed |
+| Repository | Single checkout; Luma and grounding correction merged/deployed | Frontend `aeb7381`; API `15d59e4`; release evidence on `docs/luma-hosted-release` |
+| App and contracts | Guided UI, contracts and hosted functional journey verified | Final procurement, contextual explanation and workspace navigation verified; automated-label caveat below |
 | Quotation intake/review | Built-in PDFs and guided review deployed | Both public examples passed real upload/extraction, explicit grouped review and immutable confirmation |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
 | Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
-| App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
-| Cloud Build/Run/Hosting | Guided demo, assistant and UI deployed and verified | Cloud Run `greenprocure-api-00007-8x8` at 100%; Hosting `2e435930a985410d`; fresh hosted journey passed |
+| App Check | Enterprise provider configured; corrected-API security reads verified | Seven protected reads without App Check returned 403; six foreign-record reads returned 404; own workspace returned 200 |
+| Cloud Build/Run/Hosting | Corrected release deployed; hosted functionality verified | Cloud Run `greenprocure-api-00009-bbf` at 100%; Hosting `76e1c96ca463770d`; health and exact frontend content checks passed |
 | Security/quotas | Owner/revision checks, private files, App Check and bounded model usage | Deployed extraction limits: 10/user/day, 100 globally/day, 2 active; buyer-note limit: 10/case, locally tested |
 | Domain calculations | Cost, requirement checks and cost/delivery trade-off verified | Hosted: USD 142,500 / 20 days versus USD 139,000 / 23 days; exact USD 3,500 / 3-day trade-off; carbon/ranking deferred |
 | Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
 | Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
-| ADK coordinator and specialists | Contextual assistant deployed; real hosted selection explanation passed | Coordinator delegated to Sourcing Specialist and read saved context: four model calls, two tool calls. PDF extraction retains its direct Gemini adapter |
+| ADK coordinator and specialists | Corrected contextual explanation and workspace navigation verified hosted | Final case explanation: four model calls/two tools; workspace navigation: two model calls; initial grounding failure preserved below |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
 | Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
+
+## Hosted Luma workspace release and grounding correction - 19 October 2026
+
+- User authorized commit, push, merge and deployment. PR #17 merged as
+  `aeb73811545d41148f36ca3ac7395dbac807021d`; its tree equals the checked `9b69ae28` tree.
+  Functional commits: `7073895`, `0a9f003`; verification documentation: `2277888`,
+  synchronized with prior release evidence at `9b69ae2`.
+- Initial Cloud Build `0e3ee482-7a37-414b-9ae0-6b33dbe3dfa1` produced image
+  `sha256:72c52d35e04b6f7eced4c6c1b5a91a0bbd7c7a06b30a445d75829dbb0dc17e25`.
+  API revision `greenprocure-api-00008-jz4` was deployed. Firebase Hosting version
+  `76e1c96ca463770d`, release `1792343331984000`, remains the current frontend release.
+  All five content asset hashes plus `release.json` match its exact reviewed production build.
+- The initial full hosted procurement rehearsal ran at 00:09-00:10 Vietnam time on 19 October.
+  It passed two real Gemini extractions, explicit review/confirmation, deterministic comparison
+  with the USD 3,500 / three-day trade-off, and immutable buyer-selection save/reopen.
+  The existing `explain_selection` request failed grounding validation after four model calls
+  and two tool calls. The invalid result was rejected; there were no browser exceptions.
+  This initial run is not recorded as an entirely successful assistant rehearsal.
+- A separate hosted workspace-navigation request passed using two model calls. App Check and
+  owner-isolation checks passed. An initial test-harness timing warning was superseded by an
+  exact destination-heading recheck that passed; it was not a demonstrated navigation failure.
+- The provider had accepted a broadly valid JSON shape with semantically invalid references
+  or focus. The correction supplies a schema constrained to the current saved context while
+  preserving strict result rendering/validation. Fix `adf4c30` merged through PR #18 as
+  `15d59e4b7d8e4698ba4f8fd7a04eb87228ace141`; the merged API tree equals the checked fix tree.
+  All three remote checks passed. Full `npm run check` passed: 31 frontend tests, 69 backend
+  tests and three existing opt-in skips, plus lint/type/build and generated-contract checks.
+  Nine focused checks passed. No private tests or inputs were added to Git.
+- The same question passed a real provider-adapter check with four model calls and two tool
+  calls in 5.75 seconds using prompt `saved_state_adk_v2`. This is live adapter evidence,
+  separate from a hosted end-to-end result.
+- Corrected API Cloud Build `6840aa14-2bb1-431f-b924-880e0cfa71c3` succeeded, producing image
+  `sha256:1dcaec51747445b109f60654746ffac0fde275a97a2e213d924eb550538971d3`.
+  Cloud Run revision `greenprocure-api-00009-bbf` now serves 100% of traffic. Public health
+  returned 200 with production Firestore and AI enabled. Frontend Hosting remains unchanged.
+- The final hosted rehearsal ran at 00:18:37-00:19:55 Vietnam time on 19 October
+  (77.962 seconds) against `greenprocure-api-00009-bbf`. Ten recorded functional checks
+  were true: global Luma/team and Help access, workspace shell, two public-PDF real
+  extractions and guided human reviews, both offers passing deterministic comparison,
+  the exact USD 3,500 / three-day trade-off, immutable selection save/reopen and no AI
+  for comparison/selection, plus the actual saved-selection ADK explanation.
+- The corrected `explain_selection` run succeeded with `saved_state_adk_v2`, four model
+  calls and two tool calls. Actual events showed coordinator delegation to the Sourcing
+  Specialist and `read_saved_context`; no fixture substituted for the hosted model.
+  Workspace navigation separately succeeded with two model calls, a current fingerprint
+  and the correct case's quotation action. The exact Case quotations heading and matching
+  topbar were asserted after navigation.
+- The automated script then stopped because it expected `Review quotation` on an already
+  confirmed row; the correct action was `View reviewed quotation`. Its raw report remains
+  `passed: false`. The reviewed screenshot showed the correct case and both confirmed
+  quotations. The obsolete selector was corrected for future runs; no extra paid run was
+  needed to establish the observed functional result. No browser exceptions occurred and
+  credentials were not persisted. This is not an all-green automated-run claim.
+- That script did not reach its authorization/security tail. A separate read-only security
+  check against `greenprocure-api-00009-bbf` passed all three groups and 14 reads: a fresh
+  owner's workspace returned 200 with an empty catalog; seven protected reads without
+  App Check returned 403; six reads of another owner's case, comparison, selection,
+  case-assistant and navigation records returned 404. This follow-up produced no errors,
+  made no AI calls and created no cases. The original automated report remains unchanged;
+  the separate audit records the functional evidence, screenshot review and security pass.
+- Private test scripts, inputs, screenshots and detailed reports remain outside Git.
+  Deployed frontend source is `aeb7381`; deployed API source is `15d59e4`. This later
+  documentation branch records evidence without changing either deployed artifact.
+  Reduced-demo scope remains unchanged.
 
 ## Luma across the workspace - 18 October 2026 (release approved 19 October)
 
