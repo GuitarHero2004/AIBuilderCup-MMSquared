@@ -2,22 +2,25 @@
 
 **Updated:** 18 October 2026.
 
-**Current status:** the guided quotation-to-saved-selection flow is deployed and verified.
-The implementation ledger records its exact release and remaining scope. Carbon estimates,
-ranking and scenarios are not connected product capabilities. The contextual assistant is
-implemented and merged through PR #14 at `392f46f`. Local workflow checks, backward review,
-two live ADK adapter checks and all three remote checks passed. It is not deployed. The
-separate `fix/workspace-ui-polish` branch starts from that updated `dev` baseline; its initial
-remote branch publication is verified. UI implementation, backward review and local
-verification passed. The implementation is committed and the user has authorized push.
-The UI branch is not merged or deployed.
+**Current status:** the guided quotation-to-saved-selection flow, contextual Google ADK
+assistant and workspace refinements are deployed and verified. Assistant PR #14 and UI PR #15
+are included in released source `4c4d8b6`. The verification ledger records the exact cloud
+release and the fresh hosted rehearsal, completed at 23:22 Vietnam time on 18 October 2026.
 
-**Current separate milestone requested by the user:** general workspace UI refinement after
-the merged assistant increment. Keep the desktop navigation column visible, scroll the selected
-content area independently, make Help a practical task guide, and align the Refresh/Create
-sourcing case controls and related page actions. Preserve navigation guards, keyboard focus,
-mobile usability and enlarged-text layouts. Do not combine these layout changes with the
-assistant feature branch.
+**Completed workspace milestone:** desktop navigation/topbar stay visible while content scrolls;
+Create and Refresh belong to their respective page/list contexts; Help explains the actual
+sourcing steps and recovery controls. Local regression and responsive checks passed, followed
+by a hosted flow using real Gemini, human confirmation, comparison, saved selection and a
+real assistant answer. Carbon estimates/ranking, scenarios, enterprise/supplier access,
+private invitations and component BOM sourcing remain future product scope.
+
+**Next increment, locally verified:** Luma's floating launcher is available across the app.
+The Workspace view reads the private saved-case catalog and offers direct/AI-assisted navigation;
+Current case preserves precise saved-record help. Luma, Quill and Sage have distinct SVG marks.
+Team/context details share the accessible assistant dialog. Screen capture is not used, and
+unsaved values are not sent. All existing edit, confirmation and recovery controls remain in
+charge. The user approved release from `feat/luma-workspace-assistant` on 19 October;
+implementation verification is complete and deployment verification remains pending.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
@@ -185,7 +188,7 @@ Checks include another owner's access, changed revisions, prompt injection, forb
 model-call limits, repeated clicks, cancellation/interruptions, context switching, keyboard
 focus, narrow screens and enlarged text. Test inputs and screenshots stay in OS temp.
 
-### Workspace UI increment - committed; push authorized
+### Workspace UI increment - deployed and verified
 
 - Keep the desktop sidebar and top navigation stable while the selected content area scrolls.
   Changing tabs changes content and active navigation, with deliberate scroll/focus handling.
