@@ -1,13 +1,62 @@
-# Quotation comparison: proposed API handoff
+# Quotation checks and proposed evaluation API
 
-**Status:** proposal for Minh and Mạnh to review; not an agreed or implemented API.
+**Updated: 18 October 2026.** The read-only requirement-check slice below is implemented
+on `feat/confirmed-quote-comparison` and verified locally. It is not deployed.
+The ranked evaluation, scenarios and decision handoff in sections 2 onward remain proposals;
+their development UI walkthrough does not operate on connected quotation data.
 
-**Prepared:** 16 October 2026.
+## Implemented read-only slice
 
-**Branch scope:** comparison UI, explicitly synthetic local walkthrough and this handoff.
-No evaluation engine, model call, persisted evaluation, scenario or final decision is added.
-A selected offer advances only to a local decision handoff. It is not a saved decision,
-quotation confirmation, supplier approval or purchase order.
+`GET /api/v1/cases/{case_id}/comparison` checks the saved requirement against up to four
+current quotations. It uses existing Firebase identity, owner isolation and configured
+App Check. Unknown and other-owner case IDs return the same safe 404.
+Optional `expected_case_revision` returns 409 `STALE_CASE_REVISION` on a mismatch.
+Successful responses use `Cache-Control: private, no-store`.
+
+Case, quotation index, quote records and immutable confirmed revisions are read in one
+consistent Firestore transaction. Discovery races cause at most three bounded attempts, then
+409 `COMPARISON_INPUT_CHANGED`. Missing or malformed stored confirmation content returns
+503 `COMPARISON_DATA_UNAVAILABLE`. Owner, draft revision, source hash, extraction reference,
+confirmation timestamp and confirmed data must agree. This endpoint performs no writes,
+PDF retrieval, storage initialization or model calls.
+
+Pydantic/OpenAPI owns the contract, with generated TypeScript and a runtime guard.
+`CaseComparison` contains `case_id`, `case_data_revision`, `checked_at`, `input_fingerprint`,
+`scope: "confirmed_quote_checks_v1"`, `requirement`, `rows`, `limitations`,
+`carbon_available: false` and `ranking_available: false`.
+Rows include quote/source/supplier identity, confirmation reference, draft revision,
+nullable metrics and per-field checks:
+
+| Status | Meaning |
+|---|---|
+| `meets_checked_requirements` | All checks in this restricted scope pass or are explicitly not applicable |
+| `does_not_meet_requirements` | At least one known hard requirement fails, even with other missing inputs |
+| `needs_review` | A required input or reviewed basis is missing or inconsistent |
+| `unconfirmed` | Current immutable human confirmation is absent; all calculated metrics are null |
+
+Metrics use decimal strings for quoted/comparable cost and net fabric mass, plus currency,
+actual/estimated mass basis, full-order lead time and arrival date. Check states are
+`pass`, `fail`, `needs_review` or `not_applicable`, with explanations and field paths.
+Stable quote-ID order has no ranking meaning.
+
+Cost requires exact full-order quantity coverage. Kilogram prices use actual full-order net
+mass or an estimate from metres, total width and GSM; packaging/gross mass is excluded.
+Comparable cost additionally needs matching currency and reviewed scope, no unsupported
+adjustments, and no contradictory included/excluded charges. The fixed delivered-to-buyer
+scope rejects material/delivery exclusions and included tax/duties. Arbitrary free-text
+charge semantics are not inferred; human review remains responsible for their meaning.
+Delivery uses reviewed end-to-end full-order calendar days, never blindly summed stages.
+Equality at technical, MOQ, budget and deadline limits passes. Missing values are not zero.
+
+This refreshable diagnostic is not a saved evaluation, certification, carbon calculation,
+preference score, recommendation or decision. Missing carbon does not block this restricted
+scope but prevents claiming complete P0 evaluation. Missing expiry is explicitly unverified;
+it is not a new mandatory expiry policy.
+
+The screen shows timestamp/revision, retains prior results with an explicit refresh-failure
+warning, discards obsolete session/case responses, and clears unconfirmed metrics after refresh.
+Review navigation retains existing unsaved-change/in-flight-operation guards.
+Private tests, fixtures and reports remain in OS temp.
 
 The buyer outcome is to understand which reviewed offers can be compared, why others cannot,
 and what cost, delivery and logistics-emissions tradeoffs support the returned ranking.
@@ -17,11 +66,11 @@ Authority: [PRD FR-13–FR-15](GreenProcure_Vietnam_Textile_SME_PRD.md),
 
 ## 1. Current boundary
 
-The API currently implements case list/create/read and health only. `CaseRead` fixes
-`data_revision` to `1` and status to `draft`; `ErrorDetail.run_id` is null-only.
-Evaluation, recommendation, agent-run and recovery routes below do not exist. CORS needs
-an explicit idempotency header before integration. Extend backend models, response guards
-and generated TypeScript together; Pydantic/OpenAPI owns the final transport contract.
+The API now implements cases, private quotation intake, extraction runs, saved review,
+immutable confirmation, operation recovery and the read-only comparison above.
+Durable evaluations, recommendations, scenarios and explanation operations below remain
+future work. Existing run routes support extraction; the proposed explanation intent is
+not implemented. Extend Pydantic/OpenAPI, response guards and generated TypeScript together.
 UI presentation types and synthetic fixtures are not an alternative transport schema.
 
 Every route and shared agent-tool service verifies Firebase identity, case ownership,

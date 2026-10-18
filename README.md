@@ -10,10 +10,12 @@ access and direct browser database/storage reads were rejected in deployed check
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-Comparison, scenario and decision screens remain development-only simulations. Deterministic
-calculations, approved carbon factors, persisted evaluations/decisions and the planned ADK
-coordinator/specialists are still pending. The extraction adapter calls Gemini directly; it
-does not establish that the full agent architecture or competition MVP is complete.
+The current local branch adds real, read-only comparison of confirmed quotation terms:
+server-calculated order cost and net mass, technical requirements, MOQ, budget and delivery
+checks. It is not deployed yet. Carbon factors, ranking, persisted evaluations/decisions,
+scenarios and the planned ADK coordinator/specialists remain pending. Their development-only
+walkthroughs remain separate simulations. The extraction adapter calls Gemini directly;
+the full agent architecture and competition MVP are not complete.
 
 Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for implemented behavior,
 the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
@@ -73,6 +75,25 @@ Unknown upload/save/confirmation responses preserve their request reference for 
 After a reload, only request metadata is restored; unsaved PDF or draft content is not stored
 in browser session storage. A missing request can be explicitly closed with a server-side
 marker before starting new work. Existing recorded operations must be recovered.
+
+## Connected confirmed-quotation checks (local branch)
+
+From a saved case, choose **Open quotations** then **Compare confirmed terms**. The normal
+React/TypeScript screen calls the authenticated API. It reads current immutable human-confirmed
+revisions and saved requirements in a consistent database snapshot, without writes or model calls.
+
+Each quote shows requirements met, requirements failed, information missing, or not confirmed.
+**View checks** explains each outcome; **Review quotation** reopens the current draft and
+private source PDF. Costs use exact server decimals and a reviewed common cost basis.
+Missing information stays unavailable. Gross mass is never used for kilogram pricing.
+Conflicting declared charges prevent a comparable total even when a cost-basis checkbox is set.
+
+**Refresh checks** reads current inputs again. A failed refresh explicitly marks the displayed
+result as a previous, unverified result. An invalidated confirmation removes that offer's
+calculated metrics on refresh. A passing row does not establish carbon comparability,
+supplier certification, ranking, a recommendation or purchasing approval.
+
+See the [implemented comparison contract](docs/QUOTATION_COMPARISON_CONTRACT.md).
 
 The walkthroughs below remain independent, labelled design simulations. Their preview controls
 do not operate on the connected case or its saved quotations.
