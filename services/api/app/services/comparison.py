@@ -10,7 +10,7 @@ from app.models.cases import CaseRead, valid_case_id
 from app.models.comparison import CaseComparison
 from app.models.quotations import ConfirmedRevision, QuoteRead
 from app.security import Principal
-from app.services.comparison_engine import compare_confirmed_quote
+from app.services.comparison_engine import compare_confirmed_quote, summarize_tradeoff
 from app.services.quotations import QuotationRepository, digest
 
 LIMITATIONS = [
@@ -211,6 +211,7 @@ class ComparisonService:
                         input_fingerprint=fingerprint,
                         requirement=case.requirement,
                         rows=rows,
+                        tradeoff_summary=summarize_tradeoff(rows),
                         limitations=LIMITATIONS,
                     )
                     if accept is not None:

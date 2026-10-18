@@ -400,6 +400,7 @@ export interface components {
              * @constant
              */
             scope: "confirmed_quote_checks_v1";
+            tradeoff_summary?: components["schemas"]["ComparisonTradeoff"] | null;
         };
         /** CaseCreate */
         CaseCreate: {
@@ -548,6 +549,25 @@ export interface components {
             status: "meets_checked_requirements" | "does_not_meet_requirements" | "needs_review" | "unconfirmed";
             /** Supplier Name */
             supplier_name: string | null;
+        };
+        /** ComparisonTradeoff */
+        ComparisonTradeoff: {
+            /** Additional Cost Amount */
+            additional_cost_amount: string;
+            /** Cheaper Quote Id */
+            cheaper_quote_id: string;
+            /** Currency */
+            currency: string;
+            /** Delivery Days Saved */
+            delivery_days_saved: number;
+            /** Faster Quote Id */
+            faster_quote_id: string;
+            /**
+             * Kind
+             * @default faster_costs_more
+             * @constant
+             */
+            kind: "faster_costs_more";
         };
         /** CompositionPart */
         CompositionPart: {
