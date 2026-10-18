@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import type { ApiClient } from '../../api/client';
 import { ApiError } from '../../api/client';
-import type { CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
+import type { AssistantAction, CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
 import { QuotationIntake } from '../quotations/QuotationIntake';
 import { demoSamples, loadDemoSample } from './demoSamples';
 import { ConnectedSelections } from '../connected-selections/ConnectedSelections';
@@ -11,15 +11,16 @@ import type { SelectionSource } from '../connected-selections/recovery';
 import { ConnectedComparison } from '../connected-comparison/ConnectedComparison';
 import { Icon } from '../../components/Icon';
 import { QuotationReview } from '../quotation-review/QuotationReview';
-import type { ReviewBatchAction, ReviewDocument, ReviewDraft, ReviewDraftField, ReviewOperation } from '../quotation-review/types';
+import type { ReviewNavigation, ReviewBatchAction, ReviewDocument, ReviewDraft, ReviewDraftField, ReviewOperation } from '../quotation-review/types';
 import type { IntakeTransfer } from '../quotations/types';
 import { applyReviewBatch } from '../quotation-review/model';
 import { draftIssues, intakeCase, intakeQuote, reviewDraft, reviewFields, toSaveDraft, updateReviewDraft } from './adapters';
+import { useAssistantScope } from '../assistant/context';
 import './connected-quotations.css';
 
 type Pending = { key: string; kind: 'upload' | 'save' | 'confirm' | 'extract'; quoteId?: string; sourceHash?: string; file?: File; revision?: number; body?: SaveDraft | ConfirmQuote | ExtractRequest };
 export type QuotationNavigationGuard = ((proceed: () => void) => void) | null;
-interface Props { api: ApiClient; ownerId: string; item: CaseRead; onBack: () => void; onCaseChanged: (item: CaseRead) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>; onBusy: (busy: boolean) => void }
+interface Props { api: ApiClient; ownerId: string; item: CaseRead; onBack: () => void; onCaseChanged: (item: CaseRead) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>; onBusy: (busy: boolean) => void; assistantTarget?: AssistantAction | null; onAssistantTargetConsumed?: () => void }
 const reason = (error: unknown) => error instanceof ApiError ? `${error.message}${error.requestId ? ` Reference: ${error.requestId}.` : ''}` : 'The result could not be checked. Keep this view open and try checking the recorded state again.';
 const stale = (error: unknown) => error instanceof ApiError && ['STALE_CASE_REVISION', 'STALE_DRAFT_REVISION', 'SOURCE_REFERENCE_CHANGED'].includes(error.code);
 const uncertain = (error: unknown) => !(error instanceof ApiError) || error.outcomeUnknown;
@@ -55,7 +56,7 @@ function assertReceiptBinding(receipt: MutationReceipt, attempt: Pending) {
     if (!revisionsMatch || quote.source_extraction_run_id !== input.source_extraction_run_id) throw new ApiError('The receipt did not match the submitted draft and extraction revision. Check the recorded operation again.', 'INVALID_RESPONSE', undefined, true);
   }
 }
-export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged, navigationGuardRef, onBusy }: Props) {
+export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged, navigationGuardRef, onBusy, assistantTarget, onAssistantTargetConsumed }: Props) {
   const storageKey = `greenprocure:pending-quotation:${ownerId}:${item.id}`;
   const [pending, setPending] = useState<Pending | null>(() => readPending(storageKey));
   const [collection, setCollection] = useState<QuoteList | null>(null);
@@ -64,7 +65,10 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   const [transfer, setTransfer] = useState<IntakeTransfer>(() => pending ? { status: 'uncertain', message: 'An earlier operation needs readback. Check its recorded result before adding or changing quotations. Unsaved browser edits were not stored.' } : { status: 'idle' });
   const [selected, setSelected] = useState<QuoteRead | null>(null);
   const [comparisonOpen, setComparisonOpen] = useState(false);
-  const [selectionView, setSelectionView] = useState<{ source: SelectionSource | null } | null>(() => !pending && readSelectionAttempt(ownerId, item.id) ? { source: null } : null);
+  const [selectionView, setSelectionView] = useState<{ source: SelectionSource | null; savedId?: string } | null>(() => !pending && readSelectionAttempt(ownerId, item.id) ? { source: null } : null);
+  const reviewNavigation = useRef<ReviewNavigation>(null);
+  const consumedAssistantTarget = useRef<AssistantAction | null>(null);
+  const [comparisonRefresh, setComparisonRefresh] = useState(0);
   const [selectionBusy, setSelectionBusy] = useState(false);
   const selectionNavigation = useRef<QuotationNavigationGuard>(null);
   const [draft, setDraft] = useState<ReviewDraft>({});
@@ -334,6 +338,41 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
     setSelected(conflict); setSaved(latest); setDraft(next); setConflict(null); setShowConflict(false); setOperation({ status: 'idle' }); setNotice(keep ? 'Your edits were reapplied to the current draft. Review the fields again, save, then explicitly confirm.' : 'Your local edits were discarded and the current saved draft is displayed.');
   }
   function requestLeave(proceed: () => void) { navigationGuardRef.current?.(proceed); }
+  function assistantAction(action: AssistantAction) {
+    if (action.case_id !== item.id || action.expected_case_revision !== Math.max(item.data_revision, collection?.case_data_revision ?? 0, selected?.case_data_revision ?? 0)) return false;
+    if (action.kind === 'open_intake') {
+      // The existing guard first resolves pending operations and asks about any unsaved
+      // quotation/selection edits. This callback runs only after that guard proceeds.
+      requestLeave(() => {
+        setSelected(null); setDraft({}); setSaved({}); setUnknownNote('');
+        setOperation({ status: 'idle' }); setSelectionView(null); setComparisonOpen(false);
+        setNotice(''); void refreshCollection();
+      });
+      return true;
+    }
+    const proceed = () => {
+      if (action.kind === 'open_review' && action.quote_id) {
+        if (selected?.id === action.quote_id && !comparisonOpen && !selectionView) { if (action.field_path) reviewNavigation.current?.focusField(action.field_path); return; }
+        setSelectionView(null);
+        void openReview(action.quote_id).then(() => { if (action.field_path) requestAnimationFrame(() => reviewNavigation.current?.focusField(action.field_path!)); });
+      } else if (action.kind === 'open_comparison') {
+        setSelected(null); setDraft({}); setSaved({}); setSelectionView(null); setComparisonOpen(true); setComparisonRefresh(value => value + 1);
+      } else if (action.kind === 'open_selection' && action.selection_id) {
+        setSelectionView({ source: null, savedId: action.selection_id });
+      }
+    };
+    // Focusing within this same review does not discard or replace its unsaved draft.
+    if (action.kind === 'open_review' && selected?.id === action.quote_id && !comparisonOpen && !selectionView) proceed();
+    else requestLeave(proceed);
+    return true;
+  }
+  useAssistantScope({ screen: selected && !comparisonOpen && !selectionView ? 'review' : 'intake', label: item.name + (selected && !comparisonOpen && !selectionView ? ' / ' + selected.source_file.name : ' / Quotations'), caseId: item.id, caseRevision: Math.max(item.data_revision, collection?.case_data_revision ?? 0, selected?.case_data_revision ?? 0), quoteId: !comparisonOpen && !selectionView ? selected?.id : null, draftRevision: !comparisonOpen && !selectionView ? selected?.draft_revision : null, dirty: dirty || Boolean(unknownNote.trim()), busy: blocked, unavailable: operation.status === 'conflict' ? 'Resolve the saved-draft conflict before asking for a new explanation.' : loadError ?? undefined }, 10, JSON.stringify([draft, unknownNote, operation.status]), assistantAction);
+  useEffect(() => {
+    if (!assistantTarget || consumedAssistantTarget.current === assistantTarget || loading || !collection) return;
+    const frame = requestAnimationFrame(() => { consumedAssistantTarget.current = assistantTarget; if (!assistantAction(assistantTarget)) setNotice('The saved inputs changed before this assistant action opened. Check the current case and ask again.'); onAssistantTargetConsumed?.(); });
+    return () => cancelAnimationFrame(frame);
+  });
+
   const selectedFields = selected ? reviewFields(selected) : [];
   const conflictingFields = conflict ? selectedFields.filter(field => JSON.stringify(draft[field.id]) !== JSON.stringify(saved[field.id]) || JSON.stringify(reviewDraft(conflict)[field.id]) !== JSON.stringify(saved[field.id])) : [];
   const activityRun = selected ? selected.latest_run : run;
@@ -347,12 +386,12 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   return <>
     {notice && <div className="alert info-alert cq-notice" role="status">{notice}</div>}
     {!comparisonOpen && !selectionView && !selected && activity}
-    {selectionView ? <ConnectedSelections api={api} ownerId={ownerId} item={item} source={selectionView.source} navigationGuardRef={selectionNavigation} onBusy={setSelectionBusy}
-      onBack={() => { setSelectionView(null); setComparisonOpen(!!selectionView.source); setNotice(''); void refreshCollection(); }} /> : comparisonOpen ? <ConnectedComparison api={api} ownerId={ownerId} item={item} minimumRevision={Math.max(item.data_revision, collection?.case_data_revision ?? 0)} busy={busy}
+    {selectionView ? <ConnectedSelections api={api} ownerId={ownerId} item={item} source={selectionView.source} initialSelectionId={selectionView.savedId} navigationGuardRef={selectionNavigation} onBusy={setSelectionBusy}
+      onBack={() => { setSelectionView(null); setComparisonOpen(!!selectionView.source); setNotice(''); void refreshCollection(); }} /> : comparisonOpen ? <ConnectedComparison key={comparisonRefresh} api={api} ownerId={ownerId} item={item} minimumRevision={Math.max(item.data_revision, collection?.case_data_revision ?? 0)} busy={busy}
       onBack={() => requestLeave(() => { setComparisonOpen(false); setNotice(''); void refreshCollection(); })}
       onReview={quoteId => requestLeave(() => { void openReview(quoteId); })}
       onSelect={source => requestLeave(() => { setNotice(''); setSelectionView({ source }); })} /> : selected ? <>
-      <QuotationReview key={selected.id} quote={{ id: selected.id, supplierName: selected.draft_data?.supplier_name ?? 'Supplier not identified', caseName: item.name, caseRevision: selected.case_data_revision, savedDraftRevision: selected.draft_revision, extractionLabel: 'Check each extracted value and citation against the original PDF.' }}
+      <QuotationReview navigationRef={reviewNavigation} key={selected.id} quote={{ id: selected.id, supplierName: selected.draft_data?.supplier_name ?? 'Supplier not identified', caseName: item.name, caseRevision: selected.case_data_revision, savedDraftRevision: selected.draft_revision, extractionLabel: 'Check each extracted value and citation against the original PDF.' }}
         fields={selectedFields} draft={draft} issues={issues} document={source} dirty={dirty} operation={busy && operation.status === 'idle' ? { status: 'checking' } : operation}
         confirmation={selected.confirmation ? { draftRevision: selected.confirmation.draft_revision, confirmedAt: selected.confirmation.confirmed_at, reviewerLabel: 'You, in this private session' } : null}
         onFieldChange={changeField} onReviewBatch={reviewBatch} unknownNote={unknownNote} onUnknownNoteChange={setUnknownNote} activity={activity} onSave={saveDraft} onConfirm={confirm} onCheckSaved={() => { void checkSaved(); }} onResolveConflict={() => { void compareConflict(); }}

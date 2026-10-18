@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-type IconName = 'leaf' | 'grid' | 'arrow' | 'plus' | 'shield' | 'fabric' | 'check' | 'refresh' | 'close' | 'chevron';
+type IconName = 'leaf' | 'grid' | 'arrow' | 'plus' | 'shield' | 'fabric' | 'check' | 'refresh' | 'close' | 'chevron' | 'chat';
 
 export function Icon({ name, size = 20, style }: { name: IconName; size?: number; style?: CSSProperties }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -13,6 +13,7 @@ export function Icon({ name, size = 20, style }: { name: IconName; size?: number
     check: <path d="m5 12 4 4L19 6" />,
     refresh: <><path d="M20 10a8 8 0 1 0-2 8M20 4v6h-6" /></>,
     close: <path d="m6 6 12 12M18 6 6 18" />,
+    chat: <><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0Z" /><path d="M7 10h8M7 14h5" /></>,
     chevron: <path d="m9 5 7 7-7 7" />,
   };
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" style={style}>{paths[name]}</svg>;

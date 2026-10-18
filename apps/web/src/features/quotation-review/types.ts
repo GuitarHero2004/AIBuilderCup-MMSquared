@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 /** Presentation models only. Generate API DTOs from the agreed backend OpenAPI contract. */
 export type ReviewGroup = 'textile' | 'commercial' | 'delivery' | 'logistics' | 'evidence';
 export interface ReviewField {
@@ -53,7 +53,9 @@ export interface ReviewConfirmation {
   confirmedAt: string;
   reviewerLabel: string;
 }
+export interface ReviewNavigation { focusField: (fieldId: string) => void }
 export interface QuotationReviewProps {
+  navigationRef?: Ref<ReviewNavigation>;
   quote: {
     id: string;
     supplierName: string;
