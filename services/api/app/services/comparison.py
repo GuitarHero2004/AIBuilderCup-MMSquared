@@ -1,5 +1,6 @@
 """Consistent, owner-scoped reads for confirmed quotation diagnostics."""
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from pydantic import ValidationError
@@ -99,6 +100,24 @@ class ComparisonService:
     def get(
         self, principal: Principal, case_id: str, expected_case_revision: int | None = None
     ) -> CaseComparison:
+        return self.run(principal, case_id, expected_case_revision)
+
+    def run(
+        self,
+        principal: Principal,
+        case_id: str,
+        expected_case_revision: int | None = None,
+        *,
+        extra_paths: dict[str, str] | None = None,
+        before_snapshot: Callable | None = None,
+        accept: Callable | None = None,
+    ):
+        """Read consistent inputs and optionally accept a bounded server-side write.
+
+        The early callback resolves an existing operation before current-input checks.
+        The acceptance callback runs inside the same transaction as the source checks;
+        neither callback may perform I/O or invoke another transaction.
+        """
         if not valid_case_id(case_id):
             raise ApiError(404, "CASE_NOT_FOUND", "This case is not available in your session.")
         try:
@@ -108,6 +127,10 @@ class ComparisonService:
                 ids = self._ids(initial["index"])
                 paths = {"index": "intake_state/index"}
                 paths.update({f"quote_{qid}": f"quotes/{qid}" for qid in ids})
+                if extra_paths:
+                    if set(paths) & set(extra_paths):
+                        raise ValueError("Transaction aliases must not replace comparison inputs")
+                    paths.update(extra_paths)
                 discovery = self.repo.read(principal.uid, case_id, paths)
                 if ids != self._ids(discovery["index"]):
                     continue
@@ -123,6 +146,10 @@ class ComparisonService:
                         paths[f"revision_{qid}"] = f"quotes/{qid}/revisions/{refs[qid]}"
 
                 def read_snapshot(docs, ids=ids, refs=refs):
+                    if before_snapshot is not None:
+                        replay = before_snapshot(docs)
+                        if replay is not None:
+                            return replay
                     if self._ids(docs["index"]) != ids:
                         raise _SnapshotMoved()
                     case = CaseRead.model_validate(docs["case"])
@@ -177,7 +204,7 @@ class ComparisonService:
                             "inputs": frozen_inputs,
                         }
                     )
-                    return CaseComparison(
+                    comparison = CaseComparison(
                         case_id=case.id,
                         case_data_revision=case.data_revision,
                         checked_at=datetime.now(UTC),
@@ -185,7 +212,10 @@ class ComparisonService:
                         requirement=case.requirement,
                         rows=rows,
                         limitations=LIMITATIONS,
-                    ), {}
+                    )
+                    if accept is not None:
+                        return accept(comparison, docs)
+                    return comparison, {}
 
                 try:
                     return self.repo.atomic(principal.uid, case_id, paths, read_snapshot)

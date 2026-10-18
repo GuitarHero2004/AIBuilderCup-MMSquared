@@ -21,6 +21,7 @@ from app.errors import ApiError, ErrorDetail, ErrorEnvelope
 from app.models.cases import CaseCreate, CaseList, CaseRead
 from app.models.comparison import CaseComparison
 from app.routes.quotations import quotation_router
+from app.routes.selections import selection_router
 from app.security import FirebaseIdentityVerifier, IdentityVerifier, Principal
 from app.services.cases import CaseRepository, CaseService
 from app.services.comparison import ComparisonService
@@ -96,6 +97,20 @@ def get_comparison_service(request: Request) -> ComparisonService:
     )
 
 
+def get_selection_service(request: Request):
+    from app.services.selections import SelectionService
+
+    with request.app.state.resource_lock:
+        if request.app.state.quotation_repository is None:
+            request.app.state.quotation_repository = FirestoreQuotationRepository(
+                request.app.state.settings
+            )
+    return SelectionService(
+        request.app.state.quotation_repository,
+        request.app.state.settings.maximum_quotes_per_case,
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -129,7 +144,8 @@ def create_app(
         lifespan=lifespan,
         description=(
             "Private synthetic quotation intake, direct Gemini extraction and human review. "
-            "Read-only confirmed quotation checks are available; ranking and agent orchestration "
+            "Confirmed quotation checks and human buyer selection notes are available; "
+            "ranking and agent orchestration "
             "are not implemented."
         ),
         responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 422, 429, 503)},
@@ -259,4 +275,5 @@ def create_app(
         return service.get(principal, case_id, expected_case_revision)
 
     app.include_router(quotation_router(get_principal, get_quotation_service))
+    app.include_router(selection_router(get_principal, get_selection_service))
     return app
