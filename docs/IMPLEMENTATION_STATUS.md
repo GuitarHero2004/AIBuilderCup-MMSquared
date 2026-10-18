@@ -1,36 +1,35 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** active branch `feat/guided-demo-workflow`, based on
-`871679b`, is in progress. This increment adds public synthetic example PDFs, guided human
-review, clearer extraction activity and a deterministic cost/delivery trade-off. These new
-changes passed integrated and local browser verification and are being prepared for release;
-hosted verification is pending. Backend commit `d67f95e` is complete. Evidence is recorded below.
+**Current state - 18 October 2026:** the guided quotation-to-selection demo is deployed and
+verified at [GreenProcure](https://greenprocure-511917.web.app). [PR #12](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/12)
+merged as `e947184` after all three remote checks passed. Cloud Run revision
+`greenprocure-api-00006-bvd` serves 100% of traffic; Hosting version `55630d153862661e` is live.
 
-The prior reduced demo remains deployed and verified: Cloud Run revision
-`greenprocure-api-00005-c2k` and Hosting version `e09fa612e61d0c14`. Its fresh hosted journey
-passed two real extractions, explicit reviews/confirmations, confirmed comparison and
-immutable buyer-selection save/reopen, plus App Check and owner-isolation checks. That
-baseline evidence does not validate this new guided workflow. Carbon ranking, scenarios and
-the general agent remain deferred; the full PRD and competition submission are not complete.
+A fresh hosted journey passed the two built-in PDF uploads, two real Gemini extractions,
+explicit guided reviews/confirmations, deterministic cost/delivery comparison, and immutable
+buyer-selection save/reopen after reload. Missing App Check and another owner's access were
+rejected. This is the approved reduced demo outcome, not the full PRD: carbon estimates,
+ranking, scenarios and the general Google ADK agent remain deferred. The automated journey
+is not a narrated video or evidence of competition submission acceptance.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; guided-demo milestone in progress | `C:\AIBuilderCup-MMSquared`; `feat/guided-demo-workflow` from `871679b`; backend committed; reviewed UI changes ready for release |
-| App and contracts | Prior connected workflow verified; guided UI and trade-off changes in progress | Full branch checks and 10 local browser groups passed; hosted verification pending |
-| Quotation intake/review | Prior upload/review/confirmation verified; examples and grouped review in progress | Built-in PDF upload and guided review passed in the actual local app; hosted verification pending |
+| Repository | Single checkout; guided demo merged and deployed | `C:\AIBuilderCup-MMSquared`; `feat/guided-demo-workflow` merged through PR #12; release evidence branch from updated `dev` at `e947184` |
+| App and contracts | Guided UI, generated contracts and trade-off verified | Full branch checks, 11 local browser groups and fresh hosted journey passed |
+| Quotation intake/review | Built-in PDFs and guided review deployed | Both public examples passed real upload/extraction, explicit grouped review and immutable confirmation |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
 | Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
 | App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
-| Cloud Build/Run/Hosting | Reduced demo deployed and verified | Cloud Run `greenprocure-api-00005-c2k` at 100%; Hosting version `e09fa612e61d0c14`; full reduced hosted journey passed |
+| Cloud Build/Run/Hosting | Guided demo deployed and verified | Cloud Run `greenprocure-api-00006-bvd` at 100%; Hosting `55630d153862661e`; fresh hosted guided journey passed |
 | Security/quotas | Owner/revision checks, private files, App Check and bounded model usage | Deployed extraction limits: 10/user/day, 100 globally/day, 2 active; buyer-note limit: 10/case, locally tested |
-| Domain calculations | Prior cost/requirement checks verified; new cost/delivery trade-off in progress | Exact decimals; full ranking/carbon evaluation deferred; local trade-off and save checks passed |
+| Domain calculations | Cost, requirement checks and cost/delivery trade-off verified | Hosted: USD 142,500 / 20 days versus USD 139,000 / 23 days; exact USD 3,500 / 3-day trade-off; carbon/ranking deferred |
 | Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
 | Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
 | ADK coordinator and specialists | Deferred in the approved reduced demo | Current extraction uses a direct Gemini adapter; no general agent implementation |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
-| Submission readiness | Prior reduced hosted demo verified; guided recording flow in progress | Hosted verification pending; video under three minutes, source/deck and acceptance remain separate gates |
+| Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
 
-## Guided demo workflow - 18 October 2026 (in progress)
+## Guided demo workflow - 18 October 2026 (hosted verification passed)
 
 - Scope: make the real quotation-to-selection flow easier to demonstrate and operate through
   public synthetic PDF inputs, guided human review, visible recorded extraction status and a
@@ -55,14 +54,14 @@ Dated entries preserve earlier evidence; later entries supersede their then-curr
   exact USD 3,500 / three-day differences, old saved-record hydration, ties and tiny decimals;
   **26 frontend response-guard checks**. Targeted frontend lint/typecheck and backend Ruff
   passed. Source-return and integrated browser refinements passed their affected rechecks;
-  no hosted claim is made for this branch yet.
+  the separate hosted run below supplies live evidence.
 - Final `npm run check` passed: lint, TypeScript, 31 frontend tests, build, Ruff/format,
   69 backend tests (3 existing opt-in skips) and generated-contract equivalence. The build
   retains a non-blocking large-chunk warning; no bundle-splitting claim is made.
-- The actual local app passed **10 browser groups** using real Auth/Firestore/Storage emulators
+- The actual local app passed **11 browser groups** using real Auth/Firestore/Storage emulators
   and an explicit no-network extraction double: download failure/retry, duplicate-click and
   navigation protection, source round-trips, discarded/unapplied notes, edit invalidation,
-  both sample uploads/reviews/confirmations, exact server comparison and saved-selection focus.
+  both sample uploads/reviews/confirmations, exact server comparison, saved-selection focus and identical reload/reopen.
   This local run is not live Gemini evidence. Private test files and screenshots stayed in TEMP.
 - Working backwards from the demonstration exposed excessive scrolling: the initial guided
   page was 7,392 px high at 1,440 px width. Compact cited rows and section navigation reduced
@@ -71,7 +70,28 @@ Dated entries preserve earlier evidence; later entries supersede their then-curr
   passed; an observed enlarged-text label overlap was fixed and visually rechecked.
 - Cloud Build `9482f1ad-adec-4d78-86f9-d4851c1a307d` succeeded for backend commit `d67f95e`:
   image digest `sha256:99ff898a35417852b659a0dc49c7488ca4ff2d0a9e8cdafc80a32bb2b96ed659`.
-  Deployment and the bounded two-extraction hosted rehearsal remain pending.
+  This exact image deployed as revision `greenprocure-api-00006-bvd` at 100% traffic.
+- Functional commits: `d67f95e` (server trade-off/contracts), `f4d352b` (examples, guided review
+  and shared typography), `3c92fc4` (comparison and saved outcome), `d44fb3a` (documentation).
+  All three CI checks passed at `d44fb3a` before PR #12 merged. Local `dev` was pulled and
+  `chore/guided-demo-release-evidence` was created/published at `e947184` for this evidence.
+- The production frontend build and receipt passed. Firebase Hosting published six files,
+  593,263 bytes, version `55630d153862661e`, release `1792334798360000`. Only the two intentional
+  synthetic PDFs were added to public assets; private tests and answer keys were not published.
+- Fresh hosted verification at 21:47-21:48 Vietnam time passed with normal Firebase Auth and
+  App Check: examples A/B uploaded through the actual UI, each returned one real model call,
+  source facts/citations checked, explicit guided review and individual boundary decisions
+  saved/confirmed, and required unknowns retained. No fixture response or auto-confirmation
+  was substituted. Both offers met checked requirements and the server returned the exact
+  USD 3,500 / three-day trade-off. Comparison and selection made no model calls.
+- Saving the buyer's choice and reason succeeded; reload/reopen preserved the exact immutable
+  selection and comparison snapshot. Four read routes rejected missing App Check with 403
+  and another owner with 404. No browser runtime errors were recorded. Hosted desktop and
+  390 px screenshots were inspected; the 1,440 px guided page measured 2,666 px high.
+- The automated hosted journey, including screenshots/reload/access checks, took 57.6 seconds.
+  This measures test execution and service response, not human review or narrated video time.
+  A recording can show requirements, live extraction, one source-review example, the cost/
+  delivery trade-off and the reopened buyer choice; a finished video/deck is not produced here.
 - The official [submission FAQ](https://aibuildercup.com/Faqs.html) was checked on 18 October
   2026: the video must be **under three minutes**. PRD, context and reference wording were
   corrected to supersede the earlier supplied 3-4 minute duration.
