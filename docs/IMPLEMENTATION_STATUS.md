@@ -1,37 +1,66 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** the guided quotation-to-selection demo is deployed and
-verified at [GreenProcure](https://greenprocure-511917.web.app). [PR #12](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/12)
-merged as `e947184` after all three remote checks passed. Cloud Run revision
-`greenprocure-api-00006-bvd` serves 100% of traffic; Hosting version `55630d153862661e` is live.
+**Current state - 18 October 2026:** the guided sourcing demo, contextual Google ADK
+assistant and workspace UI refinements are deployed and verified at
+[GreenProcure](https://greenprocure-511917.web.app). UI [PR #15](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/15)
+merged as `4c4d8b6` after all three remote checks passed, including assistant PR #14.
+Cloud Run revision `greenprocure-api-00007-8x8` serves 100% of traffic; Firebase Hosting
+version `2e435930a985410d` is live.
 
-A fresh hosted journey passed the two built-in PDF uploads, two real Gemini extractions,
-explicit guided reviews/confirmations, deterministic cost/delivery comparison, and immutable
-buyer-selection save/reopen after reload. Missing App Check and another owner's access were
-rejected. This is the approved reduced demo outcome, not the full PRD: carbon estimates,
-ranking and scenarios remain deferred. The first bounded Google ADK assistant is implemented
-and merged through [PR #14](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/14)
-after all three remote checks passed. It has not been deployed. The separate
-`fix/workspace-ui-polish` branch has passed local workspace, Help and workflow checks;
-its implementation is committed and the user has authorized push. It is not merged or deployed. The automated journey is not a narrated
-video or evidence of competition submission acceptance.
+A fresh hosted rehearsal passed at 23:22 Vietnam time: two sample PDF uploads, two real
+Gemini extractions, explicit guided reviews/confirmations, deterministic cost/delivery
+comparison, immutable buyer-selection save/reopen and one real ADK assistant explanation.
+Missing App Check and another owner's access were rejected on the tested comparison/selection
+reads. The approved reduced demo is ready to record. Carbon estimates/ranking, scenarios,
+enterprise/supplier accounts, private invitations and component BOM sourcing remain deferred.
+Video, deck and submission acceptance remain separate from this application verification.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; assistant merged; UI refinement committed; push authorized | `C:\AIBuilderCup-MMSquared`; `fix/workspace-ui-polish` created and initially published from updated `dev` at `392f46f` |
+| Repository | Single checkout; assistant and UI merged and deployed | `C:\AIBuilderCup-MMSquared`; released source `4c4d8b6`; verification record on a separate documentation branch |
 | App and contracts | Guided UI, generated contracts and trade-off verified | Full branch checks, 11 local browser groups and fresh hosted journey passed |
 | Quotation intake/review | Built-in PDFs and guided review deployed | Both public examples passed real upload/extraction, explicit grouped review and immutable confirmation |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
 | Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
 | App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
-| Cloud Build/Run/Hosting | Guided demo deployed and verified | Cloud Run `greenprocure-api-00006-bvd` at 100%; Hosting `55630d153862661e`; fresh hosted guided journey passed |
+| Cloud Build/Run/Hosting | Guided demo, assistant and UI deployed and verified | Cloud Run `greenprocure-api-00007-8x8` at 100%; Hosting `2e435930a985410d`; fresh hosted journey passed |
 | Security/quotas | Owner/revision checks, private files, App Check and bounded model usage | Deployed extraction limits: 10/user/day, 100 globally/day, 2 active; buyer-note limit: 10/case, locally tested |
 | Domain calculations | Cost, requirement checks and cost/delivery trade-off verified | Hosted: USD 142,500 / 20 days versus USD 139,000 / 23 days; exact USD 3,500 / 3-day trade-off; carbon/ranking deferred |
 | Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
 | Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
-| ADK coordinator and specialists | First contextual assistant merged through PR #14; not deployed | Actual ADK coordinator/specialist live checks and local workflow/concurrency checks passed; evidence is recorded below. PDF extraction retains its direct Gemini adapter |
+| ADK coordinator and specialists | Contextual assistant deployed; real hosted selection explanation passed | Coordinator delegated to Sourcing Specialist and read saved context: four model calls, two tool calls. PDF extraction retains its direct Gemini adapter |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
 | Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
+
+## Hosted assistant and workspace release - 18 October 2026
+
+- User authorized merging UI PR #15, deployment and final demo verification. Exact source:
+  `4c4d8b6cf8e0983e79d51b7e4a8ffba2d17b12f9`, including the previously merged assistant.
+- Cloud Build `5e94a039-1261-4620-83a6-257bbed481c9` succeeded. Image digest:
+  `sha256:ac8fdd1f5215fffd35a85beb5596e4a4581d5d52ba076740821f4ccae1d23f55`.
+- Cloud Run `greenprocure-api-00007-8x8` serves 100% of traffic. Firebase Hosting version
+  `2e435930a985410d`, release `1792340425538000`, is live. The existing production configuration
+  and identities were reused; no new IAM, schema migration or cloud resources were needed.
+- Public `/api/health` returned 200 with production Firestore and AI enabled. All five
+  content asset hashes plus the public build receipt matched the reviewed production output.
+- Fresh hosted rehearsal ran at 23:20:42-23:22:05 Vietnam time (82.953 seconds), with genuine
+  anonymous Auth/App Check and no model doubles. All ten check groups passed, with zero
+  browser exceptions. Only synthetic example documents were used; credentials were not saved.
+- Verified stable desktop chrome and practical Help, both example PDF uploads, two actual
+  Gemini extractions, explicit source review and human confirmation, deterministic comparison,
+  immutable buyer selection and unchanged reopen after reload. The exact trade-off remained
+  USD 3,500 for three calendar days; comparison and selection made no model calls.
+- One real hosted assistant question explained the saved selection using its matching saved
+  evidence. Actual activity showed coordinator, Sourcing Specialist and `read_saved_context`.
+  The assistant used four model calls and two tool calls; two extractions used one model call
+  each, for six total model calls in this rehearsal. No automatic approval or purchasing.
+- Missing App Check returned 403 and a separate owner was denied all four tested comparison/
+  selection read paths. Existing local assistant ownership/revision tests remain recorded below.
+- Actual hosted Help, review, comparison, saved-selection and assistant screenshots were inspected;
+  1440px/390px checks found no horizontal overflow. Private scripts, reports and screenshots
+  remain in OS TEMP and are excluded from Git.
+- Application demo release is complete. Video/deck/submission are separate; carbon ranking,
+  scenarios, staff/supplier accounts, invitations and component BOM sourcing are not implemented.
 
 ## Workspace UI refinement - 18 October 2026 (local verification passed)
 

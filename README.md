@@ -12,24 +12,22 @@ routes. Earlier deployed checks also rejected direct browser database/storage ac
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-The last verified hosted release uses API revision `greenprocure-api-00006-bvd` and
-Hosting version `55630d153862661e`.
-Final hosted comparison and saved-note screenshots passed visual review at desktop 1440px
-and mobile 390px, with no clipping or overlap. Final source and release evidence are in
-[PR #12](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/12) and
-[release evidence](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/13).
-See the verification ledger for build and test evidence.
+The current hosted release uses API revision `greenprocure-api-00007-8x8` and
+Hosting version `2e435930a985410d`, from merged source `4c4d8b6`.
+The contextual Google ADK assistant (PR #14) and workspace UI refinements (PR #15)
+are both deployed. A fresh hosted rehearsal passed on 18 October at 23:22 Vietnam time:
+two real Gemini extractions, explicit review/confirmation, comparison, immutable selection
+save/reopen and one real assistant explanation of the saved selection. The assistant
+used four model calls and two tool calls; comparison and selection used no AI.
+The published asset hashes match the reviewed build; desktop/mobile screenshots were inspected.
+See the verification ledger for exact evidence and boundaries.
 
 The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
-evaluations and scenarios remain deferred. A first bounded ADK assistant is now implemented
-and merged through PR #14; local verification and two live ADK adapter checks passed.
-It is not part of the hosted release above. The separate `fix/workspace-ui-polish` branch
-refines navigation, page actions and Help; full local checks and 29 browser groups passed.
-The UI changes are committed on the feature branch; the user has authorized push.
-They are not merged or deployed. A buyer selection note
-is not purchasing approval or a complete carbon-aware decision. Development-only walkthroughs
-remain separate simulations. Live extraction calls Gemini directly; the full planned MVP
-and agent architecture are not complete.
+evaluations, scenarios, enterprise/supplier accounts and private invitations remain deferred.
+The assistant explains saved context and opens relevant screens; it cannot approve quotations,
+edit procurement records or place orders. A buyer selection note is not purchasing approval
+or a complete carbon-aware decision. Development-only walkthroughs remain separate simulations.
+Live extraction calls Gemini directly; the full planned MVP is not complete.
 
 Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for implemented behavior,
 the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
