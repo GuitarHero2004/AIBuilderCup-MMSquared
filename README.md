@@ -1,24 +1,22 @@
 # GreenProcure
 AI-assisted fabric sourcing for Vietnamese textile and garment SMEs.
 
-**Status: live quotation workflow deployed and verified, 18 October 2026.**
+**Status: reduced hosted demo deployed and verified, 18 October 2026.**
 [Open GreenProcure](https://greenprocure-511917.web.app). Firebase Hosting serves the normal
-React/TypeScript app; the FastAPI service runs on Cloud Run in Singapore with Firebase
-anonymous identity and App Check. The hosted journey passed: private PDF upload, real Gemini
-extraction, saved human review, explicit confirmation and reopening after reload. Cross-owner
-access and direct browser database/storage reads were rejected in deployed checks.
+React/TypeScript app; FastAPI runs on Cloud Run in Singapore with Firebase anonymous identity
+and App Check. The hosted journey passed: two private PDF uploads and real Gemini extractions,
+explicit human reviews/confirmations, deterministic comparison, and an immutable buyer
+selection note reopened unchanged after reload. Comparison and selection made no AI calls.
+Missing App Check was rejected with 403; a second owner received 404 on all four tested read
+routes. Earlier deployed checks also rejected direct browser database/storage access.
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-The local code now includes confirmed-quotation requirement checks and a buyer selection
-note: choose an offer that meets the available checks, record a reason and reopen the exact
-saved snapshot. Private service/API, real local Firestore, browser and full branch checks
-passed. Final UI polish passed lint/type checks, private guard checks and rendered desktop/390px
-review, including the saved-scope disclosure and another actual save. Production configuration
-and local release preparation passed. Comparison is committed, published and merged in PR #8;
-the saved-selection branch is implemented and locally verified. The user approved three
-functional commits, push, PR merge and deployment; that release is now in progress. No new
-commit or deployed-selection result is claimed until its verification is recorded.
+The live API is revision `greenprocure-api-00005-c2k`; Hosting version is `e09fa612e61d0c14`.
+Final hosted comparison and saved-note screenshots passed visual review at desktop 1440px
+and mobile 390px, with no clipping or overlap. Final source and release evidence are in
+[PR #11](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/11).
+See the verification ledger for build and test evidence.
 
 The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
 evaluations, scenarios and the general ADK assistant remain deferred. A buyer selection note
@@ -85,7 +83,7 @@ After a reload, only request metadata is restored; unsaved PDF or draft content 
 in browser session storage. A missing request can be explicitly closed with a server-side
 marker before starting new work. Existing recorded operations must be recovered.
 
-## Connected confirmed-quotation checks (local branch)
+## Connected confirmed-quotation checks
 
 From a saved case, choose **Open quotations** then **Compare confirmed terms**. The normal
 React/TypeScript screen calls the authenticated API. It reads current immutable human-confirmed
@@ -104,7 +102,7 @@ supplier certification, ranking, a recommendation or purchasing approval.
 
 See the [implemented comparison contract](docs/QUOTATION_COMPARISON_CONTRACT.md).
 
-## Buyer selection notes (local branch; not deployed)
+## Buyer selection notes
 
 The connected selection screen records a human choice from a current comparison. Only an
 immutable confirmed quotation that meets the displayed requirement checks can be selected.
@@ -120,7 +118,7 @@ must be resolved or explicitly closed before new work; it is not proof that no s
 
 See the [implemented buyer selection contract](docs/BUYER_SELECTION_CONTRACT.md). Service/API
 and isolated Firestore tests, six browser workflow groups and the full branch check passed.
-Release execution and hosted-verification gates remain in the
+The successful hosted journey and release evidence are recorded in the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md).
 
 The walkthroughs below remain independent, labelled design simulations. Their preview controls
@@ -374,8 +372,8 @@ One coordinator delegates to two specialist agents. Deterministic code owns calc
 
 ## Data disclosure
 Cases and quotations are labelled synthetic. Live Gemini extraction and private cloud
-persistence are verified for the deployed quotation workflow. Connected checks and buyer notes
-are local changes awaiting their release checks; general agent execution remains deferred.
+persistence, confirmed checks and buyer-note save/reopen are verified in the hosted demo.
+General agent execution remains deferred.
 Test-only carbon coefficients are not production reference factors. No measured customer
 savings or environmental certification is claimed.
 

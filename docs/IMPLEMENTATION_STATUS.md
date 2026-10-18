@@ -1,36 +1,98 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** active branch `feat/saved-buyer-selection`,
-created from the approved `dev` baseline `7081c27`. The user approved a reduced demo:
-confirmed quotation checks followed by an immutable human buyer selection note and reopening.
-Carbon ranking, scenarios and the general agent are deferred. The saved-selection branch is
-implemented and locally verified. The user approved three functional commits, push, PR merge
-and deployment; release is in progress. Commit and hosted-release evidence will be recorded
-after verification. This is not yet a released feature or a completed full PRD.
-The deployed app still contains the previously verified quotation workflow. Comparison and
-selection release remains pending. Local browser verification and the full current-branch
-check passed; final UI polish passed lint/type checks and 33 private frontend checks.
-Final rendered desktop/390px review, the exact saved-scope disclosure and another actual save
-also passed. Comparison is committed, published and merged in PR #8; the approved
-saved-selection release is in progress. Production configuration and local release
-preparation passed; no new cloud changes were made by those checks.
+**Current state - 18 October 2026:** the reduced hosted demo is deployed and verified.
+The active branch is `chore/demo-release-evidence`, created and published from updated `dev`
+at `42c9924`. PRs #9 and #10 merged with all three CI checks passing; final extraction fix
+`08a9bf8` and final release evidence are tracked in
+[PR #11](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/11).
+
+Cloud Run revision `greenprocure-api-00005-c2k` serves 100% of traffic; Hosting version
+`e09fa612e61d0c14` is live. A fresh hosted run passed two real extractions, explicit human
+review/confirmation, deterministic comparison and immutable buyer-selection save/reopen
+after reload. Missing App Check and other-owner read access were rejected. The approved
+reduced outcome is verified; carbon ranking, scenarios and the general agent remain deferred.
+This is not completion of the full PRD or proof that a competition submission was accepted.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; active saved-selection milestone | `C:\AIBuilderCup-MMSquared`; baseline `7081c27`; implementation verified; authorized release in progress |
+| Repository | Single checkout; release verification branch published | `C:\AIBuilderCup-MMSquared`; `chore/demo-release-evidence` branched from `42c9924`; PRs #9 and #10 merged |
 | App and contracts | React/TypeScript quotation workflow connected to FastAPI | Generated contracts, connected selection UI and full local branch check passed |
 | Quotation intake/review | Private PDF intake, saved corrections and immutable human confirmation implemented | Hosted upload, real extraction, saved review, confirmation and reopen passed |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
 | Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
 | App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
-| Cloud Build/Run/Hosting | Verified deployed quotation release | Comparison and buyer-note production release remains pending |
+| Cloud Build/Run/Hosting | Reduced demo deployed and verified | Cloud Run `greenprocure-api-00005-c2k` at 100%; Hosting version `e09fa612e61d0c14`; full reduced hosted journey passed |
 | Security/quotas | Owner/revision checks, private files, App Check and bounded model usage | Deployed extraction limits: 10/user/day, 100 globally/day, 2 active; buyer-note limit: 10/case, locally tested |
-| Domain calculations | Confirmed cost, net mass and requirement checks verified locally | Exact decimals; full ranking/carbon evaluation deferred |
-| Buyer selection notes | Backend, immutable snapshot, history and recovery verified locally | 95 private service/API tests, 1 actual Firestore integration, 6 browser groups and full branch check passed |
-| Comparison/scenarios/full decisions | Connected comparison locally verified; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
+| Domain calculations | Cost and requirement checks verified in the hosted journey; net mass verified locally | Exact decimals; full ranking/carbon evaluation deferred |
+| Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
+| Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
 | ADK coordinator and specialists | Deferred in the approved reduced demo | Current extraction uses a direct Gemini adapter; no general agent implementation |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
-| Submission readiness | Reduced demo in implementation; full competition MVP incomplete | Authorized release in progress; hosted smoke remains before claiming the new flow works live |
+| Submission readiness | Reduced hosted demo verified; full competition MVP incomplete | Live runtime verified; public-source, video/slides and submission acceptance remain separate gates |
+
+## Reduced demo release - 18 October 2026 (hosted verification passed)
+
+- The user approved three functional commits, push, PR merge and deployment. Saved-selection
+  commits: `e222a5b` (backend), `1b62f4a` (UI), `c585435` (documentation).
+- [PR #9](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/9) passed all three CI
+  checks and merged as `b11bf7415c014f762532cf4633959ba807e08571`. Local `dev` was updated;
+  `chore/demo-release-verification` was then created and published at that clean baseline.
+- Cloud Build `60837922-39ca-4efb-a816-fd7cba01602e` succeeded. Release API image digest:
+  `sha256:2248caed35436d17d50d02c44e78677bf884c552b7eeab305e7336e92e8eea31`.
+  The production frontend configuration/build also passed.
+- Initial deployment passed: Cloud Run revision `greenprocure-api-00003-xv7` served 100%
+  of traffic using the exact image digest above; revision 4 below supersedes it. Stable API:
+  `https://greenprocure-api-694155506378.asia-southeast1.run.app`.
+- Firebase Hosting version `e09fa612e61d0c14`, release `1792330094439000`, published four
+  files totaling 558,497 bytes to [GreenProcure](https://greenprocure-511917.web.app).
+- The first hosted extraction returned `INVALID_EXTRACTION_RESULT`: date text and a container
+  route citation did not meet the strict extraction contract. Prompt v3 clarified these outputs;
+  validation was retained. The fix passed 29 focused private tests, full `npm run check`
+  (31 frontend / 69 backend tests, 3 existing opt-in skips), and a real provider diagnostic
+  verifying 20/20 business-fact citations.
+- Prompt-fix commit `727791602e77ef2cec7dd682fdeea86b7e7829b4` was pushed and
+  [PR #10](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/10) merged after all
+  three checks passed, as `42c99245801c3dad2820e434d2ac94c34e039b6b`.
+- Cloud Build `0d2a4943-90a7-4bac-bc9e-9e559af556ba` succeeded with image digest
+  `sha256:ce14ce3b1e18693c052eb4baae4bc2d1a5b53c5042e108ba2f2ab2dd21b56d7e`.
+  Cloud Run revision `greenprocure-api-00004-mxb` served 100% of traffic before revision 5. Hosting remained
+  unchanged. Local `dev` was pulled to the merge, then `chore/demo-release-evidence` was created
+  and published at that baseline with these documentation edits preserved.
+- Fresh hosted quotation A passed real extraction, source review/save and explicit human
+  confirmation using normal Firebase Auth and App Check. The next hosted run reached quotation B
+  and strict validation rejected two comma-formatted numeric strings (quantity and MOQ).
+  Prompt-v3 date/route handling held; this additional number-format issue was reproduced.
+- The generic canonical-number schema hint and prompt-v4 correction passed one bounded live
+  quotation-B verification: all expected business fields and 20 source citations, unknowns
+  preserved and no authority fields populated. All 41 focused tests and Ruff passed.
+- Fix commit `08a9bf8` was pushed on `chore/demo-release-evidence`. Cloud Build
+  `2de2a762-69e7-490a-87eb-638d08bd62d8` succeeded with image digest
+  `sha256:723c80713204747750e54a0e90fe5836b03ab45a2b3dc02fc16b02ad331eb42b`.
+  Cloud Run revision `greenprocure-api-00005-c2k` deployed successfully and serves 100% of
+  traffic using that exact image. Hosting remains version `e09fa612e61d0c14`.
+- [PR #11](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/11) contains the
+  extraction correction and final release evidence. All three CI checks passed on the
+  code commit; hosted verification passed against its exact deployed image.
+- An earlier private-harness stop before quotation B upload was corrected by expanding
+  **Add a quotation**. Screenshot review confirmed that panel behavior was correct in the app.
+- Harness setup also required the Playwright browser-path environment variable before library
+  import. That initial launch made no AI call. Neither harness setup issue is an app defect.
+- Final fresh hosted verification passed against revision 5 with normal Firebase Auth and
+  App Check: two real PDF extractions, explicit saved reviews and human confirmations, and
+  both comparison rows meeting the checked requirements. Returned totals/lead times were
+  USD 142,500 / 20 days and USD 139,000 / 23 days.
+- A buyer selection note saved successfully and reopened unchanged after reload, preserving
+  its reason and exact comparison snapshot. Comparison and save made no AI calls.
+- Final hosted comparison and saved-note screenshots were visually inspected at desktop
+  1440px and mobile 390px. Layouts were usable with no clipping or overlap.
+- Missing App Check returned 403. A separate normal owner received 404 on all four tested read
+  routes. No authentication bypass or mocked extraction was used for this final journey.
+  Private case IDs, fixture paths, screenshots and detailed reports remain outside the repo.
+- Repository visibility, video/slides, final submitted-source link and competition
+  submission acceptance are separate from this
+  successful hosted runtime check; no submission acceptance is claimed.
+- The reduced scope remains a human buyer selection note, without carbon ranking, scenarios,
+  general-agent execution, purchase approval or a completed full competition MVP.
 
 ## Saved buyer selection note - 18 October 2026 (local verification)
 
