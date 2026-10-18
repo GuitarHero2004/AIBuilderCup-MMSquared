@@ -10,12 +10,21 @@ access and direct browser database/storage reads were rejected in deployed check
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-The current local branch adds real, read-only comparison of confirmed quotation terms:
-server-calculated order cost and net mass, technical requirements, MOQ, budget and delivery
-checks. It is not deployed yet. Carbon factors, ranking, persisted evaluations/decisions,
-scenarios and the planned ADK coordinator/specialists remain pending. Their development-only
-walkthroughs remain separate simulations. The extraction adapter calls Gemini directly;
-the full agent architecture and competition MVP are not complete.
+The local code now includes confirmed-quotation requirement checks and a buyer selection
+note: choose an offer that meets the available checks, record a reason and reopen the exact
+saved snapshot. Private service/API, real local Firestore, browser and full branch checks
+passed. Final UI polish passed lint/type checks, private guard checks and rendered desktop/390px
+review, including the saved-scope disclosure and another actual save. Production configuration
+and local release preparation passed. Comparison is committed, published and merged in PR #8;
+the saved-selection branch is implemented and locally verified. The user approved three
+functional commits, push, PR merge and deployment; that release is now in progress. No new
+commit or deployed-selection result is claimed until its verification is recorded.
+
+The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
+evaluations, scenarios and the general ADK assistant remain deferred. A buyer selection note
+is not purchasing approval or a complete carbon-aware decision. Development-only walkthroughs
+remain separate simulations. Live extraction calls Gemini directly; the full planned MVP
+and agent architecture are not complete.
 
 Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for implemented behavior,
 the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
@@ -94,6 +103,25 @@ calculated metrics on refresh. A passing row does not establish carbon comparabi
 supplier certification, ranking, a recommendation or purchasing approval.
 
 See the [implemented comparison contract](docs/QUOTATION_COMPARISON_CONTRACT.md).
+
+## Buyer selection notes (local branch; not deployed)
+
+The connected selection screen records a human choice from a current comparison. Only an
+immutable confirmed quotation that meets the displayed requirement checks can be selected.
+Review the checked terms, enter a reason, acknowledge the limited scope and choose
+**Save buyer selection**. Reopen the original snapshot from **Saved selection history**.
+Each case can retain ten notes. This workflow does not place an order or approve a supplier.
+
+The server rechecks the case revision, input fingerprint and exact confirmation in the same
+transaction that saves the note and its receipt. Later source edits leave the note unchanged;
+the saved view reports whether its inputs still match, changed, or could not be checked.
+An uncertain save keeps its request reference for **Check save result**. A missing receipt
+must be resolved or explicitly closed before new work; it is not proof that no save occurred.
+
+See the [implemented buyer selection contract](docs/BUYER_SELECTION_CONTRACT.md). Service/API
+and isolated Firestore tests, six browser workflow groups and the full branch check passed.
+Release execution and hosted-verification gates remain in the
+[verification ledger](docs/IMPLEMENTATION_STATUS.md).
 
 The walkthroughs below remain independent, labelled design simulations. Their preview controls
 do not operate on the connected case or its saved quotations.
@@ -285,9 +313,11 @@ One monorepo, feature-oriented React UI and a modular FastAPI backend:
 ```text
 apps/web/                  React + Vite + TypeScript + Tailwind
   src/features/cases/      Case form, validation and saved requirements
-  src/features/quotations/ Reusable intake UI; not connected to an API yet
+  src/features/quotations/ Reusable quotation intake UI components
   src/features/quotation-review/ Source, corrections and explicit review UI
-  src/features/comparison/ Supplier results, provenance and decision handoff UI
+  src/features/comparison/ Development comparison walkthrough components
+  src/features/connected-comparison/ Server-backed confirmed requirement checks
+  src/features/connected-selections/ Human buyer notes and saved snapshot recovery
   src/dev/                Development-only intake/review/comparison simulations; excluded from app entry
   src/api/                API client and generated OpenAPI types
   src/auth/               Firebase anonymous identity and App Check
@@ -297,7 +327,7 @@ services/api/
   app/adapters/           Firestore persistence
   app/security.py         Token verification and trusted identity
   tests/                  Unit, emulator and opt-in deployed tests
-  Dockerfile              Backend image definition; not deployed
+  Dockerfile              Backend image used by the deployed quotation release
   pyproject.toml, uv.lock  Locked Python dependencies
 infra/firebase/           Deny-direct-access rules and Firestore indexes
 scripts/                  Cross-platform setup, checks, contracts and smoke tests
@@ -309,9 +339,9 @@ firebase.json             Local emulators and static Hosting target
 .local/                   Ignored tools, test artefacts and any retained local history
 ```
 
-Extend the existing services and adapters as the product grows. Add `app/domain/` with the
-first deterministic calculations and `app/agents/` with the first real ADK tools; those future
-components are not empty placeholders in this foundation. The browser does not directly
+Extend the existing services and adapters as the product grows. Deterministic checks live in
+`app/services/comparison_engine.py`; saved buyer notes use the same consistent source snapshot.
+`app/agents/` remains future work rather than an empty framework placeholder. The browser does not directly
 read/write Firestore or Storage. The API derives ownership from the verified Firebase UID.
 
 ## Start here
@@ -330,7 +360,8 @@ read/write Firestore or Storage. The API derives ownership from the verified Fir
 - [UI/UX user flows and screen plan (planning draft)](docs/UI_UX_PLAN.md)
 - [Quotation intake API handoff (proposal)](docs/QUOTATION_INTAKE_CONTRACT.md)
 - [Quotation review API handoff (proposal)](docs/QUOTATION_REVIEW_CONTRACT.md)
-- [Quotation comparison API handoff (proposal)](docs/QUOTATION_COMPARISON_CONTRACT.md)
+- [Implemented quotation checks and proposed full evaluation](docs/QUOTATION_COMPARISON_CONTRACT.md)
+- [Implemented buyer selection note contract](docs/BUYER_SELECTION_CONTRACT.md)
 - [Screen wireframes and visual direction (design draft)](docs/design/VISUAL_DIRECTION.md)
 - [Changes from earlier drafts](docs/DECISIONS.md)
 - [Technical references and unresolved dependencies](docs/REFERENCES.md)
@@ -342,9 +373,11 @@ FastAPI + Google ADK on one Cloud Run service → Gemini, Firestore and private 
 One coordinator delegates to two specialist agents. Deterministic code owns calculations.
 
 ## Data disclosure
-Cases in this foundation are labelled synthetic. Live Gemini extraction, agent tool execution
-and cloud persistence still require implementation/verification. Test-only carbon coefficients are not production
-reference factors. No measured customer savings or environmental certification is claimed.
+Cases and quotations are labelled synthetic. Live Gemini extraction and private cloud
+persistence are verified for the deployed quotation workflow. Connected checks and buyer notes
+are local changes awaiting their release checks; general agent execution remains deferred.
+Test-only carbon coefficients are not production reference factors. No measured customer
+savings or environmental certification is claimed.
 
 ## History
 The uploaded v1 files are optional historical material, kept locally under

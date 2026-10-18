@@ -1,29 +1,106 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** Google setup was merged into `dev` through
-[PR #7](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/7),
-baseline `b46cab9c76d67bcfc505c4101f902f7426ece76f`.
-Active branch: `feat/confirmed-quote-comparison`, published at that baseline before coding.
-The comparison implementation is approved for three functional commits and PR integration.
-Real confirmed-quotation requirement checks are
-implemented and verified locally. The deployed app still contains the previously verified
-quotation workflow; this comparison increment has not been deployed.
+**Current state - 18 October 2026:** active branch `feat/saved-buyer-selection`,
+created from the approved `dev` baseline `7081c27`. The user approved a reduced demo:
+confirmed quotation checks followed by an immutable human buyer selection note and reopening.
+Carbon ranking, scenarios and the general agent are deferred. The saved-selection branch is
+implemented and locally verified. The user approved three functional commits, push, PR merge
+and deployment; release is in progress. Commit and hosted-release evidence will be recorded
+after verification. This is not yet a released feature or a completed full PRD.
+The deployed app still contains the previously verified quotation workflow. Comparison and
+selection release remains pending. Local browser verification and the full current-branch
+check passed; final UI polish passed lint/type checks and 33 private frontend checks.
+Final rendered desktop/390px review, the exact saved-scope disclosure and another actual save
+also passed. Comparison is committed, published and merged in PR #8; the approved
+saved-selection release is in progress. Production configuration and local release
+preparation passed; no new cloud changes were made by those checks.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout and published comparison branch | `C:\AIBuilderCup-MMSquared`; comparison packaging approved; deployment pending |
-| App and contracts | React/TypeScript quotation workflow connected to FastAPI | Generated contracts; locked packages; prior local/CI checks passed |
+| Repository | Single checkout; active saved-selection milestone | `C:\AIBuilderCup-MMSquared`; baseline `7081c27`; implementation verified; authorized release in progress |
+| App and contracts | React/TypeScript quotation workflow connected to FastAPI | Generated contracts, connected selection UI and full local branch check passed |
 | Quotation intake/review | Private PDF intake, saved corrections and immutable human confirmation implemented | Hosted upload, real extraction, saved review, confirmation and reopen passed |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
 | Gemini PDF extraction | Real `gemini-3.1-flash-lite` through global endpoint verified | Actual changed-PDF facts, citations, unknowns and no-approval checks passed |
 | App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
-| Cloud Build/Run/Hosting | Dedicated identities, guarded build/release scripts and production configuration prepared | Final API revision and Hosting release verified; public asset hashes match |
-| Security/quotas | Owner/revision validation, private files, App Check, model kill switch and concurrency limits | 10 generations/user/day; 100 globally/day; 2 active globally; deployed isolation checks passed |
-| Domain calculations | Confirmed cost, net mass and requirement checks implemented locally | Exact decimals; full ranking/carbon evaluation pending |
-| Comparison/scenarios/decisions | Connected comparison locally verified; other walkthroughs remain simulations | Comparison deployment, saved evaluations, scenarios and durable decisions pending |
-| ADK coordinator and specialists | Designed, not wired | Current extraction uses a direct Gemini adapter |
-| Carbon references | Not supplied/approved | Exact source rows, review notes and licence required |
-| Submission readiness | Full competition MVP not complete | Live quotation release verified; calculation/agent/decision work remains |
+| Cloud Build/Run/Hosting | Verified deployed quotation release | Comparison and buyer-note production release remains pending |
+| Security/quotas | Owner/revision checks, private files, App Check and bounded model usage | Deployed extraction limits: 10/user/day, 100 globally/day, 2 active; buyer-note limit: 10/case, locally tested |
+| Domain calculations | Confirmed cost, net mass and requirement checks verified locally | Exact decimals; full ranking/carbon evaluation deferred |
+| Buyer selection notes | Backend, immutable snapshot, history and recovery verified locally | 95 private service/API tests, 1 actual Firestore integration, 6 browser groups and full branch check passed |
+| Comparison/scenarios/full decisions | Connected comparison locally verified; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
+| ADK coordinator and specialists | Deferred in the approved reduced demo | Current extraction uses a direct Gemini adapter; no general agent implementation |
+| Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
+| Submission readiness | Reduced demo in implementation; full competition MVP incomplete | Authorized release in progress; hosted smoke remains before claiming the new flow works live |
+
+## Saved buyer selection note - 18 October 2026 (local verification)
+
+- Approved outcome: from current confirmed quotation checks, the buyer records a reason and
+  reopens an immutable selection note. The user accepted this narrower demo in place of the
+  full ranked/carbon-aware decision and general-agent milestones for tonight.
+- Backend: five authenticated owner-scoped routes for create/list/read, exact-request
+  receipt lookup and cancellation. The human route supplies service authority; request JSON
+  cannot supply trusted actor, owner, totals or a comparison snapshot. No model, PDF, external
+  message or purchase operation is called. See [the implemented contract](BUYER_SELECTION_CONTRACT.md).
+- Persistence: verify current case revision, comparison fingerprint, passing selected row and
+  its exact immutable confirmation in the same Firestore transaction that creates the note,
+  operation receipt and bounded history index. Ten notes per case. Saving a note does not
+  change the quotation or requirement revision. Historical notes are never rewritten.
+- Recovery: identical requests replay the original receipt even after source edits. A changed
+  body under the same key conflicts. A missing receipt is inconclusive; an explicit cancellation
+  transaction either records a fence against late saves or returns the already committed ID.
+  Known saved IDs reopen the record instead of starting another save. Freshness is separate
+  from saved content and can be current, changed or temporarily unknown.
+- Frontend: connected React/TypeScript selection/reason/reopen and recovery code uses generated
+  API types and strict runtime guards. Six actual local-emulator browser workflow groups passed:
+  real save/reload/history; lost response after commit then reload/recovery without duplicate
+  POST; recovery from a known-committed summary read failure; missing-receipt cancellation fence
+  with reason preservation; stale history after source invalidation while retaining the original
+  reason and USD 142,500; required fields, dirty-navigation guards and passing-row-only selection.
+  Layouts covered 320/390/768/1024/1600px and 200% root text. Rendered PNGs were inspected for
+  hierarchy, wrapping and control alignment. The final redundant scope-detail polish passed
+  frontend lint/type checks and 33 private frontend checks. Final desktop/390px rendered review,
+  opening the saved disclosure to its exact limitations and another actual form save also passed.
+  Broader accessibility certification is not claimed.
+- `npm run check` passed: frontend lint/typecheck, **31 frontend tests**, production Vite build,
+  backend Ruff/format, **69 backend tests** with **3 existing opt-in skips**, and generated
+  API-contract equivalence. These are local checks, not a production release.
+- Private commands used `services/api/.venv/Scripts/python.exe -m pytest` with
+  `PYTHONPATH=C:/AIBuilderCup-MMSquared/services/api` and flags `-q -p no:cacheprovider`.
+  The three invocations targeted OS-temp `greenprocure-saved-selection-tests-20261018/`
+  files `test_selection_service.py` plus `test_selection_api.py`, then
+  `test_selection_emulator.py`, then the prior OS-temp
+  `greenprocure-confirmed-comparison-20261018/test_comparison_service.py`.
+  Executable tests, synthetic fixtures, screenshots and detailed reports remain outside
+  this repository; only results are recorded here.
+- Results: **95 private selection service/API tests passed**, covering immutable snapshots,
+  stale revisions/fingerprints/confirmations, failed/unknown rows, owner isolation, human-only
+  authority, reason/acknowledgment validation, idempotency collisions, concurrent duplicate
+  saves, lost acknowledgments, unavailable receipt readback, cancellation races and the
+  concurrent ten-note cap. **1 actual Firestore emulator integration passed**, including
+  atomic persistence/replay, unchanged historical data after edit, cancellation and other-owner
+  denial. Its unique synthetic records were removed and absence verified. **40 comparison
+  regression tests passed** after the shared transaction refactor. The initial loss-response
+  fixture was refined to cover both immediate known-receipt recovery and unavailable readback;
+  this was a test expectation correction, not a product failure.
+- One existing Starlette/httpx TestClient deprecation warning remains. These checks made no
+  live AI calls or production writes. No production release is claimed for this branch.
+- Backward review against PRD FR-18 and the calculation contract: the implemented record is
+  explicitly a `buyer_selection_note`, not a full evaluation or purchase approval. Only a
+  current `meets_checked_requirements` row can be chosen; hard failures/unknown required terms
+  cannot be overridden by a reason. Original requirements, all comparison outcomes, confirmed
+  reference, fingerprint, buyer reason and scope limitations stay frozen. Carbon availability
+  and ranking availability remain false. No concrete backend blocker was found within this
+  approved restricted scope; full PRD agent/carbon/scenario requirements remain deferred.
+- Production preparation: `cloud-build-api.ps1` produced only allowlisted local staged source
+  and a hash receipt. `cloud-build-web.ps1 -EnvironmentFile .local/cloud/web.production.json
+  -Build` passed production configuration and build. `cloud-deploy-api.ps1` with the existing
+  build ID and `-EnableLiveAi`, without `-Deploy`, passed runtime configuration validation.
+  These checks made no new cloud requests or writes.
+- Release in progress: the user approved three functional commits, push, PR merge and
+  deployment. Inspect final change/commit scope, package/publish and build/deploy the authorized
+  API and frontend release; record each result only after verification. Verify deployed save/reopen/recovery
+  and owner isolation before calling this reduced path live. No carbon/general-agent expansion
+  is required for the approved scope. Record release IDs and actual hosted evidence afterward.
 
 ## Confirmed quotation requirement checks - 18 October 2026
 
