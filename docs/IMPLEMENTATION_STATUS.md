@@ -1,17 +1,17 @@
 # Implementation and verification ledger
-**Current state - 18 October 2026:** quotation delivery was merged into `dev` through
-[PR #6](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/6) after all three
-GitHub checks passed (merge `2e2818d331f25fa2ea07e53ad6331654f0c2c3a1`).
-The active branch is `feat/google-cloud-setup`. This increment is packaged in four approved
-local commits; its remote branch remains at the published dev baseline. Google resources and
-real Gemini extraction are verified. The final hosted quotation journey and deployed
-owner/App Check/privacy checks passed.
-Dated entries below preserve evidence at each earlier review; later entries supersede their
-then-current blockers.
+**Current state - 18 October 2026:** Google setup was merged into `dev` through
+[PR #7](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/7),
+baseline `b46cab9c76d67bcfc505c4101f902f7426ece76f`.
+Active branch: `feat/confirmed-quote-comparison`, published at that baseline before coding.
+The comparison implementation is approved for three functional commits and PR integration.
+Real confirmed-quotation requirement checks are
+implemented and verified locally. The deployed app still contains the previously verified
+quotation workflow; this comparison increment has not been deployed.
+Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout and published Google setup branch | `C:\AIBuilderCup-MMSquared`; four local commits, publication pending |
+| Repository | Single checkout and published comparison branch | `C:\AIBuilderCup-MMSquared`; comparison packaging approved; deployment pending |
 | App and contracts | React/TypeScript quotation workflow connected to FastAPI | Generated contracts; locked packages; prior local/CI checks passed |
 | Quotation intake/review | Private PDF intake, saved corrections and immutable human confirmation implemented | Hosted upload, real extraction, saved review, confirmation and reopen passed |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
@@ -19,11 +19,46 @@ then-current blockers.
 | App Check | Enterprise provider configured for both Hosting domains; mandatory backend verification | Fresh hosted session passed; missing/invalid App Check rejected with 403 |
 | Cloud Build/Run/Hosting | Dedicated identities, guarded build/release scripts and production configuration prepared | Final API revision and Hosting release verified; public asset hashes match |
 | Security/quotas | Owner/revision validation, private files, App Check, model kill switch and concurrency limits | 10 generations/user/day; 100 globally/day; 2 active globally; deployed isolation checks passed |
-| Domain calculations | Specified, not implemented | Cost, mass, eligibility, ranking and carbon engine pending |
-| Comparison/scenarios/decisions | Labelled development UI walkthroughs | Backend evaluations, scenario persistence and durable decisions pending |
+| Domain calculations | Confirmed cost, net mass and requirement checks implemented locally | Exact decimals; full ranking/carbon evaluation pending |
+| Comparison/scenarios/decisions | Connected comparison locally verified; other walkthroughs remain simulations | Comparison deployment, saved evaluations, scenarios and durable decisions pending |
 | ADK coordinator and specialists | Designed, not wired | Current extraction uses a direct Gemini adapter |
 | Carbon references | Not supplied/approved | Exact source rows, review notes and licence required |
 | Submission readiness | Full competition MVP not complete | Live quotation release verified; calculation/agent/decision work remains |
+
+## Confirmed quotation requirement checks - 18 October 2026
+
+- Branch: pulled latest `dev`, created and immediately published the comparison branch with
+  upstream tracking, then verified the baseline before implementation.
+- Backend: owner-scoped `GET /api/v1/cases/{case_id}/comparison`; consistent snapshot of
+  requirements and immutable confirmations; bounded race recovery; optional expected revision;
+  private no-store response. No writes, PDF reads or model calls.
+- Calculation: deterministic Decimal cost/net mass, fibre/GSM/width/construction, MOQ,
+  exact full-order quantity, budget and reviewed full-order delivery. Hard failures remain
+  failures alongside missing information. Unconfirmed offers expose no calculated metrics.
+  Carbon factors, scoring, ranking and durable decisions remain out of scope.
+- Frontend: normal React/TypeScript integration, aligned results/mobile cards, check
+  explanations, current source review, timestamp/revision and failed-refresh recovery.
+- Backward review: checked the confirmed-input-to-understandable-comparison outcome against
+  PRD FR-13 through FR-15 and calculation rules. Refined contradictory cost scope, unknown currency,
+  optional-check labels, unavailable-mass labels and enlarged-text navigation. A passing row
+  never claims complete evaluation or approval.
+- `npm run check` passed: frontend lint/typecheck, 31 frontend tests, production build,
+  backend Ruff/format, 69 backend tests (3 existing opt-in tests skipped), generated contracts.
+  One existing Starlette/httpx deprecation warning remains.
+- Private checks outside the repository: 95 domain tests; 40 service/API tests; 26 frontend
+  runtime/API guard checks; one real Firestore emulator integration verifying zero writes,
+  owner isolation, revision guards and confirmation invalidation.
+- Browser: actual local Auth/Firestore/Storage/API, six workflow groups passed. Covered empty
+  comparison, four outcomes, server amounts, keyboard disclosure, private PDF, reload,
+  failed-refresh recovery and clearing metrics after a real confirmation change.
+  Layouts covered 1600/1440/1024/768/390/320px and 200% root text; screenshots inspected.
+- Fixtures: explicitly synthetic confirmed records and real emulator PDFs; no live Gemini
+  calls or cloud changes. New executable tests, screenshots, PDFs and detailed reports stay
+  in OS temp. Implementation commit, push and PR merge were subsequently authorized.
+- Next approved increment: save a human buyer selection/rationale with its immutable checked
+  comparison, then reopen it. The user accepted this limited demo scope for tonight; it is not
+  a complete carbon-aware evaluation or purchasing approval. Carbon ranking, scenarios and
+  the general agent are deferred. Deployment remains a separate reviewed release step.
 
 ## Documentation review — 4 October 2026
 - Changed: PRD v2.1, architecture, shared context, decision log and references for the requested

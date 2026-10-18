@@ -120,6 +120,7 @@ def test_openapi_exposes_implemented_quotation_contract(client):
         "/healthz",
         "/api/v1/cases",
         "/api/v1/cases/{case_id}",
+        "/api/v1/cases/{case_id}/comparison",
         "/api/v1/cases/{case_id}/quotes",
         "/api/v1/cases/{case_id}/quote-intakes/{request_key}",
         "/api/v1/cases/{case_id}/quotation-operations/{request_key}/cancel",

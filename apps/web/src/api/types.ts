@@ -1,4 +1,4 @@
-﻿import type { components } from './generated/schema';
+import type { components } from './generated/schema';
 export type CaseRequirement = components['schemas']['Requirement'];
 export type CaseCreate = components['schemas']['CaseCreate'];
 export type CaseRead = components['schemas']['CaseRead'];
@@ -17,3 +17,11 @@ export type RunEvents = components['schemas']['RunEvents'];
 export type ReviewDecision = components['schemas']['ReviewDecision'];
 export type CloseOperation = components['schemas']['CloseOperation'];
 export type OperationResolution = components['schemas']['OperationResolution'];
+// The runtime response guard requires serialized defaults before the UI consumes them.
+type ComparisonContract = components['schemas']['CaseComparison'];
+type ComparisonRowContract = ComparisonContract['rows'][number];
+export type CaseComparison = Omit<ComparisonContract, 'rows'> & {
+  rows: (Omit<ComparisonRowContract, 'metrics'> & {
+    metrics: Required<NonNullable<ComparisonRowContract['metrics']>>;
+  })[];
+};

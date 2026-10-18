@@ -52,6 +52,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/cases/{case_id}/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Comparison */
+        get: operations["get_comparison_api_v1_cases__case_id__comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cases/{case_id}/quotation-operations/{request_key}/cancel": {
         parameters: {
             query?: never;
@@ -278,6 +295,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CaseComparison */
+        CaseComparison: {
+            /**
+             * Carbon Available
+             * @default false
+             * @constant
+             */
+            carbon_available: false;
+            /** Case Data Revision */
+            case_data_revision: number;
+            /** Case Id */
+            case_id: string;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Input Fingerprint */
+            input_fingerprint: string;
+            /** Limitations */
+            limitations: string[];
+            /**
+             * Ranking Available
+             * @default false
+             * @constant
+             */
+            ranking_available: false;
+            requirement: components["schemas"]["Requirement"];
+            /** Rows */
+            rows: components["schemas"]["ComparisonRow"][];
+            /**
+             * Scope
+             * @default confirmed_quote_checks_v1
+             * @constant
+             */
+            scope: "confirmed_quote_checks_v1";
+        };
         /** CaseCreate */
         CaseCreate: {
             /** Name */
@@ -373,6 +427,58 @@ export interface components {
             quoted_quantity?: string | null;
             /** Unit Price Amount */
             unit_price_amount?: string | null;
+        };
+        /** ComparisonCheck */
+        ComparisonCheck: {
+            /** Code */
+            code: string;
+            /** Field Paths */
+            field_paths?: string[];
+            /** Message */
+            message: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pass" | "fail" | "needs_review" | "not_applicable";
+        };
+        /** ComparisonMetrics */
+        ComparisonMetrics: {
+            /** Arrival Date */
+            arrival_date?: string | null;
+            /** Comparable Cost Amount */
+            comparable_cost_amount?: string | null;
+            /** Currency */
+            currency?: string | null;
+            /** End To End Lead Time Days */
+            end_to_end_lead_time_days?: number | null;
+            /** Net Fabric Mass Kg */
+            net_fabric_mass_kg?: string | null;
+            /** Net Mass Basis */
+            net_mass_basis?: ("actual" | "estimated") | null;
+            /** Quoted Cost Amount */
+            quoted_cost_amount?: string | null;
+        };
+        /** ComparisonRow */
+        ComparisonRow: {
+            /** Checks */
+            checks: components["schemas"]["ComparisonCheck"][];
+            /** Confirmation Revision Id */
+            confirmation_revision_id: string | null;
+            /** Draft Revision */
+            draft_revision: number;
+            metrics?: components["schemas"]["ComparisonMetrics"];
+            /** Quote Id */
+            quote_id: string;
+            /** Source Name */
+            source_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "meets_checked_requirements" | "does_not_meet_requirements" | "needs_review" | "unconfirmed";
+            /** Supplier Name */
+            supplier_name: string | null;
         };
         /** CompositionPart */
         CompositionPart: {
@@ -1311,6 +1417,87 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunRead"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Too Many Requests */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    get_comparison_api_v1_cases__case_id__comparison_get: {
+        parameters: {
+            query?: {
+                expected_case_revision?: number | null;
+            };
+            header?: {
+                authorization?: string | null;
+                "x-firebase-appcheck"?: string | null;
+            };
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseComparison"];
                 };
             };
             /** @description Unauthorized */

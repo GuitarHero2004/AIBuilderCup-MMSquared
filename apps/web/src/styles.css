@@ -41,14 +41,14 @@ h1 { font-size: 28px; line-height: 1.25; letter-spacing: -.65px; font-weight: 65
 h2 { font-size: 18px; line-height: 1.4; font-weight: 600; }
 h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .app-shell { min-height: 100vh; display: flex; }
-.sidebar { width: 224px; flex-shrink: 0; padding: 28px 16px 24px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 32px; }
+.sidebar { width: 14.933333rem; flex-shrink: 0; padding: 28px 16px 24px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 32px; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; text-align: left; font-size: 18px; letter-spacing: -.4px; font-weight: 650; }
 .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--primary); color: #fff; flex-shrink: 0; }
 .brand > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .brand-subtitle { display: block; margin-top: 1px; color: var(--secondary); font-size: var(--ui-text-caption); font-weight: 400; letter-spacing: 0; }
 .primary-nav { display: flex; flex-direction: column; gap: 8px; }
 .nav-label { color: var(--secondary); font-size: var(--ui-text-caption); font-weight: 600; letter-spacing: 1.2px; padding: 0 12px 9px; }
-.nav-item { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid transparent; border-radius: var(--ui-radius-control); background: transparent; color: var(--secondary); font-size: var(--ui-text-body); min-width: 0; overflow-wrap: anywhere; }
+.nav-item { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid transparent; border-radius: var(--ui-radius-control); background: transparent; color: var(--secondary); font-size: var(--ui-text-body); min-width: 0; overflow-wrap: normal; }
 .nav-item:hover:not(:disabled) { background: #e9eeeb; }
 .nav-item[aria-current=page] { background: #e6f0e9; color: var(--primary); font-weight: 600; }
 .sidebar-footer { display: flex; gap: 10px; margin-top: auto; padding: 20px 8px 0; color: var(--secondary); border-top: 1px solid var(--border); font-size: var(--ui-text-caption); }
@@ -208,7 +208,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .configuration-page p { margin: 20px 0; color: var(--secondary); }
 .configuration-page code { overflow-wrap: anywhere; }
 @media (max-width: 1150px) {
-  .sidebar { width: 192px; padding: 25px 12px 20px; }
+  .sidebar { width: 12.8rem; padding: 25px 12px 20px; }
   .brand { font-size: 16px; gap: 8px; }
   .brand-mark { width: 32px; height: 32px; }
   .nav-item { font-size: var(--ui-text-small); padding-left: 10px; gap: 8px; }

@@ -7,7 +7,7 @@ from threading import Lock
 from typing import Annotated, Literal
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, Header, Request
+from fastapi import Depends, FastAPI, Header, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,9 +19,11 @@ from app.adapters.firestore_quotations import FirestoreQuotationRepository
 from app.config import Settings
 from app.errors import ApiError, ErrorDetail, ErrorEnvelope
 from app.models.cases import CaseCreate, CaseList, CaseRead
+from app.models.comparison import CaseComparison
 from app.routes.quotations import quotation_router
 from app.security import FirebaseIdentityVerifier, IdentityVerifier, Principal
 from app.services.cases import CaseRepository, CaseService
+from app.services.comparison import ComparisonService
 from app.services.quotations import QuotationRepository, QuotationService
 
 logger = logging.getLogger("greenprocure.api")
@@ -82,6 +84,18 @@ def get_quotation_service(request: Request) -> QuotationService:
     )
 
 
+def get_comparison_service(request: Request) -> ComparisonService:
+    with request.app.state.resource_lock:
+        if request.app.state.quotation_repository is None:
+            request.app.state.quotation_repository = FirestoreQuotationRepository(
+                request.app.state.settings
+            )
+    return ComparisonService(
+        request.app.state.quotation_repository,
+        request.app.state.settings.maximum_quotes_per_case,
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -115,7 +129,8 @@ def create_app(
         lifespan=lifespan,
         description=(
             "Private synthetic quotation intake, direct Gemini extraction and human review. "
-            "Evaluation and agent orchestration are not implemented."
+            "Read-only confirmed quotation checks are available; ranking and agent orchestration "
+            "are not implemented."
         ),
         responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 422, 429, 503)},
     )
@@ -231,6 +246,17 @@ def create_app(
         service: Annotated[CaseService, Depends(get_case_service)],
     ) -> CaseRead:
         return service.get(principal, case_id)
+
+    @app.get("/api/v1/cases/{case_id}/comparison", response_model=CaseComparison)
+    def get_comparison(
+        case_id: str,
+        response: Response,
+        principal: Annotated[Principal, Depends(get_principal)],
+        service: Annotated[ComparisonService, Depends(get_comparison_service)],
+        expected_case_revision: Annotated[int | None, Query(ge=1, le=1000000)] = None,
+    ) -> CaseComparison:
+        response.headers["Cache-Control"] = "private, no-store"
+        return service.get(principal, case_id, expected_case_revision)
 
     app.include_router(quotation_router(get_principal, get_quotation_service))
     return app
