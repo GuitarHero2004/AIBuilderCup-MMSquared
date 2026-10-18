@@ -1,12 +1,54 @@
+import { Icon } from '../components/Icon';
+import './help.css';
+
 export function Help({ onBack }: { onBack: () => void }) {
-  return <>
-    <div className="page-heading"><div><p className="eyebrow">GREENPROCURE GUIDE</p><h1 tabIndex={-1} data-page-title>Help & methodology</h1><p className="page-intro">A clear starting point for your fabric sourcing decision.</p></div><button type="button" className="button button-secondary" onClick={onBack}>Back to workspace</button></div>
-    <div className="help-grid">
-      <section className="panel help-section"><span className="section-number">01</span><h2>Start with your requirements</h2><p>Create a case with an order quantity, budget, reference date, delivery window and destination. The demo uses a fixed woven polyester–cotton specification.</p><p>Use synthetic, non-confidential information. Saving creates a private requirements record; it does not place an order.</p></section>
-      <section className="panel help-section"><span className="section-number">02</span><h2>Understand the comparison basis</h2><p>Quantity is in metres. The USD budget includes material and declared delivery charges, excluding tax and duties.</p><p>Lead time is the number of calendar days from your chosen order reference date until the full order arrives. Your saved date stays unchanged.</p></section>
-      <section className="panel help-section"><span className="section-number">03</span><h2>Keep access to your cases</h2><p>Your anonymous session is stored in this browser. You can refresh and reopen saved cases without an email account.</p><p>Clearing browser data, ending a private-browsing session or changing devices can lose access. The demo allows two cases per visitor.</p></section>
-      <section className="panel help-section"><span className="section-number">04</span><h2>Know what is available</h2><p>Use the built-in example PDFs or upload a synthetic quotation. Gemini extracts a draft with source citations. Review the displayed evidence, resolve the cost and delivery basis, and explicitly confirm the saved revision. Group review records your acknowledgement; it never approves a quotation automatically.</p><p>Compare confirmed offers against your requirements, inspect the cost/delivery trade-off, then record your choice and reason. Saved selections preserve the checked snapshot and reopen after reload. Carbon estimates, supplier ranking and purchase orders are outside this demo.</p></section>
+  return <section className="workspace-guide" aria-labelledby="workspace-guide-title">
+    <header className="page-heading">
+      <div className="page-heading-copy"><p className="eyebrow">HELP</p><h1 id="workspace-guide-title" tabIndex={-1} data-page-title>Workspace guide</h1><p className="page-intro">Follow a quotation from your order requirements to a saved buyer selection.</p></div>
+      <button type="button" className="button button-secondary" onClick={onBack}>Back to workspace</button>
+    </header>
+
+    <div className="guide-layout">
+      <section className="panel guide-workflow" aria-labelledby="guide-workflow-title">
+        <div className="guide-section-heading"><h2 id="guide-workflow-title">Your sourcing workflow</h2><p>Complete each review before moving to the next step.</p></div>
+        <ol className="guide-steps">
+          <li><span className="guide-step-number" aria-hidden="true">01</span><div><h3>Set your order requirements</h3><p>Choose <strong>Create sourcing case</strong>. Check the quantity, budget, order reference date, delivery window and destination, then save the case.</p><p className="guide-outcome"><strong>Result:</strong> a saved brief for checking your quotations.</p></div></li>
+          <li><span className="guide-step-number" aria-hidden="true">02</span><div><h3>Add quotation PDFs</h3><p>Choose <strong>Open quotations</strong>. Select an example and choose <strong>Use synthetic sample</strong>, or add your own synthetic PDF with <strong>Upload quotation</strong>.</p><p className="guide-outcome"><strong>Result:</strong> a private source document, ready for extraction.</p></div></li>
+          <li><span className="guide-step-number" aria-hidden="true">03</span><div><h3>Extract and check the terms</h3><p>Choose <strong>Extract information</strong>, then <strong>Review quotation</strong>. Check the cited values against the PDF, correct any errors and explain missing information.</p><p className="guide-outcome"><strong>Result:</strong> a draft with your review decisions and known gaps.</p></div></li>
+          <li><span className="guide-step-number" aria-hidden="true">04</span><div><h3>Confirm the reviewed revision</h3><p>Resolve the cost and delivery basis, then choose <strong>Save draft</strong>. Choose <strong>Confirm reviewed quotation</strong> and confirm the saved revision in the dialog.</p><p className="guide-outcome"><strong>Result:</strong> a buyer-confirmed revision. Unknowns and failed checks still remain.</p></div></li>
+          <li><span className="guide-step-number" aria-hidden="true">05</span><div><h3>Compare the confirmed terms</h3><p>Return to quotations and choose <strong>Compare confirmed terms</strong>. Use <strong>View checks</strong> to inspect each offer, then consider any displayed cost and delivery trade-off.</p><p className="guide-outcome"><strong>Result:</strong> requirement checks that show what passes, fails or needs review.</p></div></li>
+          <li><span className="guide-step-number" aria-hidden="true">06</span><div><h3>Save and reopen your choice</h3><p>For an offer that meets the checked requirements, choose <strong>Record buyer selection</strong>. Enter your reason, acknowledge the scope and choose <strong>Save buyer selection</strong>. Return through <strong>Saved selections</strong> and <strong>Open selection</strong>.</p><p className="guide-outcome"><strong>Result:</strong> your choice, reason and checked snapshot preserved together.</p></div></li>
+        </ol>
+      </section>
+
+      <aside className="guide-side" aria-label="Ways to get started">
+        <section className="panel guide-card"><div className="guide-card-title"><Icon name="chat" size={20} /><h2>Ask GreenProcure</h2></div><p>Open a saved case, then choose <strong>Ask GreenProcure</strong> in the top bar. Ask about the screen you are working on:</p><ul><li>What is blocking this quotation?</li><li>Explain the cost and delivery trade-off.</li><li>What did I record in this selection?</li></ul><p className="guide-card-note">Answers use saved information. The assistant can draft clarification and open relevant screens; you still review, confirm and save your choice.</p></section>
+        <section className="panel guide-card"><div className="guide-card-title"><Icon name="fabric" size={20} /><h2>Try the example PDFs</h2></div><p>Keep the prefilled case requirements and add the Supplier A and Supplier B samples from quotation intake.</p><p>Each sample adds a real synthetic PDF. Extraction still runs through Gemini, and you review its output before comparison.</p><p className="guide-card-note">The examples demonstrate a cost and delivery trade-off. They are not real supplier offers.</p></section>
+      </aside>
     </div>
-    <section className="help-recovery"><h2>If a save cannot be confirmed</h2><p>Use <strong>Check saved cases</strong> to refresh the workspace. Look for the case before resuming your draft: the server may have saved it even if the response did not reach your browser.</p></section>
-  </>;
+
+    <section className="panel guide-reference" aria-labelledby="guide-reference-title">
+      <div className="guide-section-heading"><h2 id="guide-reference-title">When you need more detail</h2><p>Find the recovery step or boundary that applies to your current task.</p></div>
+      <details className="guide-disclosure"><summary>If an operation has not returned a clear result</summary><div className="guide-disclosure-content"><p>A missing response does not mean the operation failed. Use the recovery control on that screen before starting another attempt.</p><dl className="guide-recovery">
+        <div><dt>Creating a case</dt><dd>Use <strong>Check saved cases</strong> and look for the case before resuming the draft.</dd></div>
+        <div><dt>Uploading or extracting a quotation</dt><dd>Use <strong>Check saved quotations</strong> to read the recorded outcome. If extraction has failed, inspect the message before using <strong>Retry extraction</strong>.</dd></div>
+        <div><dt>Saving or confirming a review</dt><dd>Use <strong>Check saved result</strong>. If a newer revision is reported, review the changed fields before saving or confirming again.</dd></div>
+        <div><dt>Saving a buyer selection</dt><dd>Use <strong>Check save result</strong>. If a saved reference was received, use <strong>Read saved selection</strong> to reopen that record.</dd></div>
+        <div><dt>Asking the assistant</dt><dd>Use <strong>Check recorded result</strong> or <strong>Cancel request</strong>. Closing the assistant panel does not cancel an active request.</dd></div>
+      </dl></div></details>
+      <details className="guide-disclosure"><summary>What the comparison checks</summary><div className="guide-disclosure-content"><ul>
+        <li>The current demo checks one woven polyester-cotton fabric specification. The case quantity is in metres.</li>
+        <li>The USD budget covers material and declared delivery charges, excluding taxes and duties. Review each quotation against that same cost basis.</li>
+        <li>Delivery means the full order arriving within the stated calendar days from your saved order reference date.</li>
+        <li>Only current buyer-confirmed revisions can supply comparison values. Missing information stays unknown; it does not count as zero or a pass.</li>
+        <li>A saved selection is a buyer note. Carbon estimates, supplier ranking, supplier approval and purchase orders are outside this demo.</li>
+      </ul></div></details>
+      <details className="guide-disclosure"><summary>Your private session and demo limits</summary><div className="guide-disclosure-content"><ul>
+        <li>Your anonymous session belongs to this browser. Clearing browser data, ending a private-browsing session or changing devices can lose access.</li>
+        <li>Use synthetic, non-confidential information. Do not upload real supplier documents.</li>
+        <li>The demo allows two sourcing cases per visitor, four quotations per case and ten saved selection notes per case.</li>
+        <li>Extraction and assistant requests share a limited AI allowance. If a limit or temporary interruption is reported, follow the message on the affected screen.</li>
+      </ul></div></details>
+    </section>
+  </section>;
 }

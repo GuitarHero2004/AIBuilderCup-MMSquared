@@ -215,13 +215,6 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .next-step-note svg { color: var(--primary); }
 .next-step-note strong { font-size: var(--ui-text-body); }
 .next-step-note p { font-size: var(--ui-text-small); color: var(--secondary); margin-top: 4px; }
-.help-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; max-width: 1040px; }
-.help-section { padding: 24px; }
-.help-section h2 { font-size: var(--ui-text-section); }
-.section-number { display: block; font-size: var(--ui-text-caption); font-weight: 600; color: var(--primary); margin-bottom: 13px; }
-.help-section p { margin-top: 12px; color: var(--secondary); font-size: var(--ui-text-body); line-height: 1.75; }
-.help-recovery { max-width: 900px; margin-top: 28px; }
-.help-recovery p { margin-top: 10px; color: var(--secondary); font-size: var(--ui-text-body); line-height: 1.75; }
 .workspace-footer { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; width: calc(100% - var(--workspace-gutter) * 2); max-width: calc(1600px - var(--workspace-gutter) * 2); margin: 0 auto; padding: 18px 0; border-top: 1px solid var(--border); color: var(--secondary); font-size: var(--ui-text-caption); }
 .discard-dialog { width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--ui-radius-dialog); background: white; color: #18251e; box-shadow: 0 15px 60px #18251e30; margin: auto; }
 .discard-dialog::backdrop { background: var(--ui-dialog-backdrop); }
@@ -282,7 +275,6 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 
   .form-panel, .detail-panel { padding: 24px; }
   .recovery-panel { align-items: flex-start; flex-direction: column; gap: 12px; }
-  .help-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 680px) {
   h1 { font-size: 1.666667rem; }
@@ -316,7 +308,6 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
   .dialog-actions { gap: 9px; }
   .dialog-actions { flex-wrap: wrap; }
   .dialog-actions .button { flex: 1 1 max-content; max-width: 100%; padding: 10px; }
-  .help-section { padding: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
