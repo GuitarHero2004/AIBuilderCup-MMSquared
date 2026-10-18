@@ -22,7 +22,7 @@ export function CaseDetail({ item, onClose, onQuotations }: { item: CaseRead; on
       <span className="status-badge status-neutral">{statusLabels[item.status]}</span>
       {item.is_synthetic_demo && <span className="badge badge-muted">Synthetic demo</span>}
     </div>
-    <div className="next-step-note"><Icon name="check" /><div><strong>Requirements saved</strong><p>Add quotation PDFs, extract their information and review the saved drafts. Editing requirements and comparing offers are not connected yet.</p></div></div>
+    <div className="next-step-note"><Icon name="check" /><div><strong>Requirements saved</strong><p>Open quotations to use the built-in example PDFs or add a synthetic document. Extract and confirm the terms, compare the offers, then save your selection.</p></div></div>
 
     {onQuotations && <div className="section-actions"><button className="button button-primary" onClick={onQuotations}>Open quotations<Icon name="arrow" size={17} /></button></div>}
     <section className="detail-section" aria-labelledby="detail-order-title">
@@ -55,7 +55,7 @@ export function CaseDetail({ item, onClose, onQuotations }: { item: CaseRead; on
       <h2 className="section-heading" id="detail-scope-title">Comparison scope</h2>
       <dl className="detail-grid">
         <div className="detail-wide"><dt>Cost boundary</dt><dd className="detail-copy">{requirement.cost_basis_description}</dd></div>
-        <div className="detail-wide"><dt>Logistics emissions boundary</dt><dd className="detail-copy">{carbonScope}. Well-to-wheel: fuel production and transport use.</dd></div>
+        <div className="detail-wide"><dt>Logistics emissions boundary</dt><dd className="detail-copy">{carbonScope}. Planned well-to-wheel boundary: fuel production and transport use. Emission estimates are unavailable until shipment inputs and applicable factors are established.</dd></div>
       </dl>
     </section>
 

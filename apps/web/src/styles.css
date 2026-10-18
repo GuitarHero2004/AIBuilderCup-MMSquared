@@ -37,12 +37,12 @@ button, p, dd { overflow-wrap: anywhere; }
 :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 [data-page-title]:focus:not(:focus-visible), #main:focus:not(:focus-visible) { outline: none; }
 h1, h2, h3, p { margin: 0; }
-h1 { font-size: 28px; line-height: 1.25; letter-spacing: -.65px; font-weight: 650; overflow-wrap: anywhere; }
-h2 { font-size: 18px; line-height: 1.4; font-weight: 600; }
+h1 { font-size: 1.866667rem; line-height: 1.25; letter-spacing: -.65px; font-weight: 650; overflow-wrap: anywhere; }
+h2 { font-size: 1.2rem; line-height: 1.4; font-weight: 600; }
 h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .app-shell { min-height: 100vh; display: flex; }
 .sidebar { width: 14.933333rem; flex-shrink: 0; padding: 28px 16px 24px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 32px; }
-.brand { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; text-align: left; font-size: 18px; letter-spacing: -.4px; font-weight: 650; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; text-align: left; font-size: 1.2rem; letter-spacing: -.4px; font-weight: 650; }
 .brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; background: var(--primary); color: #fff; flex-shrink: 0; }
 .brand > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .brand-subtitle { display: block; margin-top: 1px; color: var(--secondary); font-size: var(--ui-text-caption); font-weight: 400; letter-spacing: 0; }
@@ -119,7 +119,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .session-note, .small-copy { font-size: var(--ui-text-small); color: var(--secondary); }
 .availability-note { display: flex; gap: 14px; margin-top: 28px; padding: 22px 0; color: var(--secondary); }
 .availability-note > svg { margin-top: 2px; color: var(--primary); }
-.availability-note h2 { font-size: 15px; font-weight: 600; color: #334b3d; }
+.availability-note h2 { font-size: 1rem; font-weight: 600; color: #334b3d; }
 .availability-note p { margin-top: 6px; font-size: var(--ui-text-body); max-width: 700px; }
 .alert { padding: 16px; border-radius: var(--ui-radius-panel); font-size: var(--ui-text-body); line-height: 1.6; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid; }
 .alert svg { margin-top: 3px; }
@@ -164,8 +164,8 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .validation-links li + li { margin-top: 7px; }
 .validation-links a { text-underline-offset: 3px; }
 .preset-specs { display: grid; gap: 14px; margin: 0; }
-.preset-specs > div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px; }
-.preset-specs dt { color: var(--secondary); font-size: var(--ui-text-small); }
+.preset-specs > div { display: grid; grid-template-columns: minmax(0, 8.666667rem) minmax(0, 1fr); gap: 12px; }
+.preset-specs dt { min-width: 0; overflow-wrap: anywhere; color: var(--secondary); font-size: var(--ui-text-small); }
 .preset-specs dd { margin: 0; font-size: var(--ui-text-body); line-height: 1.6; }
 .preset-specs dd span { color: var(--secondary); font-size: var(--ui-text-small); }
 .form-section > .scope-summary { margin-bottom: 8px; }
@@ -177,7 +177,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; margin: 0; }
 .detail-grid > div { min-width: 0; }
 .detail-grid dt { color: var(--secondary); font-size: var(--ui-text-small); margin-bottom: 5px; }
-.detail-grid dd { margin: 0; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.detail-grid dd { margin: 0; font-size: 1rem; line-height: 1.6; overflow-wrap: anywhere; }
 .detail-grid dd { font-variant-numeric: tabular-nums; font-weight: 500; }
 .detail-grid small { font-size: var(--ui-text-small); color: var(--secondary); font-weight: 400; }
 .detail-grid .detail-copy { font-size: var(--ui-text-body); font-weight: 400; }
@@ -209,7 +209,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 .configuration-page code { overflow-wrap: anywhere; }
 @media (max-width: 1150px) {
   .sidebar { width: 12.8rem; padding: 25px 12px 20px; }
-  .brand { font-size: 16px; gap: 8px; }
+  .brand { font-size: 1.066667rem; gap: 8px; }
   .brand-mark { width: 32px; height: 32px; }
   .nav-item { font-size: var(--ui-text-small); padding-left: 10px; gap: 8px; }
   .topbar { padding-left: 24px; padding-right: 24px; }
@@ -246,7 +246,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
 @media (max-width: 680px) {
   .app-shell { display: block; }
   .sidebar { width: 100%; padding: 18px 16px 10px; border-right: 0; border-bottom: 1px solid var(--border); gap: 16px; }
-  .brand { font-size: 18px; }
+  .brand { font-size: 1.2rem; }
   .brand-mark { width: 36px; height: 36px; }
   .primary-nav { flex-direction: row; flex-wrap: wrap; gap: 8px; }
   .nav-item { flex: 1 1 max-content; max-width: 100%; width: auto; min-height: 44px; padding: 8px 12px; font-size: var(--ui-text-body); }
@@ -255,7 +255,7 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
   .breadcrumb { font-size: var(--ui-text-caption); gap: 6px; }
   .session-chip { font-size: var(--ui-text-caption); gap: 5px; }
   .main-content { padding: 24px 16px 32px; }
-  h1 { font-size: 25px; }
+  h1 { font-size: 1.666667rem; }
   .page-intro { font-size: var(--ui-text-body); }
   .page-heading { margin-bottom: 24px; gap: 16px; }
   .section-actions { width: 100%; padding-top: 0; gap: 8px; }
@@ -264,11 +264,11 @@ h3 { font-size: var(--ui-text-section); font-weight: 600; }
   .list-heading p { font-size: var(--ui-text-caption); }
   .case-list tbody tr { padding: 16px; }
   .empty-state, .welcome-panel { padding: 32px 20px; }
-  .welcome-panel h2 { font-size: 20px; }
+  .welcome-panel h2 { font-size: 1.333333rem; }
   .availability-note { padding: 10px 0; gap: 11px; }
   .form-panel, .detail-panel { padding: 16px; }
   .form-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .input-wrap input { font-size: 16px; }
+  .input-wrap input { font-size: 1.066667rem; }
   .preset-specs > div { grid-template-columns: minmax(0, 1fr); gap: 3px; }
   .detail-grid { gap: 20px; grid-template-columns: minmax(0, 1fr); }
   .detail-wide, .field-wide { grid-column: auto; }

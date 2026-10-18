@@ -106,7 +106,7 @@ function UploadPane({ limits, samples, transfer, disabled, onUpload, onUseSample
 
     {showSamples && <form className="intake-sample-form" onSubmit={submitSample} aria-label="Use a synthetic quotation sample">
       <label className="intake-input-label" htmlFor={sampleId}>Or use a synthetic sample</label>
-      <p className="intake-field-hint" id={`${sampleId}-hint`}>Synthetic examples for exploring document review.</p>
+      <p className="intake-field-hint" id={`${sampleId}-hint`}>Try Supplier A and Supplier B with the prefilled case requirements. Each example uploads a real PDF; extraction still runs through Gemini.</p>
       <select id={sampleId} value={sample} disabled={disabled || samples.length === 0} aria-describedby={`${sampleId}-hint ${sampleId}-description`}
         onChange={(event) => {
           setSample(event.target.value);

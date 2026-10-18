@@ -5,6 +5,7 @@ Unknown information cannot satisfy a requirement. Decimal arithmetic stays local
 so importing or running these checks cannot change another request's precision.
 """
 
+import re
 from datetime import timedelta
 from decimal import Decimal, localcontext
 from unicodedata import normalize
@@ -15,6 +16,7 @@ from app.models.comparison import (
     ComparisonCheck,
     ComparisonMetrics,
     ComparisonRow,
+    ComparisonTradeoff,
 )
 from app.models.quotations import ConfirmedRevision, QuoteData, QuoteRead
 
@@ -551,4 +553,58 @@ def compare_confirmed_quote(
         status=status,
         metrics=metrics,
         checks=checks.items,
+    )
+
+
+def summarize_tradeoff(rows: list[ComparisonRow]) -> ComparisonTradeoff | None:
+    """Describe the cost of faster arrival without choosing an overall winner."""
+    candidates = []
+    for row in rows:
+        metrics = row.metrics
+        if (
+            row.status != "meets_checked_requirements"
+            or row.confirmation_revision_id is None
+            or any(check.status in {"fail", "needs_review"} for check in row.checks)
+            or metrics.comparable_cost_amount is None
+            or metrics.currency is None
+            or not re.fullmatch(r"[A-Z]{3}", metrics.currency)
+            or type(metrics.end_to_end_lead_time_days) is not int
+            or metrics.end_to_end_lead_time_days < 0
+        ):
+            continue
+        cost = Decimal(metrics.comparable_cost_amount)
+        if cost <= 0:
+            continue
+        candidates.append((row, cost, metrics.end_to_end_lead_time_days))
+    if (
+        len(candidates) < 2
+        or len({row.metrics.currency for row, _, _ in candidates}) != 1
+        or len({row.quote_id for row, _, _ in candidates}) != len(candidates)
+    ):
+        return None
+    cheaper, lower_cost, cheaper_days = min(
+        candidates, key=lambda item: (item[1], item[2], item[0].quote_id)
+    )
+    faster, higher_cost, faster_days = min(
+        candidates, key=lambda item: (item[2], item[1], item[0].quote_id)
+    )
+    if (
+        cheaper.quote_id == faster.quote_id
+        or higher_cost <= lower_cost
+        or faster_days >= cheaper_days
+    ):
+        return None
+    # CalculatedDecimal inputs have at most 128 characters. Keep subtraction exact
+    # even when the caller's Decimal context is smaller or the scales differ widely.
+    with localcontext() as context:
+        context.prec = 256
+        difference = _decimal_text(higher_cost - lower_cost)
+    if len(difference) > 128:
+        return None
+    return ComparisonTradeoff(
+        cheaper_quote_id=cheaper.quote_id,
+        faster_quote_id=faster.quote_id,
+        currency=cheaper.metrics.currency,
+        additional_cost_amount=difference,
+        delivery_days_saved=cheaper_days - faster_days,
     )

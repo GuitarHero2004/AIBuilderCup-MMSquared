@@ -129,13 +129,13 @@ export function CaseForm({ values, onChange, onSave, onCancel, busy, error, unce
 
       <section className="form-section" aria-labelledby={`${prefix}-basis-title`}>
         <h2 className="section-heading" id={`${prefix}-basis-title`}>Comparison scope</h2>
-        <p className="section-note scope-summary">Logistics emissions boundary: supplier origin facility to buyer facility, well-to-wheel.</p>
+        <p className="section-note scope-summary">Compare material and declared delivery charges, excluding tax and duties.</p>
         <details className="methodology-disclosure">
           <summary>How comparison boundaries work</summary>
           <div className="methodology-copy">
             <p><strong>Cost:</strong> material and declared delivery charges, excluding tax and duties, as shown with your budget.</p>
             <p><strong>Well-to-wheel:</strong> includes fuel production and transport use within the logistics boundary. It does not include fabric production.</p>
-            <p>These boundaries are saved with your requirements. This preview does not calculate costs or emissions.</p>
+            <p>These boundaries are saved with your requirements. Cost is calculated after quotation review. Carbon estimates remain unavailable.</p>
           </div>
         </details>
       </section>

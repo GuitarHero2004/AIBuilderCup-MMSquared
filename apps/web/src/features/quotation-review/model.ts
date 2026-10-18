@@ -1,4 +1,4 @@
-﻿import type { ReviewDraft, ReviewField, ReviewIssue } from './types';
+﻿import type { ReviewBatchAction, ReviewDraft, ReviewField, ReviewIssue } from './types';
 
 export function hasFieldEvidence(field: ReviewField): boolean {
   return Boolean(field.source?.excerpt?.trim());
@@ -72,4 +72,40 @@ export function collectReviewIssues(fields: ReviewField[], draft: ReviewDraft): 
     }
   }
   return issues;
+}
+
+/** Guided presentation never changes which fields the server requires for confirmation. */
+export function reviewPresentation(field: ReviewField, draft: ReviewDraft, issues: ReviewIssue[]): 'cited' | 'unknown' | 'individual' | 'optional' {
+  const entry = draft[field.id];
+  if (!entry || field.reviewIndividually) return 'individual';
+  const localIssues = issues.filter(issue => issue.fieldId === field.id);
+  const value = entry.value.trim();
+  if (!value) {
+    const required = Boolean(field.requiredFor?.length || field.originalValue?.trim() || localIssues.some(issue => issue.blocksConfirmation));
+    if (!required && !entry.note && !entry.reviewed) return 'optional';
+    if (required) return 'unknown';
+    return 'individual';
+  }
+  const page = field.source?.page;
+  const cited = entry.basis === 'extracted' && value === field.originalValue?.trim()
+    && hasFieldEvidence(field) && typeof page === 'number' && Number.isInteger(page) && page >= 1;
+  return cited && !localIssues.some(issue => issue.kind === 'validation' || issue.kind === 'hard_failure'
+    || issue.blocksConfirmation && issue.id !== `${field.id}-review`) ? 'cited' : 'individual';
+}
+
+/** Apply only the exact displayed entries, all at once; reject a stale/invalid batch entirely. */
+export function applyReviewBatch(fields: ReviewField[], draft: ReviewDraft, issues: ReviewIssue[], action: ReviewBatchAction): ReviewDraft {
+  if (!action.fields.length || action.fields.length > fields.length || new Set(action.fields.map(item => item.id)).size !== action.fields.length) return draft;
+  const note = action.note?.trim() ?? '';
+  if (action.kind === 'unknown' && (!note || note.length > 500)) return draft;
+  for (const item of action.fields) {
+    const field = fields.find(candidate => candidate.id === item.id), entry = draft[item.id];
+    if (!field || !entry || entry.reviewed || entry.value !== item.expected.value || entry.basis !== item.expected.basis
+      || entry.note !== item.expected.note || entry.reviewed !== item.expected.reviewed
+      || reviewPresentation(field, draft, issues) !== action.kind) return draft;
+    if (action.kind === 'unknown' && (entry.value.trim() || entry.note.trim())) return draft;
+  }
+  const result = { ...draft };
+  for (const { id } of action.fields) result[id] = { ...draft[id], reviewed: true, ...(action.kind === 'unknown' ? { note } : {}) };
+  return result;
 }

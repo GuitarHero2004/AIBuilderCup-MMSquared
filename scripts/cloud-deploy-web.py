@@ -30,6 +30,7 @@ API_HOST = re.compile(
 ASSET = re.compile(
     r"/assets/[A-Za-z0-9_-]+\.(?:js|css|svg|png|jpg|jpeg|webp|ico|woff|woff2)"
 )
+PDF_ASSET = re.compile(r"/assets/example-quotation-[ab]-[A-Za-z0-9_-]{8,64}\.pdf")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 SERVING_CONFIG = {
     "rewrites": [{"glob": "**", "path": "/index.html"}],
@@ -56,6 +57,7 @@ def read_build(dist: Path) -> tuple[dict, dict[str, bytes]]:
         raise ReleaseError("Build production static files first.")
     files = {}
     total = 0
+    pdf_count = 0
     for path in sorted(dist.rglob("*")):
         if path.is_symlink() or path.is_junction():
             raise ReleaseError("Links and junctions cannot be published.")
@@ -64,8 +66,11 @@ def read_build(dist: Path) -> tuple[dict, dict[str, bytes]]:
                 raise ReleaseError("Unexpected directory in static build.")
             continue
         relative = "/" + path.relative_to(dist).as_posix()
-        if relative not in {"/index.html", "/release.json"} and not ASSET.fullmatch(
-            relative
+        is_example_pdf = PDF_ASSET.fullmatch(relative) is not None
+        if (
+            relative not in {"/index.html", "/release.json"}
+            and not ASSET.fullmatch(relative)
+            and not is_example_pdf
         ):
             raise ReleaseError(
                 "Unexpected file in static build; publish only reviewed assets."
@@ -74,7 +79,17 @@ def read_build(dist: Path) -> tuple[dict, dict[str, bytes]]:
         total += size
         if size > 10 * 1024 * 1024 or total > 20 * 1024 * 1024 or len(files) >= 100:
             raise ReleaseError("Static build exceeds this demo's publication bounds.")
-        files[relative] = path.read_bytes()
+        content = path.read_bytes()
+        if is_example_pdf:
+            pdf_count += 1
+            if (
+                pdf_count > 2
+                or size > 64 * 1024
+                or not content.startswith(b"%PDF-")
+                or not content.rstrip().endswith(b"%%EOF")
+            ):
+                raise ReleaseError("Unexpected or invalid public example PDF.")
+        files[relative] = content
     if not {"/index.html", "/release.json"}.issubset(files) or len(files) < 3:
         raise ReleaseError("Production build is incomplete or has no release receipt.")
     try:
