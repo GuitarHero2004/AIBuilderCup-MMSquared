@@ -8,13 +8,15 @@ A fresh hosted journey passed the two built-in PDF uploads, two real Gemini extr
 explicit guided reviews/confirmations, deterministic cost/delivery comparison, and immutable
 buyer-selection save/reopen after reload. Missing App Check and another owner's access were
 rejected. This is the approved reduced demo outcome, not the full PRD: carbon estimates,
-ranking, scenarios and the general Google ADK agent remain deferred. The automated journey
+ranking and scenarios remain deferred. The first bounded Google ADK assistant is implemented
+on the separate `feat/contextual-assistant` branch; local verification and backward review passed.
+The user approved functional commits, push and checked PR merge. It has not been deployed. The automated journey
 is not a narrated video or evidence of competition submission acceptance.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; guided demo merged and deployed | `C:\AIBuilderCup-MMSquared`; `feat/guided-demo-workflow` merged through PR #12; release evidence branch from updated `dev` at `e947184` |
+| Repository | Single checkout; guided demo merged and deployed; assistant branch approved for integration | `C:\AIBuilderCup-MMSquared`; assistant branch created and initially published from updated `dev` at `6b3a053`; implementation approved for functional commits, push and checked PR merge |
 | App and contracts | Guided UI, generated contracts and trade-off verified | Full branch checks, 11 local browser groups and fresh hosted journey passed |
 | Quotation intake/review | Built-in PDFs and guided review deployed | Both public examples passed real upload/extraction, explicit grouped review and immutable confirmation |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
@@ -25,9 +27,73 @@ Dated entries preserve earlier evidence; later entries supersede their then-curr
 | Domain calculations | Cost, requirement checks and cost/delivery trade-off verified | Hosted: USD 142,500 / 20 days versus USD 139,000 / 23 days; exact USD 3,500 / 3-day trade-off; carbon/ranking deferred |
 | Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
 | Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
-| ADK coordinator and specialists | Deferred in the approved reduced demo | Current extraction uses a direct Gemini adapter; no general agent implementation |
+| ADK coordinator and specialists | First contextual assistant implemented on a separate feature branch; not deployed | Actual ADK coordinator/specialist live checks and local workflow/concurrency checks passed; evidence is recorded below. PDF extraction retains its direct Gemini adapter |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
 | Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
+
+## Contextual assistant - 18 October 2026 (feature branch; local verification passed)
+
+- Outcome: ask about the current saved case, quotation review, confirmed comparison or saved
+  buyer selection without leaving the working screen. This is a bounded first assistant,
+  not the complete autonomous platform agent or the planned enterprise/supplier product.
+- Branch: `feat/contextual-assistant`, created from freshly pulled `dev` at `6b3a053` and
+  published at that baseline before development. User-approved functional commits include
+  `af96e93` (Google agents/API) and `6745aeb` (contextual UI); documentation is separate.
+  Push and checked PR merge are authorized. The hosted release above is unchanged.
+- Backend: actual Google ADK coordinator with Quotation and Sourcing specialists exposed as
+  bounded AgentTool calls. Only the relevant specialist and authorized saved-context reader
+  are available for a turn. The server renders validated fact references, exact Decimal
+  values, missing-field clarification text and navigation actions. No agent confirms a quote,
+  edits business records, saves a buyer choice or sends a message.
+- Six authenticated owner-scoped routes cover run/create/list/read/events, exact-operation
+  readback and cancellation. The awaited POST uses concurrent polling of persisted actual
+  events; this is not token streaming or a detached background job. Runs enforce a 120-second
+  deadline, six model calls, eight tool calls, two delegations and the shared usage limits.
+- Screen context contains saved references/revisions and an unsaved-change flag, not DOM
+  contents or unsaved field values. History is reconstructed from at most two matching saved
+  turns. Server context checks and client context generations prevent stale/cross-case actions;
+  unsaved-work guards remain authoritative. Saved selections retain their historical facts.
+- React/TypeScript: persistent launcher, accessible responsive drawer, visible screen context,
+  prompt and clarification UI, actual activity, cancel/retry/readback and reload recovery.
+  Actions open intake, an exact review field, comparison or a saved selection. The sidebar,
+  Help rewrite and general page-action layout are intentionally queued for the next branch.
+- Dependency compatibility: pinned `google-adk==2.12.0`; FastAPI moved from 0.142.2 to 0.141.1
+  because ADK requires OpenTelemetry <=1.42.1 while FastAPI 0.142.2 requires >=1.44.0. The
+  resolved lockfile and existing API regression checks pass; no dependency override was forced.
+- Final `npm run check` passed after the race fixes at 22:41 Vietnam time: frontend
+  lint/typecheck, 31 frontend tests, build, backend Ruff/format, 69 backend tests with three
+  existing opt-in skips, and generated-contract equivalence. Non-blocking warnings remain
+  for the 543 kB JavaScript bundle and the Starlette test-client httpx deprecation.
+- Private verification: 46 frontend checks and 92 service/API/actual-SDK-double tests passed.
+  Exact source-document guards reject concurrent same-revision source changes before a model
+  reservation or final answer commit. A failed reservation spends no model allowance.
+  Six additional assertions using two real anonymous emulator owners verified that another
+  owner cannot read or cancel a run. Detailed suites, fixtures and screenshots remain in
+  OS TEMP, outside the repo; no private test files were added to the branch.
+- Actual local app verification passed 20 browser groups: nine assistant and 11 existing guided
+  quotation-to-selection groups. These use real Auth/Firestore/Storage emulators with explicit
+  no-network provider doubles, not live Gemini. They cover empty-case intake navigation,
+  review-field focus, unsaved edits, comparison/history, cancellation, lost responses,
+  reload/readback and case switching. Desktop, 390/320px and 200% text screenshots were
+  inspected; cramped controls, hidden context and inconsistent numeric grouping were refined.
+  Three targeted browser checks also passed for late known failures: switching cases and
+  typing a new question preserves that text, newer same-case text survives, and an empty
+  original composer recovers its failed question. These intercepted all assistant POSTs.
+- Two bounded live ADK checks passed against the existing Google project/model: quotation
+  5.83 seconds and sourcing 4.88 seconds, each with four actual model generations and two
+  tool calls (eight generations total, no retries). The actual coordinator delegated through
+  AgentTool and read saved synthetic context. Clarification covered the actual missing
+  full-order delivery and route details; the sourcing result retained USD 3,500 / three days.
+  These checks used an isolated in-memory business repository and wrote no production cases.
+  They verify the live adapter, not deployment of the new routes or hosted assistant UI.
+- Next separate branch: keep desktop navigation visible while content scrolls; rewrite Help
+  around actual tasks; place Create in the page heading and Refresh with the saved case list;
+  preserve keyboard navigation, unsaved-work guards and mobile/enlarged-text layouts.
+- Later product direction confirmed by the user: enterprise staff and external suppliers,
+  starting with private invitations. Product/style briefs and an explicit component BOM may
+  cover fabrics, trims and packaging, with declared quantities/units/allowances. Organization
+  membership, invitation access and supplier-submission isolation require their own milestone;
+  they are not implemented by this assistant branch.
 
 ## Guided demo workflow - 18 October 2026 (hosted verification passed)
 

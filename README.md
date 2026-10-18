@@ -12,14 +12,18 @@ routes. Earlier deployed checks also rejected direct browser database/storage ac
 Use only synthetic, non-confidential quotation PDFs. Application data stays in Singapore;
 Gemini processing uses a global endpoint. Automatic data cleanup is not implemented.
 
-The live API is revision `greenprocure-api-00005-c2k`; Hosting version is `e09fa612e61d0c14`.
+The last verified hosted release uses API revision `greenprocure-api-00006-bvd` and
+Hosting version `55630d153862661e`.
 Final hosted comparison and saved-note screenshots passed visual review at desktop 1440px
 and mobile 390px, with no clipping or overlap. Final source and release evidence are in
-[PR #11](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/11).
+[PR #12](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/12) and
+[release evidence](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/13).
 See the verification ledger for build and test evidence.
 
 The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
-evaluations, scenarios and the general ADK assistant remain deferred. A buyer selection note
+evaluations and scenarios remain deferred. A first bounded ADK assistant is now implemented
+on `feat/contextual-assistant`; local verification and two live ADK adapter checks passed.
+It is not part of the hosted release above; release authorization and verification remain separate. A buyer selection note
 is not purchasing approval or a complete carbon-aware decision. Development-only walkthroughs
 remain separate simulations. Live extraction calls Gemini directly; the full planned MVP
 and agent architecture are not complete.
@@ -120,6 +124,32 @@ See the [implemented buyer selection contract](docs/BUYER_SELECTION_CONTRACT.md)
 and isolated Firestore tests, six browser workflow groups and the full branch check passed.
 The successful hosted journey and release evidence are recorded in the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md).
+
+## Contextual assistant (feature branch; not deployed)
+
+**Ask GreenProcure** opens one persistent drawer across the working screens. With a selected
+case, it explains saved requirements, quotation review gaps, confirmed cost/delivery checks,
+or an immutable buyer-selection note. It can draft copyable supplier clarification and open
+the relevant existing workflow. Unsaved browser values are not sent; the panel names its saved
+context and invalidates action cards when the screen or referenced inputs change.
+
+The backend runs Google ADK `2.12.0` with a coordinator and two bounded AgentTool specialists.
+Each turn invokes the relevant specialist and an authenticated saved-context tool. Facts and
+amounts come from existing deterministic services; the model selects references rather than
+writing authoritative numbers or approvals. Review acknowledgements, confirmation and buyer
+selection remain explicit human UI actions. PDF extraction remains its separate direct Gemini
+operation; this increment does not route it through the assistant.
+
+A bounded POST performs each turn while the UI polls actual recorded activity. This is not
+token streaming or a detached background job. Firestore retains run history and request
+receipts; cancellation, interruption and changed inputs have explicit recorded outcomes.
+All nested model generations share the existing extraction allowance and global kill switch.
+Ordinary emulator mode disables live AI; private test doubles are never deployed as fallbacks.
+The verification ledger distinguishes local/emulator tests from actual live Gemini calls.
+
+The assistant uses the existing configured Google project, model and location. FastAPI is
+pinned to `0.141.1` because ADK `2.12.0`'s telemetry dependency is incompatible with the
+`0.142.2` minimum; the resolved lock and existing API regression suite were checked.
 
 The walkthroughs below remain independent, labelled design simulations. Their preview controls
 do not operate on the connected case or its saved quotations.
