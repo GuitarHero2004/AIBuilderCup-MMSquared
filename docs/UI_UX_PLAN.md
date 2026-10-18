@@ -5,12 +5,15 @@
 **Current status:** the guided quotation-to-saved-selection flow is deployed and verified.
 The implementation ledger records its exact release and remaining scope. Carbon estimates,
 ranking and scenarios are not connected product capabilities. The contextual assistant is
-implemented on `feat/contextual-assistant`, from `dev` at `6b3a053`. Local workflow checks,
-backward review and two live ADK adapter checks passed; the verification ledger records
-their boundaries. The user approved functional commits, push and checked PR merge. It is not deployed.
+implemented and merged through PR #14 at `392f46f`. Local workflow checks, backward review,
+two live ADK adapter checks and all three remote checks passed. It is not deployed. The
+separate `fix/workspace-ui-polish` branch starts from that updated `dev` baseline; its initial
+remote branch publication is verified. UI implementation, backward review and local
+verification passed. The implementation is committed and the user has authorized push.
+The UI branch is not merged or deployed.
 
-**Next separate milestone requested by the user:** general workspace UI refinement after
-this assistant increment. Keep the desktop navigation column visible, scroll the selected
+**Current separate milestone requested by the user:** general workspace UI refinement after
+the merged assistant increment. Keep the desktop navigation column visible, scroll the selected
 content area independently, make Help a practical task guide, and align the Refresh/Create
 sourcing case controls and related page actions. Preserve navigation guards, keyboard focus,
 mobile usability and enlarged-text layouts. Do not combine these layout changes with the
@@ -182,7 +185,7 @@ Checks include another owner's access, changed revisions, prompt injection, forb
 model-call limits, repeated clicks, cancellation/interruptions, context switching, keyboard
 focus, narrow screens and enlarged text. Test inputs and screenshots stay in OS temp.
 
-### Following workspace UI increment - agreed direction
+### Workspace UI increment - committed; push authorized
 
 - Keep the desktop sidebar and top navigation stable while the selected content area scrolls.
   Changing tabs changes content and active navigation, with deliberate scroll/focus handling.

@@ -9,14 +9,16 @@ explicit guided reviews/confirmations, deterministic cost/delivery comparison, a
 buyer-selection save/reopen after reload. Missing App Check and another owner's access were
 rejected. This is the approved reduced demo outcome, not the full PRD: carbon estimates,
 ranking and scenarios remain deferred. The first bounded Google ADK assistant is implemented
-on the separate `feat/contextual-assistant` branch; local verification and backward review passed.
-The user approved functional commits, push and checked PR merge. It has not been deployed. The automated journey
-is not a narrated video or evidence of competition submission acceptance.
+and merged through [PR #14](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/14)
+after all three remote checks passed. It has not been deployed. The separate
+`fix/workspace-ui-polish` branch has passed local workspace, Help and workflow checks;
+its implementation is committed and the user has authorized push. It is not merged or deployed. The automated journey is not a narrated
+video or evidence of competition submission acceptance.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
 |---|---|---|
-| Repository | Single checkout; guided demo merged and deployed; assistant branch approved for integration | `C:\AIBuilderCup-MMSquared`; assistant branch created and initially published from updated `dev` at `6b3a053`; implementation approved for functional commits, push and checked PR merge |
+| Repository | Single checkout; assistant merged; UI refinement committed; push authorized | `C:\AIBuilderCup-MMSquared`; `fix/workspace-ui-polish` created and initially published from updated `dev` at `392f46f` |
 | App and contracts | Guided UI, generated contracts and trade-off verified | Full branch checks, 11 local browser groups and fresh hosted journey passed |
 | Quotation intake/review | Built-in PDFs and guided review deployed | Both public examples passed real upload/extraction, explicit grouped review and immutable confirmation |
 | Auth/Firestore/Storage | Anonymous Auth enabled; Singapore database/private bucket configured | Runtime storage/database smoke: 10 passed; deny-direct-client rules deployed |
@@ -27,19 +29,66 @@ Dated entries preserve earlier evidence; later entries supersede their then-curr
 | Domain calculations | Cost, requirement checks and cost/delivery trade-off verified | Hosted: USD 142,500 / 20 days versus USD 139,000 / 23 days; exact USD 3,500 / 3-day trade-off; carbon/ranking deferred |
 | Buyer selection notes | Local verification and hosted immutable save/reopen passed | 95 private service/API tests, 1 Firestore integration, 6 local browser groups; hosted snapshot unchanged after reload |
 | Comparison/scenarios/full decisions | Connected comparison hosted verification passed; full evaluation walkthroughs remain simulations | The reduced buyer note does not implement ranked, carbon-aware decisions or scenarios |
-| ADK coordinator and specialists | First contextual assistant implemented on a separate feature branch; not deployed | Actual ADK coordinator/specialist live checks and local workflow/concurrency checks passed; evidence is recorded below. PDF extraction retains its direct Gemini adapter |
+| ADK coordinator and specialists | First contextual assistant merged through PR #14; not deployed | Actual ADK coordinator/specialist live checks and local workflow/concurrency checks passed; evidence is recorded below. PDF extraction retains its direct Gemini adapter |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
 | Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
 
-## Contextual assistant - 18 October 2026 (feature branch; local verification passed)
+## Workspace UI refinement - 18 October 2026 (local verification passed)
+
+- User outcome: a coherent procurement workspace with stable desktop navigation, clear page
+  actions, useful Help and professional spacing across the existing sourcing workflow.
+- Assistant PR #14 was merged first. Local `dev` was pulled with `--ff-only`, then
+  `fix/workspace-ui-polish` was created and immediately pushed. Local and remote baseline
+  both matched `392f46f41f44761de2cfc9c150488eb06d6562a0`. No duplicate checkout or stash.
+- The assistant's functional commits are integrated. The user authorized UI commits and push.
+  Functional commits: `92cf237` (workspace layout/actions) and `56e3a26` (Help guide);
+  verification documentation is separate. This UI branch is not merged or deployed.
+- Scope: stable sidebar/topbar around one desktop content scroll region, correct heading
+  flex sizing, primary Create action and nearby case allowance, list-level Refresh,
+  compact empty/welcome states, consistent quotation activity styles and a task-based Help
+  guide with operation-specific recovery. Narrow/short screens retain usable reading space.
+- Backward review started with the buyer's next action and the screenshot's alignment
+  defect. The shared page-heading rule had given the title and action group equal flexible
+  width. Only title copy now grows; Create aligns with the page edge, Refresh with its list,
+  and disabled Create states retain an adjacent explanation. Empty-state copy is compact.
+- Desktop navigation stays outside one scroll region; the source PDF pane uses the actual
+  available height so wrapped topbars do not obscure it. Narrow/short layouts keep usable
+  document flow. Existing page/field focus and unsaved-work guards are preserved.
+- Help now describes six real workflow steps with exact control names, example-PDF guidance,
+  saved-state assistant help and expandable recovery/comparison/session details. Recovery
+  distinguishes case creation, quotations, selection saves and assistant requests.
+- Final `npm run check` passed at 22:58 Vietnam time: lint/typecheck, 31 frontend tests,
+  build, Ruff/format, 69 backend tests with three existing opt-in skips and generated API
+  contract equivalence. Existing non-blocking bundle-size and test-client deprecation
+  warnings remain. A later accessible-region attribute passed its affected-file lint check.
+- Actual local browser verification passed **29 groups**: nine layout/navigation checks and
+  20 quotation-to-selection/assistant regression groups. These use real Auth/Firestore/
+  Storage emulators with explicitly injected no-network extraction and assistant doubles.
+  No paid model calls or production data writes were made for this UI milestone.
+- Visual review inspected empty/filled workspaces, forms, Help, quotation review, comparison,
+  saved selection and assistant at 1440/1920px, plus 390/320px, short windows and 200% text.
+  Sidebar/topbar positions stayed fixed during normal desktop content scrolling. Skip focus,
+  source returns, dirty navigation, cancellation and lost-response/reload recovery passed.
+  A final wide-screen review refined stretched row buttons and aligned footer/content edges.
+  The final CSS-only refinements passed targeted rendered checks at 1440/1920/390px: desktop
+  row actions retain their intrinsic width, mobile actions fill their row, footer edges align
+  with the main content, and no horizontal overflow was found. Final diff checks passed.
+- Private test scripts, synthetic inputs, detailed reports and screenshots remain in OS TEMP.
+  No test files were added to the branch. This is UI verification, not a new hosted release,
+  enterprise/supplier implementation, carbon capability or production-readiness certification.
+- Next gate: publish the user-approved commits for remote review. Integration and deployment
+  remain separate; this verification entry does not establish a new hosted release.
+
+## Contextual assistant - 18 October 2026 (merged; not deployed)
 
 - Outcome: ask about the current saved case, quotation review, confirmed comparison or saved
   buyer selection without leaving the working screen. This is a bounded first assistant,
   not the complete autonomous platform agent or the planned enterprise/supplier product.
 - Branch: `feat/contextual-assistant`, created from freshly pulled `dev` at `6b3a053` and
   published at that baseline before development. User-approved functional commits include
-  `af96e93` (Google agents/API) and `6745aeb` (contextual UI); documentation is separate.
-  Push and checked PR merge are authorized. The hosted release above is unchanged.
+  `af96e93` (Google agents/API), `6745aeb` (contextual UI), and `2f1575b` (documentation).
+  All three remote checks passed at exact head `2f1575b8f5a239907a6ce0a5d15d305580c9560a`;
+  PR #14 merged as `392f46f41f44761de2cfc9c150488eb06d6562a0`. The hosted release is unchanged.
 - Backend: actual Google ADK coordinator with Quotation and Sourcing specialists exposed as
   bounded AgentTool calls. Only the relevant specialist and authorized saved-context reader
   are available for a turn. The server renders validated fact references, exact Decimal

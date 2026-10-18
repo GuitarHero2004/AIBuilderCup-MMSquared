@@ -22,8 +22,11 @@ See the verification ledger for build and test evidence.
 
 The user approved this reduced demo scope. Carbon calculations/ranking, persisted full
 evaluations and scenarios remain deferred. A first bounded ADK assistant is now implemented
-on `feat/contextual-assistant`; local verification and two live ADK adapter checks passed.
-It is not part of the hosted release above; release authorization and verification remain separate. A buyer selection note
+and merged through PR #14; local verification and two live ADK adapter checks passed.
+It is not part of the hosted release above. The separate `fix/workspace-ui-polish` branch
+refines navigation, page actions and Help; full local checks and 29 browser groups passed.
+The UI changes are committed on the feature branch; the user has authorized push.
+They are not merged or deployed. A buyer selection note
 is not purchasing approval or a complete carbon-aware decision. Development-only walkthroughs
 remain separate simulations. Live extraction calls Gemini directly; the full planned MVP
 and agent architecture are not complete.
