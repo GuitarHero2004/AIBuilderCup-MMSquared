@@ -118,6 +118,10 @@ def test_openapi_exposes_implemented_quotation_contract(client):
     schema = client.get("/openapi.json").json()
     assert set(schema["paths"]) == {
         "/healthz",
+        "/api/v1/assistant/workspace",
+        "/api/v1/assistant/navigate",
+        "/api/v1/assistant/navigation-operations/{request_key}",
+        "/api/v1/assistant/navigation-operations/{request_key}/cancel",
         "/api/v1/cases",
         "/api/v1/cases/{case_id}",
         "/api/v1/cases/{case_id}/comparison",

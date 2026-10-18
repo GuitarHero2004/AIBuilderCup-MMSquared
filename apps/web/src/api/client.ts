@@ -1,3 +1,5 @@
+import type { WorkspaceAssistantSnapshot, WorkspaceNavigationRequest, WorkspaceNavigationResult } from './types';
+import { isWorkspaceAssistantSnapshot, isWorkspaceNavigationResult } from '../features/assistant/workspace-response';
 import type { AssistantRequest, AssistantRun, AssistantRunList, AssistantEvents, AssistantCancellation, CaseCreate, CaseList, CaseRead, CaseComparison, SelectionCreate, SelectionOperation, SelectionRead, SelectionList, QuoteList, QuoteRead, MutationReceipt, OperationRead, SaveDraft, ConfirmQuote, ExtractRequest, RunRead, RunEvents, CloseOperation, OperationResolution } from './types';
 import { isAssistantRun, isAssistantRunList, isAssistantEvents, isAssistantCancellation } from '../features/assistant/response';
 import { isCaseList, isCaseRead } from './response';
@@ -54,7 +56,7 @@ export function createApiClient(baseUrl: string, authHeaders: () => Promise<Reco
   const quotePath = (caseId: string, quoteId: string) => `${casePath(caseId)}/quotes/${encodeURIComponent(quoteId)}`;
   return {
     listCases: () => request<CaseList>('/api/v1/cases', 'GET', isCaseList),
-    getCase: (caseId: string) => request<CaseRead>(casePath(caseId), 'GET', isCaseRead),
+    getCase: (caseId: string) => request<CaseRead>(casePath(caseId), 'GET', (value): value is CaseRead => isCaseRead(value) && value.id === caseId),
     createCase: (input: CaseCreate) => request<CaseRead>('/api/v1/cases', 'POST', isCaseRead, { body: input, cases: true }),
     getComparison: (caseId: string) => request<CaseComparison>(`${casePath(caseId)}/comparison`, 'GET', (value): value is CaseComparison => isCaseComparison(value) && value.case_id === caseId),
     listSelections: (caseId: string) => request<SelectionList>(casePath(caseId) + '/selections', 'GET', (value): value is SelectionList => isSelectionList(value) && value.case_id === caseId),
@@ -62,6 +64,10 @@ export function createApiClient(baseUrl: string, authHeaders: () => Promise<Reco
     getSelection: (caseId: string, selectionId: string) => request<SelectionRead>(casePath(caseId) + '/selections/' + encodeURIComponent(selectionId), 'GET', (value): value is SelectionRead => isSelectionRead(value) && value.selection.case_id === caseId && value.selection.id === selectionId),
     getSelectionOperation: (caseId: string, key: string) => request<SelectionOperation>(casePath(caseId) + '/selection-operations/' + encodeURIComponent(key), 'GET', (value): value is SelectionOperation => isSelectionOperation(value) && value.case_id === caseId && value.request_key === key),
     cancelSelectionOperation: (caseId: string, key: string) => request<SelectionOperation>(casePath(caseId) + '/selection-operations/' + encodeURIComponent(key) + '/cancel', 'POST', (value): value is SelectionOperation => isSelectionOperation(value) && value.case_id === caseId && value.request_key === key),
+    getAssistantWorkspace: () => request<WorkspaceAssistantSnapshot>('/api/v1/assistant/workspace', 'GET', isWorkspaceAssistantSnapshot),
+    navigateAssistantWorkspace: (body: WorkspaceNavigationRequest, key: string) => request<WorkspaceNavigationResult>('/api/v1/assistant/navigate', 'POST', (value): value is WorkspaceNavigationResult => isWorkspaceNavigationResult(value) && value.request_key === key && value.workspace_fingerprint === body.expected_workspace_fingerprint, { body, key, timeout: 130000 }),
+    getAssistantWorkspaceOperation: (key: string) => request<WorkspaceNavigationResult>('/api/v1/assistant/navigation-operations/' + encodeURIComponent(key), 'GET', (value): value is WorkspaceNavigationResult => isWorkspaceNavigationResult(value) && value.request_key === key),
+    cancelAssistantWorkspace: (key: string) => request<WorkspaceNavigationResult>('/api/v1/assistant/navigation-operations/' + encodeURIComponent(key) + '/cancel', 'POST', (value): value is WorkspaceNavigationResult => isWorkspaceNavigationResult(value) && value.request_key === key),
     askAssistant: (caseId: string, body: AssistantRequest, key: string) => request<AssistantRun>(casePath(caseId) + '/assistant-runs', 'POST', (value): value is AssistantRun => isAssistantRun(value) && value.case_id === caseId && value.request_key === key, { body, key, timeout: 130000 }),
     listAssistantRuns: (caseId: string) => request<AssistantRunList>(casePath(caseId) + '/assistant-runs', 'GET', (value): value is AssistantRunList => isAssistantRunList(value) && value.case_id === caseId),
     getAssistantOperation: (caseId: string, key: string) => request<AssistantRun>(casePath(caseId) + '/assistant-operations/' + encodeURIComponent(key), 'GET', (value): value is AssistantRun => isAssistantRun(value) && value.case_id === caseId && value.request_key === key),

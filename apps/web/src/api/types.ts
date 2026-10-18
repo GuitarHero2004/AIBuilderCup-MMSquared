@@ -39,3 +39,8 @@ export type AssistantRun = Omit<Required<components['schemas']['AssistantRun']>,
 export type AssistantEvents = Omit<components['schemas']['AssistantEvents'], 'items'> & { items: Required<components['schemas']['AssistantEvent']>[] };
 export type AssistantRunList = Omit<components['schemas']['AssistantRunList'], 'items'> & { items: AssistantRun[] };
 export type AssistantCancellation = Required<components['schemas']['AssistantCancellation']>;
+
+export type WorkspaceAssistantAction = Required<components['schemas']['WorkspaceAssistantAction']>;
+export type WorkspaceAssistantSnapshot = Omit<components['schemas']['WorkspaceAssistantSnapshot'], 'actions'> & { actions: WorkspaceAssistantAction[] };
+export type WorkspaceNavigationRequest = components['schemas']['WorkspaceNavigationRequest'];
+export type WorkspaceNavigationResult = Omit<Required<components['schemas']['WorkspaceNavigationResult']>, 'actions'> & { actions: WorkspaceAssistantAction[] };
