@@ -1,14 +1,12 @@
 # Buyer selection note contract
 
-**Updated: 18 October 2026.** Implemented on `feat/saved-buyer-selection`; backend/service
-and local Firestore verification passed, together with six browser workflow groups and the
-full local branch check. Final UI polish passed lint/type checks, 33 private frontend checks
-and rendered desktop/390px review, including the exact saved-scope disclosure and another
-actual save. Local production configuration and release preparation also passed. Comparison
-is committed, published and merged in PR #8; the saved-selection branch is implemented and
-locally verified. The user approved three functional commits, push, PR merge and deployment;
-release is in progress. Commit and hosted-release evidence will be recorded after verification.
-The deployed app still provides the earlier verified quotation workflow.
+**Updated: 18 October 2026.** The reduced hosted buyer-selection journey is deployed and
+verified. Final source and release evidence are in
+[PR #11](https://github.com/GuitarHero2004/AIBuilderCup-MMSquared/pull/11). Cloud Run revision
+`greenprocure-api-00005-c2k` serves 100% of traffic; Hosting version `e09fa612e61d0c14` is live.
+A fresh hosted run passed two real extractions, explicit reviews/confirmations, deterministic
+comparison and immutable selection save/reopen after reload. App Check and owner-isolation
+checks also passed. The broader carbon/ranking/general-agent PRD remains incomplete.
 
 ## 1. Approved scope and buyer outcome
 
@@ -183,13 +181,20 @@ Rendered screenshots at 320/390/768/1024/1600px and 200% text were inspected.
 
 Final UI polish passed frontend lint/type checks, 33 private checks and rendered desktop/390px
 review. The saved disclosure opened its exact limitations, and another actual form save passed.
-Local API-source
-staging, the production frontend build and runtime deployment-configuration validation also
+Local API-source staging, the production frontend build and runtime deployment-configuration validation also
 passed without new cloud requests or writes.
 
-The user approved three functional commits, push, PR merge and deployment. Release is in
-progress; implementation packaging/publication, production deployment and hosted verification
-remain execution gates until their results are recorded. No hosted selection verification or production release is
-claimed here. Record subsequent evidence in [the verification ledger](IMPLEMENTATION_STATUS.md).
+The three functional commits were pushed and PR #9 merged with all three CI checks passing.
+The final hosted run against Cloud Run `greenprocure-api-00005-c2k` passed two real extractions,
+explicit reviews/confirmations and both checked comparison rows (USD 142,500 / 20 days and
+USD 139,000 / 23 days). A saved note reopened unchanged after reload with its exact snapshot.
+Comparison and save made no AI calls. Missing App Check returned 403; another normal owner
+received 404 on all four tested read routes. Hosting remains version `e09fa612e61d0c14`,
+release `1792330094439000`. Final hosted comparison and saved-note screenshots passed
+visual review at desktop 1440px and mobile 390px with no clipping or overlap.
+
+See PR #11 and
+[the verification ledger](IMPLEMENTATION_STATUS.md) for build and release evidence.
 The full PRD remains broader than this accepted demo: carbon factors, scoring/ranking,
-scenarios and the general agent are deferred.
+scenarios and the general agent are deferred. This evidence does not claim competition
+submission or acceptance.
