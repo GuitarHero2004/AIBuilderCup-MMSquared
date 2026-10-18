@@ -1,7 +1,46 @@
 import type { components } from './generated/schema';
-
 export type CaseRequirement = components['schemas']['Requirement'];
 export type CaseCreate = components['schemas']['CaseCreate'];
 export type CaseRead = components['schemas']['CaseRead'];
 export type CaseList = components['schemas']['CaseList'];
 export type HealthRead = components['schemas']['Health'];
+export type QuoteList = components['schemas']['QuoteList'];
+export type QuoteRead = components['schemas']['QuoteRead'];
+export type QuoteData = components['schemas']['QuoteData'];
+export type MutationReceipt = components['schemas']['MutationReceipt'];
+export type OperationRead = MutationReceipt;
+export type SaveDraft = components['schemas']['SaveDraft'];
+export type ConfirmQuote = components['schemas']['ConfirmQuote'];
+export type ExtractRequest = components['schemas']['StartExtraction'];
+export type RunRead = components['schemas']['RunRead'];
+export type RunEvents = components['schemas']['RunEvents'];
+export type ReviewDecision = components['schemas']['ReviewDecision'];
+export type CloseOperation = components['schemas']['CloseOperation'];
+export type OperationResolution = components['schemas']['OperationResolution'];
+// The runtime response guard requires serialized defaults before the UI consumes them.
+type ComparisonContract = components['schemas']['CaseComparison'];
+type ComparisonRowContract = ComparisonContract['rows'][number];
+export type CaseComparison = Omit<ComparisonContract, 'rows'> & {
+  rows: (Omit<ComparisonRowContract, 'metrics'> & {
+    metrics: Required<NonNullable<ComparisonRowContract['metrics']>>;
+  })[];
+};
+
+export type SelectionCreate = components['schemas']['SelectionCreate'];
+export type SelectionOperation = components['schemas']['SelectionOperation'];
+export type SelectionList = components['schemas']['SelectionList'];
+export type SelectionRecord = Omit<components['schemas']['SelectionRecord'], 'comparison_snapshot'> & { comparison_snapshot: CaseComparison };
+export type SelectionRead = Omit<components['schemas']['SelectionRead'], 'selection'> & { selection: SelectionRecord };
+
+export type AssistantRequest = components['schemas']['AssistantRequest'];
+export type AssistantAction = Required<components['schemas']['AssistantAction']>;
+export type AssistantResult = Omit<Required<components['schemas']['AssistantResult']>, 'actions' | 'facts'> & { actions: AssistantAction[]; facts: Required<components['schemas']['AssistantFact']>[] };
+export type AssistantRun = Omit<Required<components['schemas']['AssistantRun']>, 'result'> & { result: AssistantResult | null };
+export type AssistantEvents = Omit<components['schemas']['AssistantEvents'], 'items'> & { items: Required<components['schemas']['AssistantEvent']>[] };
+export type AssistantRunList = Omit<components['schemas']['AssistantRunList'], 'items'> & { items: AssistantRun[] };
+export type AssistantCancellation = Required<components['schemas']['AssistantCancellation']>;
+
+export type WorkspaceAssistantAction = Required<components['schemas']['WorkspaceAssistantAction']>;
+export type WorkspaceAssistantSnapshot = Omit<components['schemas']['WorkspaceAssistantSnapshot'], 'actions'> & { actions: WorkspaceAssistantAction[] };
+export type WorkspaceNavigationRequest = components['schemas']['WorkspaceNavigationRequest'];
+export type WorkspaceNavigationResult = Omit<Required<components['schemas']['WorkspaceNavigationResult']>, 'actions'> & { actions: WorkspaceAssistantAction[] };

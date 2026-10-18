@@ -1,0 +1,17 @@
+.decision-preview-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--ui-space-4); padding-block: var(--ui-space-3); }
+.decision-preview-summary h2 { margin: 0; }
+.decision-preview-summary p { margin-top: var(--ui-space-1); }
+.decision-preview-controls > details { margin: 0; }
+.decision-preview-controls > details[open] { grid-column: 1 / -1; margin-top: var(--ui-space-2); }
+.decision-preview-controls .preview-outcomes:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.decision-preview-controls .decision-fixture-details { margin-top: var(--ui-space-3); }
+.decision-preview-dialog .dialog-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); margin-top: var(--ui-space-5); }
+.decision-preview-dialog .dialog-actions > .button { margin-top: 0; }
+.decision-reopen-note { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--ui-space-4); }
+.decision-reopen-note p { color: var(--secondary); margin-top: var(--ui-space-2); }
+@media (max-width: 680px) {
+  .decision-preview-controls { grid-template-columns: minmax(0, 1fr); padding: var(--ui-space-3) var(--ui-space-4); }
+  .decision-preview-controls > details { margin-top: var(--ui-space-1); }
+  .decision-preview-dialog .dialog-actions { flex-direction: column; }
+  .decision-preview-dialog .dialog-actions > .button { width: 100%; }
+}

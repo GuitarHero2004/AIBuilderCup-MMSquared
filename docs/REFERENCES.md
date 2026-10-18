@@ -13,8 +13,10 @@ No numeric emissions dataset was imported or certified by this update.
 - 4 October 2026: team requested a PRD review and revision to make fuller use of Google
   services; the resulting v2.1 requirements remain proposed and unimplemented.
 - Supplied submission excerpt: working accessible prototype/source, real Firebase/Firestore/
-  Cloud Run/Gemini usage, and 3–4 minute demonstration. Pitch template/video creation is outside
-  this technical pack. This is not a fresh audit of all organiser rules or eligibility terms.
+  Cloud Run/Gemini usage. The official [FAQ](https://aibuildercup.com/Faqs.html), checked on
+  18 October 2026, requires a video under three minutes, superseding the supplied duration.
+  Pitch template/video creation is outside this technical pack. This is not a full audit of
+  all organiser rules or eligibility terms.
 
 ## Official technical references
 - **S01 — ADK tools and agents-as-tools:** https://adk.dev/tools-custom/function-tools/

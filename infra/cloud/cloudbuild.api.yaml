@@ -1,0 +1,24 @@
+# This build publishes an image only. Deployment is a separate reviewed command.
+# Submit only the staged API source prepared by scripts/cloud-build-api.ps1.
+steps:
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --pull
+      - --label
+      - org.opencontainers.image.revision=${_GIT_COMMIT}
+      - --label
+      - org.greenprocure.source-sha256=${_SOURCE_SHA256}
+      - --label
+      - org.greenprocure.build-id=${BUILD_ID}
+      - -t
+      - asia-southeast1-docker.pkg.dev/${PROJECT_ID}/greenprocure/api:build-${BUILD_ID}
+      - .
+images:
+  - asia-southeast1-docker.pkg.dev/${PROJECT_ID}/greenprocure/api:build-${BUILD_ID}
+serviceAccount: projects/${PROJECT_ID}/serviceAccounts/greenprocure-build@${PROJECT_ID}.iam.gserviceaccount.com
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: MUST_MATCH
+timeout: 1200s

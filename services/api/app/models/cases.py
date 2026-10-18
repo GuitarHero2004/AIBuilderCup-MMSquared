@@ -131,8 +131,10 @@ class CaseRead(ContractModel):
     name: Text
     requirement: Requirement
     default_policy: DecisionPolicy = Field(default_factory=DecisionPolicy)
-    data_revision: Literal[1] = 1
-    status: Literal["draft"] = "draft"
+    data_revision: Annotated[int, Field(strict=True, ge=1)] = 1
+    status: Literal[
+        "draft", "collecting_quotes", "reviewing_quotes", "ready", "decided", "archived"
+    ] = "draft"
     schema_version: Literal["2.0"] = "2.0"
     is_synthetic_demo: Literal[True] = True
     created_at: datetime

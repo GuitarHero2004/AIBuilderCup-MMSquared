@@ -342,8 +342,9 @@ manifest for live mode. No 20–50 history rows. See CALCULATION_SPEC §9.
 9. Save a human decision, refresh and retrieve it.
 10. Edit a quote and verify old results are stale; a second visitor has no access.
 
-Technical verification covers these paths; the 3–4 minute submission recording can show the
-main path. Do not claim every test ran because a demo video was recorded.
+Technical verification covers these paths; the submission recording must be under three
+minutes per the official [FAQ](https://aibuildercup.com/Faqs.html), checked on 18 October 2026,
+and can show the main path. Do not claim every test ran because a demo video was recorded.
 
 # 13. Priorities and Increment Gates
 | Gate | Deliverable | Evidence required before next gate |

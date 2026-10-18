@@ -27,4 +27,39 @@ describe('authenticated API boundary', () => {
     await expect(api.createCase(toCaseCreate(demoDefaults()))).rejects.toMatchObject({ code: 'CONNECTION_FAILED', message: expect.stringContaining('Refresh your cases') });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
+  it('requires readback for ambiguous server failures but allows retry of explicitly aborted contention', async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json({ error: { code: 'STORAGE_UNAVAILABLE', message: 'Retry shortly.' } }, { status: 503 }))
+      .mockResolvedValueOnce(Response.json({ error: { code: 'STORAGE_CONTENTION', message: 'Retry shortly.' } }, { status: 503 }))
+      .mockResolvedValueOnce(Response.json({}, { status: 502 }));
+    const api = createApiClient('http://127.0.0.1:8000', async () => ({}), fetcher);
+    const input = toCaseCreate(demoDefaults());
+    await expect(api.createCase(input)).rejects.toMatchObject({ code: 'STORAGE_UNAVAILABLE', outcomeUnknown: true });
+    await expect(api.createCase(input)).rejects.toMatchObject({ code: 'STORAGE_CONTENTION', outcomeUnknown: false });
+    await expect(api.createCase(input)).rejects.toMatchObject({ code: 'HTTP_502', outcomeUnknown: true });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+  });
+  it('rejects malformed successful payloads before the UI discards its draft', async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json({}, { status: 201 }))
+      .mockResolvedValueOnce(Response.json({ items: [{}] }));
+    const api = createApiClient('http://127.0.0.1:8000', async () => ({}), fetcher);
+    await expect(api.createCase(toCaseCreate(demoDefaults()))).rejects.toMatchObject({ code: 'INVALID_RESPONSE', outcomeUnknown: true });
+    await expect(api.listCases()).rejects.toMatchObject({ code: 'INVALID_RESPONSE', outcomeUnknown: false });
+  });
+  it('accepts the current case contract and rejects damaged nested requirements', async () => {
+    const saved = {
+      ...toCaseCreate(demoDefaults()), id: 'a'.repeat(32), status: 'draft', data_revision: 1,
+      schema_version: '2.0', is_synthetic_demo: true, created_at: '2026-10-14T09:00:00Z', updated_at: '2026-10-14T09:00:00Z',
+    };
+    const damaged = { ...saved, requirement: { ...saved.requirement, textile_specification: { ...saved.requirement.textile_specification, composition: null } } };
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json(saved, { status: 201 }))
+      .mockResolvedValueOnce(Response.json({ items: [saved] }))
+      .mockResolvedValueOnce(Response.json(damaged, { status: 201 }));
+    const api = createApiClient('http://127.0.0.1:8000', async () => ({}), fetcher);
+    expect(await api.createCase(toCaseCreate(demoDefaults()))).toEqual(saved);
+    expect(await api.listCases()).toEqual({ items: [saved] });
+    await expect(api.createCase(toCaseCreate(demoDefaults()))).rejects.toMatchObject({ code: 'INVALID_RESPONSE', outcomeUnknown: true });
+  });
 });

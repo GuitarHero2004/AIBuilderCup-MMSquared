@@ -37,6 +37,30 @@ Use official docs, not guessed model identifiers or imports. Generate TS API typ
 OpenAPI or check equivalence. Keep JSON snake_case; decimal-safe maths; Windows-friendly commands.
 Avoid adding packages/services just for architectural appearance.
 
+Use C:\AIBuilderCup-MMSquared as the single working folder. Keep independent tasks on separate
+branches in this checkout; do not create extra worktrees or duplicate project folders unless
+the user explicitly requests them. Work on one branch at a time and preserve uncommitted work
+before any branch switch. Dependent tasks start from an approved committed baseline.
+For each new milestone, update local dev with git pull --ff-only origin dev, then create the
+feature branch from that updated dev in this checkout. Push the new branch immediately with
+upstream tracking before development starts. The user's standing instruction authorises this
+initial branch publication; no separate push confirmation is needed for it. Confirm the remote
+branch points to the intended baseline. Later implementation commits, pushes and merges still
+follow their respective user authorisation. A new branch at dev's commit has no PR diff yet.
+Finish every development task by working backwards from its PRD outcome,
+refining gaps and rechecking affected behaviour. Keep small corrections on that task's branch.
+Once a milestone is authorized, continue implementation, backward review, refinement and local
+verification until the branch is ready for user review. Do not stop after each routine subtask
+or ask the user to authorize the next planned fix. Pause only for a genuine missing decision
+or blocked dependency; make independent progress while resolving it.
+Leave changes uncommitted until the user asks; commit approval does not imply push approval.
+When authorised, split changes into coherent commits by functionality or section. Write meaningful
+messages that explain what changed and why, without being unnecessarily long. Use mostly
+non-technical language with a little technical detail where useful. Stage specific reviewed files;
+keep private test cases, test inputs, screenshots and detailed reports out of commits.
+A request to commit and push authorises both steps; carry out the authorised steps without
+asking again. A commit-only request stays local. Verify the committed contents and report hashes.
+
 The pack initially has no runnable app. Do not pretend setup/test commands already exist.
 When scaffolding, define real frontend lint/typecheck/test/build scripts and Python test/lint
 commands, execute available checks and update README with commands that actually work.
@@ -53,3 +77,13 @@ UI events correspond to actual calls and explanations refer to the saved evaluat
 Update `docs/IMPLEMENTATION_STATUS.md` with changed components, commands, test results,
 live/fixture status, blockers and next increment. Never claim tests/deployment succeeded without
 executing them. A generated architecture or homepage is not an end-to-end working prototype.
+
+## UI consistency and visual review
+The user expects meticulous UI/UX review across the current product, not just functional
+checks. Use the shared design tokens for typography, spacing, statuses, controls and dialogs.
+Use shared table columns on desktop; keep action alignment stable across different row states.
+Preserve separate processing/review meanings and make errors, unknown outcomes and routine
+unreviewed fields visually distinct. Inspect actual rendered screenshots at normal and
+enlarged text sizes, including narrow screens and long names. No-overflow assertions alone
+do not establish visual quality: check word wrapping, hierarchy, control sizes and alignment.
+Refine defects and recheck the affected workflow before presenting a task for user review.

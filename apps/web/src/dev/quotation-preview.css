@@ -1,0 +1,30 @@
+.preview-controls { padding: 16px 20px; margin-bottom: 24px; background: #f3f7fb; border: 1px solid #ccdbe6; border-left: 3px solid #7e9eb8; border-radius: var(--ui-radius-panel); color: #294c65; overflow-wrap: anywhere; }
+.preview-controls h2 { font-size: var(--ui-text-body); margin-bottom: 8px; }
+.preview-controls p { margin: 8px 0 0; font-size: var(--ui-text-small); line-height: 1.6; }
+.preview-controls details { margin-top: 8px; }
+.preview-controls summary { cursor: pointer; font-size: var(--ui-text-small); font-weight: 600; width: fit-content; min-height: 44px; padding: 12px 0; }
+.preview-control-body { padding: 8px 0 0; }
+.preview-scenario { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.preview-scenario label { font-size: var(--ui-text-small); font-weight: 600; }
+.preview-scenario select { min-height: 44px; min-width: 0; max-width: 100%; padding: 10px 12px; background: white; color: #18251e; border: 1px solid var(--input-border); border-radius: var(--ui-radius-control); font: inherit; font-size: var(--ui-text-body); }
+.preview-outcomes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #ccdbe6; padding-top: 16px; margin-top: 16px; }
+.preview-outcomes strong { width: 100%; font-size: var(--ui-text-small); }
+.preview-notice { border-top: 1px solid #d7e2eb; padding-top: 12px; color: #425e73; }
+.preview-controls details[open] { border-top: 1px solid #d7e2eb; }
+.quotation-preview .nav-item { text-decoration: none; }
+.preview-dialog { margin: auto; border: 1px solid var(--border); border-radius: var(--ui-radius-dialog); padding: 24px; color: #18251e; background: white; max-width: 560px; width: calc(100% - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; overflow-wrap: anywhere; }
+.preview-dialog::backdrop { background: var(--ui-dialog-backdrop); }
+.preview-dialog-note { color: var(--secondary); margin: 16px 0; font-size: var(--ui-text-body); }
+.preview-dialog dl { display: grid; grid-template-columns: 85px minmax(0, 1fr); gap: 12px 16px; margin: 24px 0; font-size: var(--ui-text-body); }
+.preview-dialog dt { color: var(--secondary); }
+.preview-dialog dd { margin: 0; font-weight: 600; }
+.preview-dialog .button { margin-top: 8px; }
+@media (max-width: 680px) {
+  .preview-controls { padding: 16px; }
+  .preview-scenario { align-items: stretch; flex-direction: column; }
+  .preview-scenario select { width: 100%; }
+  .preview-outcomes .button { flex: 1 1 100%; }
+  .preview-dialog { padding: 20px; }
+  .preview-dialog dl { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .preview-dialog dd { margin-bottom: 12px; }
+}

@@ -1,0 +1,25 @@
+.comparison-preview .preview-controls { margin-bottom: var(--ui-space-6); }
+.comparison-preview-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--ui-space-4); padding-block: var(--ui-space-3); }
+.comparison-preview-summary h2 { margin: 0; }
+.comparison-preview-summary p { margin-top: var(--ui-space-1); }
+.comparison-preview-controls > details { margin: 0; }
+.comparison-preview-controls > details[open] { grid-column: 1 / -1; margin-top: var(--ui-space-2); }
+.comparison-preview-controls > details > summary { padding-block: var(--ui-space-3); }
+.comparison-preview-controls .preview-control-body { padding-top: var(--ui-space-2); }
+.comparison-preview-controls .preview-outcomes:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.comparison-preview-controls .comparison-fixture-details { margin-top: var(--ui-space-3); }
+.comparison-fixture-details p:last-child { margin-bottom: var(--ui-space-2); }
+.comparison-dialog-note { font-size: var(--ui-text-body); line-height: 1.65; color: var(--secondary); margin: var(--ui-space-4) 0; }
+.comparison-inspection-dialog { max-width: 760px; }
+.comparison-inspection-dialog dl, .comparison-decision-dialog dl { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.comparison-inspection-dialog dd, .comparison-decision-dialog dd { overflow-wrap: anywhere; font-weight: 500; }
+.comparison-evidence-pair { display: contents; }
+.comparison-dialog-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); margin-top: var(--ui-space-5); }
+.comparison-dialog-actions > .button { margin-top: 0; }
+@media (max-width: 680px) {
+  .comparison-preview-controls { grid-template-columns: minmax(0, 1fr); padding: var(--ui-space-3) var(--ui-space-4); }
+  .comparison-preview-controls > details { margin-top: var(--ui-space-1); }
+  .comparison-inspection-dialog dl, .comparison-decision-dialog dl { grid-template-columns: minmax(0, 1fr); }
+  .comparison-dialog-actions { flex-direction: column; }
+  .comparison-dialog-actions > .button { width: 100%; }
+}

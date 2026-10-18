@@ -1,0 +1,43 @@
+.workspace-guide { container-type: inline-size; container-name: workspace-guide; min-width: 0; }
+.guide-layout { display: grid; grid-template-columns: minmax(0, 2.15fr) minmax(15rem, 1fr); align-items: start; gap: var(--ui-space-6); }
+.guide-workflow, .guide-side, .guide-reference { min-width: 0; }
+.guide-section-heading { padding: var(--ui-space-6); }
+.guide-section-heading h2, .guide-card h2 { font-size: var(--ui-text-section); }
+.guide-section-heading p { margin-top: var(--ui-space-2); color: var(--secondary); font-size: var(--ui-text-small); }
+.guide-steps { list-style: none; padding: 0; margin: 0; }
+.guide-steps > li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: var(--ui-space-4); padding: var(--ui-space-5) var(--ui-space-6); border-top: 1px solid var(--border); }
+.guide-step-number { padding-top: 2px; color: var(--primary); font-size: var(--ui-text-small); font-weight: 600; font-variant-numeric: tabular-nums; }
+.guide-steps h3 { font-size: var(--ui-text-section); }
+.guide-steps p, .guide-card p, .guide-card li, .guide-disclosure-content { font-size: var(--ui-text-body); line-height: 1.65; }
+.guide-steps p { margin-top: var(--ui-space-2); }
+.guide-steps .guide-outcome { color: var(--secondary); font-size: var(--ui-text-small); }
+.guide-side { display: grid; gap: var(--ui-space-6); }
+.guide-card { padding: var(--ui-space-6); }
+.guide-card-title { display: flex; align-items: flex-start; gap: var(--ui-space-3); }
+.guide-card-title svg { flex: 0 0 auto; color: var(--primary); margin-top: 1px; }
+.guide-card p { margin-top: var(--ui-space-3); }
+.guide-card ul { margin: var(--ui-space-3) 0 0; padding-left: var(--ui-space-5); }
+.guide-card li + li { margin-top: var(--ui-space-2); }
+.guide-card .guide-card-note { border-top: 1px solid var(--border); margin-top: var(--ui-space-4); padding-top: var(--ui-space-3); color: var(--secondary); font-size: var(--ui-text-small); }
+.guide-reference { margin-top: var(--ui-space-6); }
+.guide-disclosure { border-top: 1px solid var(--border); }
+.guide-disclosure > summary { min-height: 44px; padding: var(--ui-space-4) var(--ui-space-6); color: var(--primary); font-size: var(--ui-text-body); font-weight: 600; cursor: pointer; }
+.guide-disclosure-content { padding: 0 var(--ui-space-6) var(--ui-space-6); color: var(--secondary); }
+.guide-disclosure-content ul { padding-left: var(--ui-space-5); margin: var(--ui-space-2) 0 0; }
+.guide-disclosure-content li + li { margin-top: var(--ui-space-3); }
+.guide-recovery { margin: var(--ui-space-4) 0 0; }
+.guide-recovery > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--ui-space-4); padding-block: var(--ui-space-4); border-top: 1px solid var(--border); }
+.guide-recovery dt { font-weight: 600; color: #18251e; }
+.guide-recovery dd { margin: 0; }
+@container workspace-guide (max-width: 56rem) {
+  .guide-layout { grid-template-columns: minmax(0, 1fr); }
+  .guide-side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container workspace-guide (max-width: 36rem) {
+  .guide-side { grid-template-columns: minmax(0, 1fr); }
+  .guide-section-heading, .guide-card { padding: var(--ui-space-4); }
+  .guide-steps > li { padding: var(--ui-space-4); grid-template-columns: 1.75rem minmax(0, 1fr); gap: var(--ui-space-3); }
+  .guide-disclosure > summary { padding: var(--ui-space-4); }
+  .guide-disclosure-content { padding: 0 var(--ui-space-4) var(--ui-space-4); }
+  .guide-recovery > div { grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-2); }
+}
