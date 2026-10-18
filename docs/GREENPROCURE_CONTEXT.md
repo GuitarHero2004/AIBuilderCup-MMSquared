@@ -112,8 +112,9 @@ show the real calculated table and a clear explanation-unavailable message.
 ## 7. Technical submission requirements supplied by the team
 Use Firebase, Firestore, Cloud Run and Gemini meaningfully. Supply a publicly accessible
 working application and accessible GitHub source; keep dependencies operational for evaluation.
-The team's supplied video duration is 3–4 minutes. This pack does not produce the video/deck
-or claim to have independently verified every programme rule. The prescribed pitch template
+The official [FAQ](https://aibuildercup.com/Faqs.html), checked on 18 October 2026, requires
+a video under three minutes; this supersedes the earlier supplied duration. This pack does
+not produce the video/deck or verify every programme rule. The prescribed pitch template
 and submission deliverables remain external tasks.
 
 ## 8. Read order and authority
