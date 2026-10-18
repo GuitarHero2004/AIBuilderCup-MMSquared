@@ -3,7 +3,7 @@ import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import type { AppConfig } from '../config/environment';
 import type { SessionServices } from '../auth/firebase';
-import type { AssistantAction, CaseCreate, CaseRead } from '../api/types';
+import type { WorkspaceAssistantAction, AssistantAction, CaseCreate, CaseRead } from '../api/types';
 import { ApiError } from '../api/client';
 import { AppShell } from '../components/AppShell';
 import type { WorkspaceView } from '../components/AppShell';
@@ -18,11 +18,12 @@ import { SessionBoundary } from '../auth/sessionBoundary';
 import { Help } from './Help';
 import { AssistantProvider } from '../features/assistant/AssistantProvider';
 import { AssistantScope } from '../features/assistant/AssistantScope';
+import { AssistantWorkspaceBridge } from '../features/assistant/AssistantWorkspaceBridge';
 import { ConnectedQuotations } from '../features/connected-quotations/ConnectedQuotations';
 import type { QuotationNavigationGuard } from '../features/connected-quotations/ConnectedQuotations';
 
 export function App({ config, services }: { config: AppConfig; services: SessionServices }) {
-  const [assistantTarget, setAssistantTarget] = useState<AssistantAction | null>(null);
+  const [assistantTarget, setAssistantTarget] = useState<AssistantAction | WorkspaceAssistantAction | null>(null);
   const quotationNavigation = useRef<QuotationNavigationGuard>(null);
   const [quotationBusy, setQuotationBusy] = useState(false);
   const [view, setView] = useState<WorkspaceView>('workspace');
@@ -43,8 +44,10 @@ export function App({ config, services }: { config: AppConfig; services: Session
   const [uncertain, setUncertain] = useState(false);
   const [reconciled, setReconciled] = useState(false);
   const [notice, setNotice] = useState('');
+  const [navigationError, setNavigationError] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [pendingView, setPendingView] = useState<WorkspaceView | null>(null);
+  const pendingAssistantNavigation = useRef<(() => void) | null>(null);
   const sessionBoundary = useRef(new SessionBoundary());
   const savingRequest = useRef<symbol | null>(null);
   const signInRequest = useRef<symbol | null>(null);
@@ -52,14 +55,14 @@ export function App({ config, services }: { config: AppConfig; services: Session
 
   useEffect(() => onAuthStateChanged(services.auth, (currentUser) => {
     sessionBoundary.current.enter(currentUser?.uid ?? null);
-    savingRequest.current = null;
+    savingRequest.current = null; pendingAssistantNavigation.current = null; setNavigationError('');
     setAssistantTarget(null); setQuotationBusy(false); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
     setDraft(null); setInitialDraft(null); setPendingView(null); setView('workspace');
     setSaving(false); setSaveError(null); setUncertain(false); setReconciled(false);
     setNotice(''); setLoadError(null);
     setUser(currentUser); setAuthReady(true); setAuthError(null);
   }, () => {
-    sessionBoundary.current.enter(null); savingRequest.current = null;
+    sessionBoundary.current.enter(null); savingRequest.current = null; pendingAssistantNavigation.current = null; setNavigationError('');
     setAssistantTarget(null); setUser(null); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
     setDraft(null); setInitialDraft(null); setPendingView(null); setView('workspace');
     setSaving(false); setSaveError(null); setUncertain(false); setReconciled(false); setNotice(''); setLoadError(null);
@@ -149,6 +152,53 @@ export function App({ config, services }: { config: AppConfig; services: Session
     }
   }
 
+  async function navigateAssistantWorkspace(action: WorkspaceAssistantAction, stillCurrent: () => boolean): Promise<boolean> {
+    if (savingRequest.current || quotationBusy || signingIn || uncertain) return false;
+    setNavigationError('');
+    const currentSession = sessionBoundary.current.capture();
+    const guarded = (next: WorkspaceView, proceed: () => void) => {
+      if (view === 'quotations' && quotationNavigation.current) { quotationNavigation.current(proceed); return; }
+      if (view === 'create' && dirty) { pendingAssistantNavigation.current = proceed; setPendingView(next); return; }
+      if (view === 'create' && next !== 'create') { setDraft(null); setInitialDraft(null); }
+      proceed();
+    };
+    if (action.kind === 'open_workspace' || action.kind === 'open_help') {
+      const next = action.kind === 'open_help' ? 'help' : 'workspace';
+      if (view !== next) guarded(next, () => { setNotice(''); setView(next); });
+      return true;
+    }
+    if (!user || !currentSession()) return false;
+    if (action.kind === 'create_case') {
+      if (!loaded || loading || loadError || cases.length >= 2) return false;
+      if (view !== 'create') guarded('create', openForm);
+      return true;
+    }
+    if (!action.case_id || action.expected_case_revision === null) return false;
+    try {
+      const fresh = await services.api.getCase(action.case_id);
+      if (!currentSession() || !stillCurrent()) return false;
+      if (fresh.data_revision !== action.expected_case_revision) {
+        setNavigationError("This case changed. Refresh Luma's workspace overview before opening that destination.");
+        return false;
+      }
+      const next = action.kind === 'open_case' ? 'detail' : 'quotations';
+      const openDestination = () => {
+        if (!currentSession()) return;
+        setCases(previous => [fresh, ...previous.filter(item => item.id !== fresh.id)]);
+        setSelected(fresh); setNotice('');
+        setAssistantTarget(next === 'quotations' ? action : null); setView(next);
+      };
+      // A same-case quotation target runs the child's guard once, when it consumes the target.
+      // Crossing cases leaves that component, so the outer guard must protect its edits first.
+      if (view === 'quotations' && next === 'quotations' && selected?.id === fresh.id) openDestination();
+      else guarded(next, openDestination);
+      return true;
+    } catch (failure) {
+      if (currentSession()) setNavigationError(failure instanceof ApiError ? failure.message : "This destination could not be checked. Refresh Luma's workspace overview and try again.");
+      return false;
+    }
+  }
+
   const createDisabled = !loaded || loading || !!loadError || cases.length >= 2 || uncertain;
   const creationNote = uncertain ? 'Check the previous save before creating another case.'
     : loadError ? 'Refresh your saved cases before creating another.'
@@ -157,10 +207,12 @@ export function App({ config, services }: { config: AppConfig; services: Session
           : `${cases.length} of 2 demo cases used`;
 
   return <AssistantProvider key={user?.uid ?? 'signed-out'} api={services.api} ownerId={user?.uid ?? null}><AppShell view={view} caseName={selected?.name} session={!authReady ? 'restoring' : user ? 'active' : 'none'} local={config.environment === 'local'} busy={saving || quotationBusy} onWorkspace={() => navigate('workspace')} onHelp={() => navigate('help')}>
+    <AssistantWorkspaceBridge workspace={{ authenticated: Boolean(user), loading: !authReady || signingIn || loading, busy: saving || quotationBusy || uncertain || signingIn, canCreate: Boolean(user) && !createDisabled, error: authError ?? loadError, screen: view === 'help' ? 'help' : view === 'create' ? 'create' : view === 'detail' ? 'case' : view === 'quotations' ? 'intake' : 'workspace' }} onNavigate={navigateAssistantWorkspace} onStartSession={startDemo} />
     <AssistantScope context={{ screen: view === 'detail' ? 'case' : 'workspace', label: view === 'detail' && selected ? selected.name + ' / Requirements' : view === 'create' ? 'Unsaved sourcing case' : view === 'help' ? 'Workspace guide' : 'Sourcing workspace', caseId: user && selected && ['detail', 'quotations'].includes(view) ? selected.id : null, caseRevision: user && selected && ['detail', 'quotations'].includes(view) ? selected.data_revision : null, dirty, busy: saving || quotationBusy, unavailable: uncertain ? 'Resolve the unconfirmed case save before asking about its saved state.' : undefined }} stateKey={JSON.stringify(draft)} handle={action => {
       if (view !== 'detail' || !selected || action.case_id !== selected.id || action.expected_case_revision !== selected.data_revision) return false;
       setAssistantTarget(action); setView('quotations'); return true;
     }} />
+    {navigationError && <div className="alert error-alert" role="alert">{navigationError}</div>}
     <div className="sr-only" role="status" aria-live="polite">{notice}</div>
     {notice && view !== 'detail' && <div className="alert success-alert"><Icon name="check" size={18} />{notice}</div>}
     {view === 'help' ? <Help onBack={() => navigate('workspace')} /> : view === 'create' && user && draft ? <>
@@ -192,8 +244,10 @@ export function App({ config, services }: { config: AppConfig; services: Session
       </>}
       <aside className="workspace-guide-link"><Icon name="help" size={20} /><div><h2>New to GreenProcure?</h2><p>Follow the workflow from your first brief to a saved buyer selection.</p></div><button type="button" className="text-link" onClick={() => navigate('help')}>Open guide<Icon name="arrow" size={15} /></button></aside>
     </>}
-    {pendingView !== null && <DiscardDialog uncertain={uncertain} editing={view === 'create'} onKeep={() => setPendingView(null)} onDiscard={() => {
-      setDraft(null); setInitialDraft(null); setSaveError(null); setReconciled(false); setView(pendingView); setPendingView(null);
+    {pendingView !== null && <DiscardDialog uncertain={uncertain} editing={view === 'create'} onKeep={() => { pendingAssistantNavigation.current = null; setPendingView(null); }} onDiscard={() => {
+      const proceed = pendingAssistantNavigation.current; pendingAssistantNavigation.current = null;
+      setDraft(null); setInitialDraft(null); setSaveError(null); setReconciled(false); setPendingView(null);
+      if (proceed) proceed(); else setView(pendingView);
       requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-page-title]')?.focus());
     }} />}
   </AppShell></AssistantProvider>;

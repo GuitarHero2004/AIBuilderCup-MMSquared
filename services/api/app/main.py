@@ -23,6 +23,7 @@ from app.models.comparison import CaseComparison
 from app.routes.assistant import assistant_router
 from app.routes.quotations import quotation_router
 from app.routes.selections import selection_router
+from app.routes.workspace_assistant import workspace_assistant_router
 from app.security import FirebaseIdentityVerifier, IdentityVerifier, Principal
 from app.services.cases import CaseRepository, CaseService
 from app.services.comparison import ComparisonService
@@ -130,6 +131,31 @@ def get_assistant_service(request: Request):
     )
 
 
+def get_workspace_assistant_service(request: Request):
+    from app.adapters.adk_workspace import AdkWorkspaceProvider
+    from app.adapters.firestore_workspace import FirestoreWorkspaceRepository
+    from app.services.workspace_assistant import WorkspaceAssistantService
+
+    with request.app.state.resource_lock:
+        if request.app.state.quotation_repository is None:
+            request.app.state.quotation_repository = FirestoreQuotationRepository(
+                request.app.state.settings
+            )
+        if request.app.state.workspace_assistant_provider is None:
+            request.app.state.workspace_assistant_provider = AdkWorkspaceProvider(
+                request.app.state.settings
+            )
+        if request.app.state.workspace_assistant_repository is None:
+            request.app.state.workspace_assistant_repository = FirestoreWorkspaceRepository(
+                request.app.state.quotation_repository.client
+            )
+    return WorkspaceAssistantService(
+        request.app.state.workspace_assistant_repository,
+        request.app.state.settings,
+        request.app.state.workspace_assistant_provider,
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -139,6 +165,8 @@ def create_app(
     document_store=None,
     extraction_provider=None,
     assistant_provider=None,
+    workspace_assistant_provider=None,
+    workspace_assistant_repository=None,
 ) -> FastAPI:
     config = settings or Settings()
 
@@ -177,6 +205,8 @@ def create_app(
     app.state.document_store = document_store
     app.state.extraction_provider = extraction_provider
     app.state.assistant_provider = assistant_provider
+    app.state.workspace_assistant_provider = workspace_assistant_provider
+    app.state.workspace_assistant_repository = workspace_assistant_repository
     app.state.resource_lock = Lock()
     app.add_middleware(
         CORSMiddleware,
@@ -298,4 +328,5 @@ def create_app(
     app.include_router(quotation_router(get_principal, get_quotation_service))
     app.include_router(selection_router(get_principal, get_selection_service))
     app.include_router(assistant_router(get_principal, get_assistant_service))
+    app.include_router(workspace_assistant_router(get_principal, get_workspace_assistant_service))
     return app

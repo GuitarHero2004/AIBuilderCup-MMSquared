@@ -1,7 +1,10 @@
 import { Icon } from '../components/Icon';
+import { AgentAvatar } from '../features/assistant/AgentAvatar';
+import { useAssistantStore } from '../features/assistant/context';
 import './help.css';
 
 export function Help({ onBack }: { onBack: () => void }) {
+  const assistant = useAssistantStore();
   return <section className="workspace-guide" aria-labelledby="workspace-guide-title">
     <header className="page-heading">
       <div className="page-heading-copy"><p className="eyebrow">HELP</p><h1 id="workspace-guide-title" tabIndex={-1} data-page-title>Workspace guide</h1><p className="page-intro">Follow a quotation from your order requirements to a saved buyer selection.</p></div>
@@ -22,7 +25,7 @@ export function Help({ onBack }: { onBack: () => void }) {
       </section>
 
       <aside className="guide-side" aria-label="Ways to get started">
-        <section className="panel guide-card"><div className="guide-card-title"><Icon name="chat" size={20} /><h2>Ask GreenProcure</h2></div><p>Open a saved case, then choose <strong>Ask GreenProcure</strong> in the top bar. Ask about the screen you are working on:</p><ul><li>What is blocking this quotation?</li><li>Explain the cost and delivery trade-off.</li><li>What did I record in this selection?</li></ul><p className="guide-card-note">Answers use saved information. The assistant can draft clarification and open relevant screens; you still review, confirm and save your choice.</p></section>
+        <section className="panel guide-card"><div className="guide-card-title"><AgentAvatar size={28} /><h2>Meet Luma</h2></div><p>Choose the floating <strong>Ask Luma</strong> button on any page. Use <strong>Workspace</strong> to find any of your saved cases or <strong>Current case</strong> for detailed help with the record you are viewing.</p><ul><li>Take me to my quotations.</li><li>Show my saved selections.</li><li>Explain the cost and delivery trade-off.</li></ul><button type="button" className="button button-secondary" onClick={() => assistant.setOpen(true)}>Ask Luma<Icon name="arrow" size={16} /></button><p className="guide-card-note">Luma reads your saved workspace, with Quill for quotations and Sage for sourcing. It does not capture your screen or read unsaved edits. You still review, confirm and save your choice.</p></section>
         <section className="panel guide-card"><div className="guide-card-title"><Icon name="fabric" size={20} /><h2>Try the example PDFs</h2></div><p>Keep the prefilled case requirements and add the Supplier A and Supplier B samples from quotation intake.</p><p>Each sample adds a real synthetic PDF. Extraction still runs through Gemini, and you review its output before comparison.</p><p className="guide-card-note">The examples demonstrate a cost and delivery trade-off. They are not real supplier offers.</p></section>
       </aside>
     </div>
@@ -34,7 +37,7 @@ export function Help({ onBack }: { onBack: () => void }) {
         <div><dt>Uploading or extracting a quotation</dt><dd>Use <strong>Check saved quotations</strong> to read the recorded outcome. If extraction has failed, inspect the message before using <strong>Retry extraction</strong>.</dd></div>
         <div><dt>Saving or confirming a review</dt><dd>Use <strong>Check saved result</strong>. If a newer revision is reported, review the changed fields before saving or confirming again.</dd></div>
         <div><dt>Saving a buyer selection</dt><dd>Use <strong>Check save result</strong>. If a saved reference was received, use <strong>Read saved selection</strong> to reopen that record.</dd></div>
-        <div><dt>Asking the assistant</dt><dd>Use <strong>Check recorded result</strong> or <strong>Cancel request</strong>. Closing the assistant panel does not cancel an active request.</dd></div>
+        <div><dt>Asking Luma</dt><dd>For current-case questions, use <strong>Check recorded result</strong> or <strong>Cancel request</strong>. For workspace questions, use <strong>Check navigation result</strong> or <strong>Cancel navigation request</strong>. Closing the panel does not cancel an active request.</dd></div>
       </dl></div></details>
       <details className="guide-disclosure"><summary>What the comparison checks</summary><div className="guide-disclosure-content"><ul>
         <li>The current demo checks one woven polyester-cotton fabric specification. The case quantity is in metres.</li>

@@ -1,10 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ApiError } from '../../api/client';
 import type { ApiClient } from '../../api/client';
-import type { AssistantAction, AssistantEvents, AssistantRequest, AssistantRun } from '../../api/types';
+import type { AssistantAction, AssistantEvents, AssistantRequest, AssistantRun, WorkspaceAssistantAction } from '../../api/types';
 import { Icon } from '../../components/Icon';
 import { useAssistantSnapshot, useAssistantStore } from './context';
 import type { AssistantScreenContext } from './store';
+import { AgentAvatar } from './AgentAvatar';
+import { agentPersonas } from './personas';
+import type { AgentPersona } from './personas';
+import { WorkspaceNavigator } from './WorkspaceNavigator';
 
 interface Attempt { key: string; caseId: string; label: string; question?: string; generation?: number; started: number }
 const terminal = (run: AssistantRun) => run.status !== 'running';
@@ -33,6 +37,11 @@ function requestFor(context: AssistantScreenContext, message: string, previous: 
 
 export function AssistantDrawer({ api, ownerId }: { api: ApiClient; ownerId: string | null }) {
   const store = useAssistantStore(), snapshot = useAssistantSnapshot(), context = snapshot.context;
+  const [scopeChoice, setScopeChoice] = useState<{ caseId: string | null; mode: 'workspace' | 'case' } | null>(null);
+  const mode = scopeChoice?.caseId === context.caseId ? scopeChoice.mode : context.caseId ? 'case' : 'workspace';
+  const setMode = (next: 'workspace' | 'case') => setScopeChoice({ caseId: context.caseId, mode: next });
+  const [view, setView] = useState<'conversation' | 'team' | 'context'>('conversation');
+  const [navigationError, setNavigationError] = useState('');
   const [runs, setRuns] = useState<AssistantRun[]>([]);
   const [events, setEvents] = useState<Record<string, AssistantEvents['items']>>({});
   const [questionDraft, setQuestionDraft] = useState({ caseId: context.caseId, text: '' });
@@ -115,7 +124,7 @@ export function AssistantDrawer({ api, ownerId }: { api: ApiClient; ownerId: str
   }
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; if (timer.current) clearTimeout(timer.current); }; }, []);
   useEffect(() => {
-    if (snapshot.open && !dialog.current?.open) { dialog.current?.showModal(); composer.current?.focus(); }
+    if (snapshot.open && !dialog.current?.open) { dialog.current?.showModal(); dialog.current?.querySelector<HTMLElement>('[data-assistant-title]')?.focus(); }
     else if (!snapshot.open && dialog.current?.open) dialog.current.close();
   }, [snapshot.open]);
   useEffect(() => {
@@ -175,6 +184,21 @@ export function AssistantDrawer({ api, ownerId }: { api: ApiClient; ownerId: str
     dialog.current?.close(); store.setOpen(false);
     requestAnimationFrame(() => { if (!store.dispatch(action, generation)) { setActionError('This action is no longer available for the current screen. Ask again after checking its saved state.'); store.setOpen(true); } });
   }
+  function closeAssistant() {
+    store.setOpen(false);
+    requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('.assistant-launcher')?.focus());
+  }
+  async function navigateWorkspace(action: WorkspaceAssistantAction) {
+    setNavigationError(''); dialog.current?.close(); store.setOpen(false);
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    try {
+      if (!await store.navigateWorkspace(action)) {
+        setNavigationError('Navigation was not completed. Your current work is still here; check the saved case or finish the active operation, then try again.'); store.setOpen(true);
+      }
+    } catch {
+      setNavigationError('This destination could not be opened. Refresh your workspace and try again.'); store.setOpen(true);
+    }
+  }
   async function copyClarification(text: string) {
     try { await navigator.clipboard.writeText(text); setNotice('Clarification draft copied. Review it before sharing it with the supplier.'); }
     catch { setNotice('Copy was unavailable. You can select and copy the draft text below.'); }
@@ -185,12 +209,18 @@ export function AssistantDrawer({ api, ownerId }: { api: ApiClient; ownerId: str
   const sendBlocked = !ownerId || !context.caseId || !context.caseRevision || context.busy || Boolean(context.unavailable) || Boolean(pending) || historyLoading || Boolean(issue);
   const pendingRun = pending && shown.find(run => run.request_key === pending.key);
   const latestEvent = pendingRun ? events[pendingRun.id]?.at(-1)?.message : null;
-  return <dialog ref={dialog} className="assistant-drawer" aria-labelledby={id + '-title'} onCancel={event => { event.preventDefault(); store.setOpen(false); }} onClose={() => store.setOpen(false)}>
+  return <dialog ref={dialog} className="assistant-drawer" aria-labelledby={id + '-title'} onCancel={event => { event.preventDefault(); closeAssistant(); }} onClose={() => { if (!dialog.current?.open) store.setOpen(false); }}>
     <div className="assistant-layout">
-      <header className="assistant-header"><div><h2 id={id + '-title'} aria-label="GreenProcure assistant"><Icon name="chat" size={21} /><span className="assistant-product-name">GreenProcure </span><span className="assistant-short-title">assistant</span></h2><p className="assistant-header-context" title={context.label} aria-label={'Current screen: ' + context.label}>{context.label}</p>{context.dirty && <span className="status-badge status-warning">Unsaved changes</span>}</div><button type="button" className="button button-secondary assistant-close" aria-label="Close assistant" onClick={() => store.setOpen(false)}><Icon name="close" size={18} /></button></header>
+      <header className="assistant-header"><div className="assistant-brand"><AgentAvatar size={44} /><div><h2 id={id + '-title'} data-assistant-title tabIndex={-1}>Luma</h2><p>GreenProcure assistant</p></div></div><button type="button" className="button button-secondary assistant-close" aria-label="Close assistant" onClick={closeAssistant}><Icon name="close" size={18} /></button></header>
+      <div className="assistant-toolbar"><button type="button" className="text-link" onClick={() => setView('team')}>Meet the team</button><button type="button" className="text-link" onClick={() => setView('context')}><Icon name="shield" size={15} />What Luma can see</button></div>
+      <div className="assistant-main-panel" hidden={view !== 'conversation'}>
+        <div className="assistant-modes" role="group" aria-label="Assistant scope"><button type="button" aria-pressed={mode === 'workspace'} onClick={() => setMode('workspace')}><Icon name="grid" size={16} />Workspace</button><button type="button" aria-pressed={mode === 'case'} onClick={() => setMode('case')}><Icon name="fabric" size={16} />Current case</button></div>
+        {navigationError && <div className="assistant-navigation-error alert warning-alert" role="alert"><p>{navigationError}</p></div>}
+        <WorkspaceNavigator key={ownerId ?? 'public'} api={api} ownerId={ownerId} visible={snapshot.open && view === 'conversation' && mode === 'workspace'} onNavigate={navigateWorkspace} />
+        <div className="assistant-case-panel" hidden={mode !== 'case'}>
       <div className="assistant-thread" ref={thread} onScroll={() => { const node = thread.current; if (node) sticky.current = node.scrollHeight - node.scrollTop - node.clientHeight < 70; }}>
-        <section className="assistant-context" aria-label="Assistant screen context"><span className="eyebrow">CURRENT SCREEN</span><strong>{context.label}</strong>{context.caseRevision && <p>Saved case revision {context.caseRevision}{context.draftRevision !== undefined && context.draftRevision !== null ? ' / Draft ' + context.draftRevision : ''}</p>}{context.dirty && <><span className="status-badge status-warning">Unsaved changes</span><p>Answers use saved records. Your unsaved field values and notes are not sent to the assistant.</p></>}{context.busy && <p>Finish or resolve the current operation before starting another assistant request.</p>}{context.unavailable && <p>{context.unavailable}</p>}</section>
-        {!context.caseId ? <section className="assistant-empty"><h3>Continue with a sourcing case</h3><p>Start a private session and create or open a case. Then I can explain saved quotation gaps, compare checked terms, or help you understand a saved buyer selection.</p><p>This is workflow guidance. No AI request has been made.</p></section> : <>
+        <section className="assistant-context assistant-current-context" aria-label="Assistant screen context"><span className="eyebrow">CURRENT CASE CONTEXT</span><strong>{context.label}</strong>{context.caseRevision && <p>Saved case revision {context.caseRevision}{context.draftRevision !== undefined && context.draftRevision !== null ? ' / Draft ' + context.draftRevision : ''}</p>}{context.dirty && <><span className="status-badge status-warning">Unsaved changes</span><p>Answers use saved records. Your unsaved field values and notes are not sent to Luma.</p></>}{context.busy && <p>Finish or resolve the current operation before starting another request.</p>}{context.unavailable && <p>{context.unavailable}</p>}</section>
+        {!context.caseId ? <section className="assistant-empty"><h3>Choose a sourcing case</h3><p>Open any case from the workspace navigator. Luma can then explain its saved quotation gaps, checked terms and buyer selections.</p><button type="button" className="button button-secondary" onClick={() => setMode('workspace')}>Browse workspace cases<Icon name="arrow" size={16} /></button></section> : <>
           <div className="assistant-prompt-list" aria-label="Suggested questions">{prompts.map(prompt => <button key={prompt} className="button button-secondary" type="button" disabled={Boolean(pending)} onClick={() => { setQuestion(prompt); composer.current?.focus(); }}>{prompt}</button>)}</div>
           {historyLoading && <p className="assistant-turn-meta" role="status">Reading saved assistant history...</p>}
           {shown.length === 0 && !historyLoading && <p className="assistant-empty">Ask about the saved evidence on this screen. The assistant can suggest where to go next; you keep control of edits, confirmation and buyer selections.</p>}
@@ -200,20 +230,24 @@ export function AssistantDrawer({ api, ownerId }: { api: ApiClient; ownerId: str
           const stale = originGenerations[run.id] !== snapshot.generation || run.is_current !== true || context.dirty || context.busy;
           return <article key={run.id} className="assistant-turn"><p className="assistant-question">{run.message}</p><p className="assistant-turn-meta">{screenLabel[run.screen]} / Case revision {run.expected_case_revision} / {statusLabel[run.status]}</p>
             {run.has_unsaved_changes && <p className="assistant-turn-meta">This answer used saved records; browser edits were not read.</p>}
-            {result && <><p className="assistant-answer assistant-message">{result.summary}</p><div className="assistant-evidence"><h3>Saved evidence for this answer</h3><dl className="assistant-facts">{result.referenced_fact_ids.map(reference => result.facts.find(fact => fact.id === reference)!).map(fact => <div key={fact.id}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>{result.facts.some(fact => !result.referenced_fact_ids.includes(fact.id)) && <details className="assistant-details"><summary>Other saved facts</summary><dl className="assistant-facts">{result.facts.filter(fact => !result.referenced_fact_ids.includes(fact.id)).map(fact => <div key={fact.id}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></details>}
+            {result && <><div className="assistant-answer-identity"><AgentAvatar size={26} /><strong>Luma</strong></div><p className="assistant-answer assistant-message">{result.summary}</p><div className="assistant-evidence"><h3>Saved evidence for this answer</h3><dl className="assistant-facts">{result.referenced_fact_ids.map(reference => result.facts.find(fact => fact.id === reference)!).map(fact => <div key={fact.id}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></div>{result.facts.some(fact => !result.referenced_fact_ids.includes(fact.id)) && <details className="assistant-details"><summary>Other saved facts</summary><dl className="assistant-facts">{result.facts.filter(fact => !result.referenced_fact_ids.includes(fact.id)).map(fact => <div key={fact.id}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}</dl></details>}
               {result.clarification_draft && <details className="assistant-details"><summary>Supplier clarification draft</summary><p className="assistant-clarification assistant-message">{result.clarification_draft}</p><button className="button button-secondary" type="button" onClick={() => { void copyClarification(result.clarification_draft!); }}>Copy clarification draft</button><p className="assistant-turn-meta">Draft only. Nothing has been sent to the supplier.</p></details>}
               {run.is_current === false && <p className="assistant-turn-meta">Saved inputs changed after this answer. Ask again using the current screen.</p>}{run.is_current === null && <p className="assistant-turn-meta">Current inputs could not be verified. This answer reflects its recorded saved state.</p>}
               {result.actions.length > 0 && <div className="assistant-actions">{stale && <p className="assistant-turn-meta">These actions belong to an earlier screen or saved state. Ask again for current actions.</p>}{result.actions.map((action, index) => <button key={index} className="button button-secondary" type="button" disabled={stale} onClick={() => activateAction(action, run)}>{action.label}<Icon name="arrow" size={16} /></button>)}</div>}
             </>}
             {run.error && <div className="alert error-alert" role="alert"><p>{run.error.message}</p></div>}
             <p className="assistant-turn-meta">{run.model_call_count} recorded model {run.model_call_count === 1 ? 'call' : 'calls'} / {run.tool_call_count} tool {run.tool_call_count === 1 ? 'call' : 'calls'}</p>
-            <details className="assistant-details" open={run.status === 'running'}><summary>Recorded assistant activity</summary>{runEvents.length ? <ol className="assistant-events">{runEvents.map(event => <li key={event.sequence}>{event.message}</li>)}</ol> : <p className="assistant-turn-meta">Activity has not been read in this view.</p>}<button type="button" className="text-link" onClick={() => { void readEvents(run); }}>Read recorded activity</button></details>
+            <details className="assistant-details" open={run.status === 'running'}><summary>Recorded assistant activity</summary>{runEvents.length ? <ol className="assistant-events">{runEvents.map(event => <li key={event.sequence}>{event.agent_name && <span className="assistant-event-agent"><AgentAvatar agent={event.agent_name} size={22} />{agentPersonas[event.agent_name].name}</span>}<span>{event.message}</span></li>)}</ol> : <p className="assistant-turn-meta">Activity has not been read in this view.</p>}<button type="button" className="text-link" onClick={() => { void readEvents(run); }}>Read recorded activity</button></details>
           </article>;
         })}
         {pending && <section className="assistant-context" aria-label="Active assistant request">{!pendingRun && pending.question && <p className="assistant-question">{pending.question}</p>}<strong>{pending.caseId === context.caseId ? 'Assistant request in progress' : 'A request for another case is unresolved'}</strong><p role="status" aria-live="polite">{latestEvent ?? 'Checking the recorded request. Closing this panel does not cancel it.'}</p><div className="assistant-recovery"><button type="button" className="button button-secondary" disabled={reading || cancelling} onClick={() => { void checkResult(); }}>{reading ? 'Checking...' : 'Check recorded result'}</button><button type="button" className="button button-secondary" disabled={cancelling} onClick={() => { void cancel(); }}>{cancelling ? 'Requesting cancellation...' : 'Cancel request'}</button></div></section>}
         {error && <div className="alert error-alert" role="alert"><p>{error}</p></div>}{actionError && <div className="alert warning-alert" role="alert"><p>{actionError}</p></div>}{notice && <div className="alert info-alert" role="status"><p>{notice}</p></div>}
       </div>
       <form className="assistant-composer" onSubmit={event => { event.preventDefault(); void ask(); }}><label htmlFor={id + '-question'}>Ask about this saved case</label><textarea ref={composer} id={id + '-question'} value={question} onChange={event => setQuestion(event.target.value)} disabled={!ownerId || !context.caseId} aria-describedby={id + '-allowance'} rows={2} /><div className="assistant-composer-footer"><p id={id + '-allowance'}>{Array.from(question.trim()).length} / 2,000<br />Uses AI allowance.</p><button className="button button-primary" type="submit" disabled={sendBlocked}>Ask assistant<Icon name="arrow" size={16} /></button></div>{question && issue && <p className="field-error">{issue}</p>}</form>
+        </div>
+      </div>
+      <section className="assistant-subview assistant-thread" hidden={view !== 'team'} aria-label="Meet the assistant team"><button type="button" className="text-link assistant-back" onClick={() => setView('conversation')}><Icon name="arrow" size={16} />Back to assistant</button><h3>Meet your sourcing team</h3><p className="assistant-subview-intro">One conversation, with focused help when your task needs it.</p><div className="assistant-team-list">{(Object.entries(agentPersonas) as [AgentPersona, typeof agentPersonas[AgentPersona]][]).map(([key, agent]) => <article className="assistant-team-card" key={key}><AgentAvatar agent={key} size={48} /><div><h4>{agent.name}<span>{agent.role}</span></h4><p>{agent.description}</p></div></article>)}</div><p className="assistant-footnote">The team uses Google agents. Specialist activity appears only when a recorded request actually calls that specialist. You review, confirm and select.</p></section>
+      <section className="assistant-subview assistant-thread" hidden={view !== 'context'} aria-label="Assistant context details"><button type="button" className="text-link assistant-back" onClick={() => setView('conversation')}><Icon name="arrow" size={16} />Back to assistant</button><h3>What Luma can see</h3><p className="assistant-subview-intro">Luma uses structured saved records across your private workspace. It does not capture your screen or browser tab.</p><dl className="assistant-scope-facts"><div><dt>Workspace navigation</dt><dd>Your saved case names, revisions and quotation, confirmation and selection counts. You can find a destination from any page.</dd></div><div><dt>Current case answers</dt><dd>Saved requirements and the quotation, comparison or selection you opened. Source references stay tied to their recorded revisions.</dd></div><div><dt>Current location</dt><dd>{context.caseId ? context.label : snapshot.workspace.screen === 'help' ? 'Workspace guide' : snapshot.workspace.screen === 'create' ? 'Create sourcing case' : 'Sourcing workspace'}{context.caseRevision ? ' / Saved revision ' + context.caseRevision : ''}</dd></div><div><dt>Your control</dt><dd>Unsaved field values are not sent. Luma can suggest navigation and saved-record actions; you remain responsible for edits, confirmation and buyer selections.</dd></div></dl>{context.dirty && <div className="alert warning-alert"><p>You have unsaved changes. Navigation keeps the existing save/discard check.</p></div>}<p className="assistant-footnote">Private access follows this browser session. Luma cannot see other users' cases or supplier accounts.</p></section>
     </div>
   </dialog>;
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 import type { ApiClient } from '../../api/client';
 import { ApiError } from '../../api/client';
-import type { AssistantAction, CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
+import type { WorkspaceAssistantAction, AssistantAction, CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
 import { QuotationIntake } from '../quotations/QuotationIntake';
 import { demoSamples, loadDemoSample } from './demoSamples';
 import { ConnectedSelections } from '../connected-selections/ConnectedSelections';
@@ -19,8 +19,9 @@ import { useAssistantScope } from '../assistant/context';
 import './connected-quotations.css';
 
 type Pending = { key: string; kind: 'upload' | 'save' | 'confirm' | 'extract'; quoteId?: string; sourceHash?: string; file?: File; revision?: number; body?: SaveDraft | ConfirmQuote | ExtractRequest };
+type QuotationAssistantTarget = AssistantAction | WorkspaceAssistantAction;
 export type QuotationNavigationGuard = ((proceed: () => void) => void) | null;
-interface Props { api: ApiClient; ownerId: string; item: CaseRead; onBack: () => void; onCaseChanged: (item: CaseRead) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>; onBusy: (busy: boolean) => void; assistantTarget?: AssistantAction | null; onAssistantTargetConsumed?: () => void }
+interface Props { api: ApiClient; ownerId: string; item: CaseRead; onBack: () => void; onCaseChanged: (item: CaseRead) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>; onBusy: (busy: boolean) => void; assistantTarget?: QuotationAssistantTarget | null; onAssistantTargetConsumed?: () => void }
 const reason = (error: unknown) => error instanceof ApiError ? `${error.message}${error.requestId ? ` Reference: ${error.requestId}.` : ''}` : 'The result could not be checked. Keep this view open and try checking the recorded state again.';
 const stale = (error: unknown) => error instanceof ApiError && ['STALE_CASE_REVISION', 'STALE_DRAFT_REVISION', 'SOURCE_REFERENCE_CHANGED'].includes(error.code);
 const uncertain = (error: unknown) => !(error instanceof ApiError) || error.outcomeUnknown;
@@ -67,7 +68,7 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [selectionView, setSelectionView] = useState<{ source: SelectionSource | null; savedId?: string } | null>(() => !pending && readSelectionAttempt(ownerId, item.id) ? { source: null } : null);
   const reviewNavigation = useRef<ReviewNavigation>(null);
-  const consumedAssistantTarget = useRef<AssistantAction | null>(null);
+  const consumedAssistantTarget = useRef<QuotationAssistantTarget | null>(null);
   const [comparisonRefresh, setComparisonRefresh] = useState(0);
   const [selectionBusy, setSelectionBusy] = useState(false);
   const selectionNavigation = useRef<QuotationNavigationGuard>(null);
@@ -338,7 +339,7 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
     setSelected(conflict); setSaved(latest); setDraft(next); setConflict(null); setShowConflict(false); setOperation({ status: 'idle' }); setNotice(keep ? 'Your edits were reapplied to the current draft. Review the fields again, save, then explicitly confirm.' : 'Your local edits were discarded and the current saved draft is displayed.');
   }
   function requestLeave(proceed: () => void) { navigationGuardRef.current?.(proceed); }
-  function assistantAction(action: AssistantAction) {
+  function assistantAction(action: QuotationAssistantTarget) {
     if (action.case_id !== item.id || action.expected_case_revision !== Math.max(item.data_revision, collection?.case_data_revision ?? 0, selected?.case_data_revision ?? 0)) return false;
     if (action.kind === 'open_intake') {
       // The existing guard first resolves pending operations and asks about any unsaved
@@ -357,6 +358,8 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
         void openReview(action.quote_id).then(() => { if (action.field_path) requestAnimationFrame(() => reviewNavigation.current?.focusField(action.field_path!)); });
       } else if (action.kind === 'open_comparison') {
         setSelected(null); setDraft({}); setSaved({}); setSelectionView(null); setComparisonOpen(true); setComparisonRefresh(value => value + 1);
+      } else if (action.kind === 'open_history') {
+        setSelected(null); setDraft({}); setSaved({}); setComparisonOpen(false); setSelectionView({ source: null });
       } else if (action.kind === 'open_selection' && action.selection_id) {
         setSelectionView({ source: null, savedId: action.selection_id });
       }

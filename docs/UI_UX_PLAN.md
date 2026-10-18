@@ -14,6 +14,14 @@ by a hosted flow using real Gemini, human confirmation, comparison, saved select
 real assistant answer. Carbon estimates/ranking, scenarios, enterprise/supplier access,
 private invitations and component BOM sourcing remain future product scope.
 
+**Next increment, locally verified:** Luma's floating launcher is available across the app.
+The Workspace view reads the private saved-case catalog and offers direct/AI-assisted navigation;
+Current case preserves precise saved-record help. Luma, Quill and Sage have distinct SVG marks.
+Team/context details share the accessible assistant dialog. Screen capture is not used, and
+unsaved values are not sent. All existing edit, confirmation and recovery controls remain in
+charge. The user approved release from `feat/luma-workspace-assistant` on 19 October;
+implementation verification is complete and deployment verification remains pending.
+
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
 

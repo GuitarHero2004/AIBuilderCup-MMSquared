@@ -13,6 +13,8 @@ Missing App Check and another owner's access were rejected on the tested compari
 reads. The approved reduced demo is ready to record. Carbon estimates/ranking, scenarios,
 enterprise/supplier accounts, private invitations and component BOM sourcing remain deferred.
 Video, deck and submission acceptance remain separate from this application verification.
+The Luma workspace-assistant increment is locally verified on its separate branch.
+The user approved commit, push, merge and deployment on 19 October; hosted verification is pending.
 Dated entries preserve earlier evidence; later entries supersede their then-current blockers.
 
 | Area | Current status | Evidence / remaining work |
@@ -31,6 +33,59 @@ Dated entries preserve earlier evidence; later entries supersede their then-curr
 | ADK coordinator and specialists | Contextual assistant deployed; real hosted selection explanation passed | Coordinator delegated to Sourcing Specialist and read saved context: four model calls, two tool calls. PDF extraction retains its direct Gemini adapter |
 | Carbon references | Not supplied/approved | No carbon estimate, score or environmental claim is available |
 | Submission readiness | Approved reduced app workflow ready to demonstrate | Narrated video under three minutes, public-source permission, deck and submission acceptance remain separate gates |
+
+## Luma across the workspace - 18 October 2026 (release approved 19 October)
+
+- User requested named agents/icons, a floating launcher, richer assistant interaction and
+  access from Home/Help to the whole private platform. Fresh `dev` was pulled; branch
+  `feat/luma-workspace-assistant` was created and immediately published at deployed baseline
+  `4c4d8b6`. The user approved functional commits, push, merge and deployment on 19 October.
+  Hosted release verification will be recorded after deployment.
+- Names and code-native SVG marks: Luma (coordinator/workspace assistant), Quill (quotation
+  specialist), Sage (sourcing specialist). Existing backend specialist identifiers stay stable;
+  their display names/icons appear alongside actual recorded activity only.
+- The globally mounted floating launcher opens one accessible dialog. Workspace and Current
+  case views preserve their respective request/recovery state. Team and context subviews use
+  the same dialog, with back controls and focus restoration. Help introduces the new workflow.
+- Workspace context is server-read, owner-scoped saved case names/revisions and quotation,
+  confirmation and selection counts. It is independent of which page is open. It is not a
+  screenshot or unrestricted access to other users, unsaved form values or supplier accounts.
+- Four authenticated routes provide the workspace snapshot, bounded navigation request,
+  exact-key readback and cancellation. Google ADK reads the authorized workspace and selects
+  only server-defined destination IDs. The server renders summaries/actions; the model cannot
+  invent URLs, authorize a case, modify records or approve a purchase.
+- Shared model quotas, owner/global leases, kill switch, source fingerprints, bounded model
+  calls and timeout/cancellation protect navigation requests. Unknown outcomes recover by the
+  same request key without another paid request. Existing case-assistant lifecycle is preserved.
+- Navigation reaches requirements, quotations, comparison and existing saved-selection history
+  in any owned case, plus workspace, Help and case creation. Case reads must match the requested
+  ID/revision. Pending saves/uploads block navigation; dirty requirements/reviews use existing
+  discard guards. Same-case quotation navigation invokes that guard once.
+- Working backwards from the requested outcome: actual Home and Help requests must discover
+  another case and reach its destination, without losing edits or changing saved procurement
+  data. Browser checks exercise those paths, unavailable slots, stale actions and owner isolation.
+- Full `npm run check` passed: lint/typecheck, 31 frontend tests, production build, Ruff/format,
+  69 backend tests with three existing opt-in skips, and generated API contract equivalence.
+  The existing route-contract assertion was updated for the four new routes; no new test files
+  or inputs were added to Git. Known bundle-size/test-client warnings remain non-blocking.
+- Private verification: nine backend lifecycle/installed-ADK groups and eleven client response/
+  navigation guard groups passed. Local browser verification passed **41 groups**, with zero
+  browser exceptions: nine workspace groups, 22 sourcing/case-assistant regressions, six viewport/
+  text-size groups, two footer/limit groups and two busy/uncertain operation checks. These use
+  real Auth/Firestore/Storage emulators with explicitly injected no-network AI doubles.
+- Visual review inspected normal desktop/mobile, team/context panels, case catalog and source
+  review. At 320px/200% text, the panel and composer now scroll fully into reach. The launcher
+  no longer obscures the footer. Encoding artifacts and a duplicate discard prompt were fixed.
+  Final affected frontend lint/typecheck, backend adapter lint and diff checks passed.
+- One real Google ADK adapter request passed with synthetic in-memory Case A/Case B context:
+  from Help, it selected Case B's quotation destination using two model generations and one
+  actual `read_saved_workspace` call in 2.77 seconds. Prompt `workspace_navigation_adk_v1`.
+  This verifies the live provider, not a hosted release of the new routes. No production business
+  records were read or written. No credentials were persisted.
+- Preview: `http://localhost:5175`; API 8002 is isolated from the earlier local demo helpers.
+  Private tests/reports/screenshots remain in OS TEMP. Hosted app remains the prior verified
+  assistant/UI release recorded below. The user approved implementation commits, push, merge and deployment on 19 October;
+  the initial remote branch publication is already complete.
 
 ## Hosted assistant and workspace release - 18 October 2026
 

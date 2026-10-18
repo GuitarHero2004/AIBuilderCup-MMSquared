@@ -33,6 +33,19 @@ Use the [connected quotation contract](docs/QUOTATION_LIVE_CONTRACT.md) for impl
 the [Firebase and live setup guide](docs/LIVE_QUOTATION_SETUP.md) for configuration, and the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md) for executed checks and remaining gates.
 
+## Luma workspace assistant - release approved
+
+`feat/luma-workspace-assistant` adds Luma, Quill and Sage with distinct icons, a floating
+launcher, workspace navigation from Home/Help or any case, and team/context dialog views.
+Workspace questions read the current owner's saved case catalog and propose verified routes;
+current-case questions retain detailed saved-record help. No screenshot capture or unsaved
+field values are sent. Existing save/discard and operation-recovery guards still apply.
+
+Full project checks and 41 private local browser groups passed. One bounded live Google ADK
+navigation check also passed using synthetic in-memory context. The user approved committing, pushing, merging and deploying these Luma changes on
+19 October; the hosted release above remains the last verified release until verification completes. The local preview
+uses real Firebase emulators and explicit no-network AI doubles.
+
 ## Local quick start
 Install Node.js 24 (npm 11 or 12), Python 3.12 and Java 21+ first; Java 22 was used locally.
 Set `JAVA_HOME` to the installed JDK directory. Local scripts prefer its `bin` directory;
@@ -126,7 +139,7 @@ and isolated Firestore tests, six browser workflow groups and the full branch ch
 The successful hosted journey and release evidence are recorded in the
 [verification ledger](docs/IMPLEMENTATION_STATUS.md).
 
-## Contextual assistant (feature branch; not deployed)
+## Contextual assistant (deployed)
 
 **Ask GreenProcure** opens one persistent drawer across the working screens. With a selected
 case, it explains saved requirements, quotation review gaps, confirmed cost/delivery checks,
