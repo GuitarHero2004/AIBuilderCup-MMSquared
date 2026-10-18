@@ -78,3 +78,5 @@
   .cc-row { grid-template-columns: minmax(0, 1fr); padding: var(--ui-space-4); }
   .cc-actions .button, .cc-actions .text-link { width: 100%; }
 }
+
+.cc-actions .text-link + .button { margin-top: var(--ui-space-2); }

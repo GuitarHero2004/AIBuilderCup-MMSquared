@@ -1,5 +1,6 @@
-import type { CaseCreate, CaseList, CaseRead, CaseComparison, QuoteList, QuoteRead, MutationReceipt, OperationRead, SaveDraft, ConfirmQuote, ExtractRequest, RunRead, RunEvents, CloseOperation, OperationResolution } from './types';
+import type { CaseCreate, CaseList, CaseRead, CaseComparison, SelectionCreate, SelectionOperation, SelectionRead, SelectionList, QuoteList, QuoteRead, MutationReceipt, OperationRead, SaveDraft, ConfirmQuote, ExtractRequest, RunRead, RunEvents, CloseOperation, OperationResolution } from './types';
 import { isCaseList, isCaseRead } from './response';
+import { isSelectionList, isSelectionOperation, isSelectionRead } from '../features/connected-selections/response';
 import { isCaseComparison } from '../features/connected-comparison/response';
 import { isQuoteList, isQuoteRead, isMutationReceipt, isOperationRead, isRunRead, isRunEvents, isOperationResolution } from '../features/connected-quotations/response';
 
@@ -55,6 +56,11 @@ export function createApiClient(baseUrl: string, authHeaders: () => Promise<Reco
     getCase: (caseId: string) => request<CaseRead>(casePath(caseId), 'GET', isCaseRead),
     createCase: (input: CaseCreate) => request<CaseRead>('/api/v1/cases', 'POST', isCaseRead, { body: input, cases: true }),
     getComparison: (caseId: string) => request<CaseComparison>(`${casePath(caseId)}/comparison`, 'GET', (value): value is CaseComparison => isCaseComparison(value) && value.case_id === caseId),
+    listSelections: (caseId: string) => request<SelectionList>(casePath(caseId) + '/selections', 'GET', (value): value is SelectionList => isSelectionList(value) && value.case_id === caseId),
+    saveSelection: (caseId: string, body: SelectionCreate, key: string) => request<SelectionOperation>(casePath(caseId) + '/selections', 'POST', (value): value is SelectionOperation => isSelectionOperation(value) && value.case_id === caseId && value.request_key === key, { body, key }),
+    getSelection: (caseId: string, selectionId: string) => request<SelectionRead>(casePath(caseId) + '/selections/' + encodeURIComponent(selectionId), 'GET', (value): value is SelectionRead => isSelectionRead(value) && value.selection.case_id === caseId && value.selection.id === selectionId),
+    getSelectionOperation: (caseId: string, key: string) => request<SelectionOperation>(casePath(caseId) + '/selection-operations/' + encodeURIComponent(key), 'GET', (value): value is SelectionOperation => isSelectionOperation(value) && value.case_id === caseId && value.request_key === key),
+    cancelSelectionOperation: (caseId: string, key: string) => request<SelectionOperation>(casePath(caseId) + '/selection-operations/' + encodeURIComponent(key) + '/cancel', 'POST', (value): value is SelectionOperation => isSelectionOperation(value) && value.case_id === caseId && value.request_key === key),
     listQuotes: (caseId: string) => request<QuoteList>(`${casePath(caseId)}/quotes`, 'GET', isQuoteList),
     getQuote: (caseId: string, quoteId: string) => request<QuoteRead>(quotePath(caseId, quoteId), 'GET', isQuoteRead),
     uploadQuote: (caseId: string, file: File, revision: number, key: string) => {
