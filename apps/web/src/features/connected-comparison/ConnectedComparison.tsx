@@ -68,6 +68,9 @@ function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview,
   useEffect(() => { heading.current?.focus(); }, []);
   const outdated = result !== null && result.case_data_revision < minimumRevision;
   const requirement = result?.requirement;
+  const tradeoff = result?.tradeoff_summary;
+  const cheaper = tradeoff ? result?.rows.find(row => row.quote_id === tradeoff.cheaper_quote_id) : null;
+  const faster = tradeoff ? result?.rows.find(row => row.quote_id === tradeoff.faster_quote_id) : null;
   return <section className="connected-comparison" aria-labelledby={headingId}>
     <header className="cc-heading">
       <button className="button button-secondary" type="button" disabled={busy} onClick={onBack}>Back to quotations</button>
@@ -80,6 +83,16 @@ function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview,
     {outdated && !error && <div className="alert warning-alert" role="status"><div><strong>The saved inputs have changed</strong><p>The result below belongs to an earlier case revision. Refresh before using it.</p></div></div>}
     {loading && <p className="loading-line" role="status"><span className="spinner" />{result ? 'Checking saved inputs again. The previous result remains visible.' : 'Reading confirmed quotations and checking their requirements…'}</p>}
     {result && requirement && <>
+      {tradeoff && cheaper && faster && !loading && !error && !outdated && <section className="panel cc-tradeoff" aria-label="Cost and delivery trade-off">
+        <p className="eyebrow">YOUR PROCUREMENT TRADE-OFF</p><h2>{tradeoff.delivery_days_saved} {tradeoff.delivery_days_saved === 1 ? 'day' : 'days'} earlier for {tradeoff.currency} {displayDecimal(tradeoff.additional_cost_amount)} more</h2>
+        <p>Both offers meet the checked requirements. Choose the balance of cost and delivery that fits this order.</p>
+        <div className="cc-tradeoff-options">{[{ row: cheaper, label: 'Lower cost' }, { row: faster, label: 'Earlier delivery' }].map(({ row, label }) => <div key={row.quote_id}>
+          <span className="cc-tradeoff-label">{label}</span><h3>{row.supplier_name ?? row.source_name}</h3>
+          <p><strong>{row.metrics.currency} {displayDecimal(row.metrics.comparable_cost_amount!)}</strong><span>{row.metrics.end_to_end_lead_time_days} calendar days</span></p>
+          <button type="button" className="button button-secondary" disabled={busy} aria-label={'Review this choice: ' + (row.supplier_name ?? row.source_name)} onClick={() => onSelect({ comparison: structuredClone(result), quoteId: row.quote_id })}>Review this choice<Icon name="arrow" size={16} /></button>
+        </div>)}</div>
+        <p className="cc-secondary">Calculated from confirmed terms on the same cost basis. This comparison does not establish a carbon benefit.</p>
+      </section>}
       <section className="panel cc-context" aria-label="Requirements used for these checks">
         <div className="cc-section-heading"><h2>Requirements used</h2><p>Case revision {result.case_data_revision} · Checked <time dateTime={result.checked_at}>{dateLabel(result.checked_at, true)}</time></p></div>
         <dl className="cc-requirements">

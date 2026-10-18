@@ -43,3 +43,11 @@
   .connected-selections h1 { font-size: 1.666667rem; }
   .cs-actions .button, .cs-history .button { width: 100%; }
 }
+
+.cs-outcome { padding-block: var(--ui-space-3); margin-bottom: var(--ui-space-5); border-bottom: 1px solid var(--border); }
+.cs-outcome h3 { font-size: 1.333333rem; overflow-wrap: anywhere; }
+.cs-outcome dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-5); margin-block: var(--ui-space-4); }
+.cs-outcome dl > div { min-width: 0; }
+.cs-outcome dt { color: var(--secondary); font-size: var(--ui-text-small); margin-bottom: var(--ui-space-2); }
+.cs-outcome dd { font-size: 1.333333rem; font-weight: 600; margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 540px) { .cs-outcome dl { grid-template-columns: minmax(0, 1fr); } }

@@ -80,3 +80,14 @@
 }
 
 .cc-actions .text-link + .button { margin-top: var(--ui-space-2); }
+
+.cc-tradeoff { padding: var(--ui-space-6); border-top: 3px solid var(--primary); }
+.cc-tradeoff h2 { font-size: 1.6rem; margin-bottom: var(--ui-space-2); }
+.cc-tradeoff > p:not(.eyebrow) { color: var(--secondary); }
+.cc-tradeoff-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-5); margin-block: var(--ui-space-5); }
+.cc-tradeoff-options > div { min-width: 0; padding: var(--ui-space-4); background: #f5f9f6; border: 1px solid var(--border); border-radius: var(--ui-radius-control); }
+.cc-tradeoff-label { display: block; color: var(--secondary); font-size: var(--ui-text-small); margin-bottom: var(--ui-space-2); }
+.cc-tradeoff-options h3 { overflow-wrap: anywhere; }
+.cc-tradeoff-options p { display: flex; flex-wrap: wrap; gap: var(--ui-space-2) var(--ui-space-5); margin-block: var(--ui-space-3); font-variant-numeric: tabular-nums; }
+.cc-tradeoff-options .button { max-width: 100%; }
+@media (max-width: 650px) { .cc-tradeoff { padding: var(--ui-space-4); } .cc-tradeoff-options { grid-template-columns: minmax(0, 1fr); } .cc-tradeoff h2 { font-size: 1.333333rem; } }
