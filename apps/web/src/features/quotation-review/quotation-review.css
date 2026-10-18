@@ -208,3 +208,7 @@
   .qr-cited-heading > .qr-cited-value { flex-basis: 100%; }
   .qr-cited-heading > .qr-cited-actions { width: 100%; justify-content: space-between; }
 }
+
+@media (min-width: 901px) and (min-height: 600px) {
+  .qr-source-pane { max-height: calc(var(--workspace-scroll-height, 100dvh) - var(--ui-space-5) * 2); scrollbar-gutter: stable; }
+}
