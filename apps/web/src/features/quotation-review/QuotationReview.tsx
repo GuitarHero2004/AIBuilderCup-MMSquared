@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useImperativeHandle, useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { hasFieldEvidence, reviewPresentation } from './model';
 import type { QuotationReviewProps, ReviewDraftField, ReviewField, ReviewGroup } from './types';
@@ -96,6 +96,8 @@ export function QuotationReview(props: QuotationReviewProps) {
       requestAnimationFrame(() => citedCards.current[fieldId]?.focus());
     } else focusField(fieldId);
   }
+
+  useImperativeHandle(props.navigationRef, () => ({ focusField: returnToField }));
 
   function showSource(fieldId: string) {
     setSelectedId(fieldId);

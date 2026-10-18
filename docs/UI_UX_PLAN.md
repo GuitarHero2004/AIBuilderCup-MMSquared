@@ -1,16 +1,20 @@
 # GreenProcure — user flows and screen plan
 
-**Updated:** 17 October 2026.
+**Updated:** 18 October 2026.
 
-**Current status:** case workspace, quotation intake, review, comparison and scenario UI
-are integrated into `dev`. Decision review and immutable-summary UI plus a proposed API handoff
-are locally verified and committed on `feat/ui-decision-summary`; implementation has not been pushed. Backend evaluation, durable decisions and the
-connected sourcing journey remain pending; synthetic walkthroughs do not complete FR-18 acceptance.
+**Current status:** the guided quotation-to-saved-selection flow is deployed and verified.
+The implementation ledger records its exact release and remaining scope. Carbon estimates,
+ranking and scenarios are not connected product capabilities. The contextual assistant is
+implemented on `feat/contextual-assistant`, from `dev` at `6b3a053`. Local workflow checks,
+backward review and two live ADK adapter checks passed; the verification ledger records
+their boundaries. The user approved functional commits, push and checked PR merge. It is not deployed.
 
-**Current branch baseline:** `dev` at `fa874ead76ea28e5c0f9907298d14852ab17e410`,
-including scenario PR #4 after all three GitHub checks passed. The decision branch was published
-at that baseline before development. Its implementation is now committed locally following user review.
-Work stays in the single canonical checkout.
+**Next separate milestone requested by the user:** general workspace UI refinement after
+this assistant increment. Keep the desktop navigation column visible, scroll the selected
+content area independently, make Help a practical task guide, and align the Refresh/Create
+sourcing case controls and related page actions. Preserve navigation guards, keyboard focus,
+mobile usability and enlarged-text layouts. Do not combine these layout changes with the
+assistant feature branch.
 
 **Original planning baseline:** 14 October 2026, `feat/ui-workspace`, freshly fetched `dev`
 at `bb31efe3008f9f8bbad32a7d40bc509bfd870509`.
@@ -22,9 +26,10 @@ decision. This document completes the first UI planning task: navigation, screen
 actions, transitions and recovery states. The linked design package covers visual tokens
 and wireframes; implementation proceeds in small reviewed increments.
 
-Minh is taking the lead on user flows and UI/UX. Backend/database work is expected to be
-coordinated with Mạnh; this document does not claim his availability or assign unagreed work.
-AI integration and release responsibilities still need an explicit owner.
+Minh owns product decisions and review. As of 18 October, Mạnh remains a registered team
+member but is unavailable; the user has authorized the coding assistant to implement the
+backend, database and Google integration as well as the UI. This does not assign new work
+to Mạnh. Commit, release and scope decisions retain the user's agreed review boundaries.
 
 The visual reference is the [BeyondPilot admin](https://beyondpilot.ai/admin) screenshots supplied in the conversation:
 light sidebar, white content area, clear page headings, restrained borders, searchable
@@ -41,7 +46,10 @@ P0 covers one material line, at most four quotations per case and a private anon
 It does not add organisation administration, a supplier directory, inventory, purchase
 orders, email sending, payments, gamification, risk scoring or PDF export.
 
-## 2. Existing foundation versus planned experience
+## 2. Original planning foundation (14 October 2026)
+
+The table below is historical context from the first UI planning task. Use the current
+status above and the implementation ledger for what is implemented and deployed today.
 
 | Capability | Verified in the current source | Planning boundary |
 |---|---|---|
@@ -143,6 +151,94 @@ the scenario branch adds no agent code, launcher or nonfunctional placeholder.
 The first agent milestone needs an agreed context/tool contract, owner and live integration
 plan. It must show an authorized action and its recovery end to end, rather than only a chat
 panel. This direction does not change the comparison milestone's backend scope.
+
+### First contextual assistant increment - implementation scope
+
+The assistant has one persistent entry in the app shell and a contextual right drawer
+(full-screen on a narrow display). It names the active case, workflow step and saved-state
+boundary. It preserves the underlying workflow and uses existing navigation guards.
+Without a selected case it offers ordinary workflow guidance; it does not pretend that an
+AI request has run. Screen changes update bounded local context rather than sending every
+keystroke to a model.
+
+The backend uses actual Google ADK coordinator/specialist calls inside the existing service.
+The first useful outcomes are saved quotation review guidance, a copyable supplier
+clarification draft, explanations of current confirmed cost/delivery checks, and explanations
+of an immutable saved buyer selection. Existing deterministic services own facts and amounts.
+Allowed action cards open the relevant existing workflow or refresh checks. No tool marks
+fields reviewed, confirms quotations, saves a buyer selection, sends messages, or writes
+arbitrary data. Extraction remains its existing separate explicit operation.
+
+Each request has an owner-scoped persisted identity, bounded model/tool work, actual activity
+events, explicit cancellation and recorded-state recovery. The first transport uses a
+bounded POST plus polling of recorded events; that is live activity, not token streaming or
+a background-job guarantee. Every nested generation counts against shared AI limits.
+Results retain their source revisions; context changes invalidate actions. Saved-record
+explanations must not silently incorporate local unsaved edits.
+
+Acceptance works backwards from a buyer asking what blocks progress, inspecting the stated
+evidence, opening the correct existing screen, and continuing the normal reviewed workflow.
+Checks include another owner's access, changed revisions, prompt injection, forbidden actions,
+model-call limits, repeated clicks, cancellation/interruptions, context switching, keyboard
+focus, narrow screens and enlarged text. Test inputs and screenshots stay in OS temp.
+
+### Following workspace UI increment - agreed direction
+
+- Keep the desktop sidebar and top navigation stable while the selected content area scrolls.
+  Changing tabs changes content and active navigation, with deliberate scroll/focus handling.
+  On small screens, use a compact accessible navigation arrangement rather than shrinking
+  a permanent desktop column into the working area.
+- Make **Create sourcing case** the clear primary page action. Place **Refresh cases** next
+  to the saved-case list it updates, with consistent button height, spacing and loading state.
+  Audit other headings so broad flex rules do not stretch or misalign their action groups.
+- Rename the Help destination to a plain user guide and lead with the actual sequence:
+  create requirements, add PDFs, review and confirm, compare, save and reopen a choice.
+  Explain where to click, what each step produces, and how to resolve common blockers.
+  Keep detailed comparison assumptions and demo limits in secondary expandable sections.
+- Verify sidebar position at the top and bottom of long pages, selected navigation, content
+  scrolling, mobile/short-height layouts, 200% text, unsaved-navigation protection, and the
+  assistant drawer if this increment is later integrated with the assistant branch.
+
+### Product expansion requested - buyer/supplier workspaces and product materials
+
+The user requested two product experiences on 18 October: enterprise staff sourcing materials,
+and external suppliers responding to sourcing requests. This is future scope; the current
+anonymous private demo does not provide enterprise memberships or supplier access.
+
+Recommended buyer flow: define the finished product/style and order quantity, add its bill of
+materials (BOM), select the components to source, publish a request for quotation (RFQ), review
+supplier responses per component, compare eligible offers, and record the chosen supplier(s).
+Keep direct single-material sourcing available for a buyer who already has the specifications.
+The current fabric case can later be one sourcing line beneath a product order.
+
+Recommended supplier flow: authenticate, open an authorized published RFQ, review the shared
+component specifications/deadline, quote the lines the supplier can supply, attach supporting
+PDFs, submit, and revise through an explicit versioned submission workflow. Internal budgets,
+review notes and competing supplier offers are not part of the supplier-visible RFQ. A route or
+client role selector is not authorization: server-side organization membership, request access,
+file access and quote ownership must enforce each boundary. The user selected private
+invitations for the first release; public discovery remains outside this milestone.
+
+A product BOM lists the specified quantity and unit for each component needed for a finished
+product, with variant-specific requirements where relevant. This follows the standard BOM
+concept described in [Odoo's component/variant documentation](https://www.odoo.com/documentation/20.0/applications/inventory_and_mrp/manufacturing/management/bill_configuration.html).
+For the proposed T-shirt example, potential lines include main fabric, neck ribbing, sewing
+thread, brand/size/care labels, hangtag and packaging. Interlining, buttons and hangers are
+optional requirements of the actual product, not universal defaults. The 65/35 polyester/cotton
+blend belongs to the applicable fabric specification; it must not silently describe every
+component or the whole finished garment.
+
+Record garment quantity in pieces separately from each component's sourcing quantity and unit
+(metres, kilograms, pieces or another supported unit). Per-garment consumption, size/color
+breakdown, agreed waste allowance, pack size and MOQ need explicit inputs before deriving a
+purchase quantity. Do not invent consumption from garment count or composition. Show net
+requirement, allowance and intended purchase quantity separately; extra MOQ purchasing is an
+explicit decision and differs from the current single-fabric comparison rules.
+
+Implement in independent milestones after the assistant and workspace refinement: first
+organization identity/membership and RFQ visibility, then product/BOM and sourcing lines, then
+supplier submission/versioning and line-based comparison. Update the PRD, schema and migration
+plan before changing the live owner-scoped business model. This plan does not implement a schema migration, new account role, public listing or supplier notification.
 
 ## 4. Screen specifications
 

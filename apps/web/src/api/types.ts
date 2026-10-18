@@ -31,3 +31,11 @@ export type SelectionOperation = components['schemas']['SelectionOperation'];
 export type SelectionList = components['schemas']['SelectionList'];
 export type SelectionRecord = Omit<components['schemas']['SelectionRecord'], 'comparison_snapshot'> & { comparison_snapshot: CaseComparison };
 export type SelectionRead = Omit<components['schemas']['SelectionRead'], 'selection'> & { selection: SelectionRecord };
+
+export type AssistantRequest = components['schemas']['AssistantRequest'];
+export type AssistantAction = Required<components['schemas']['AssistantAction']>;
+export type AssistantResult = Omit<Required<components['schemas']['AssistantResult']>, 'actions' | 'facts'> & { actions: AssistantAction[]; facts: Required<components['schemas']['AssistantFact']>[] };
+export type AssistantRun = Omit<Required<components['schemas']['AssistantRun']>, 'result'> & { result: AssistantResult | null };
+export type AssistantEvents = Omit<components['schemas']['AssistantEvents'], 'items'> & { items: Required<components['schemas']['AssistantEvent']>[] };
+export type AssistantRunList = Omit<components['schemas']['AssistantRunList'], 'items'> & { items: AssistantRun[] };
+export type AssistantCancellation = Required<components['schemas']['AssistantCancellation']>;

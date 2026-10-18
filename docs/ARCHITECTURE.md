@@ -154,6 +154,43 @@ Error contract example:
 Suggested status mapping: 401 auth; 403 App Check; 404 owner-scoped not found; 409 stale/active run; 413 size;
 422 bad data; 429 quota; 502 provider/invalid response; 504 timeout. Do not leak other user IDs.
 
+### First contextual assistant implementation (18 October feature branch)
+
+The full contracts above remain the target architecture. The first assistant increment is a
+bounded saved-record assistant implemented separately from direct PDF extraction. It uses
+Google ADK `2.12.0` in the same FastAPI process with `AgentTool`; the coordinator invokes one
+appropriate Quotation or Sourcing Specialist, which reads authorized saved context. The
+provider selects typed fact IDs/focus/missing-field references. Server rendering owns displayed
+amounts, statuses, clarification wording and action targets. It has no business-write tool.
+
+| Implemented route under `/api/v1/cases/{case_id}` | Purpose |
+|---|---|
+| `POST /assistant-runs` | Await a bounded authenticated turn with an idempotency key |
+| `GET /assistant-runs` | Read at most the latest 20 case-scoped turns |
+| `GET /assistant-runs/{run_id}` | Read a result with current-input status |
+| `GET /assistant-runs/{run_id}/events` | Read actual safe recorded activity |
+| `GET /assistant-operations/{request_key}` | Recover the exact submitted attempt |
+| `POST /assistant-operations/{request_key}/cancel` | Cancel or close an unresolved attempt |
+
+The browser polls recorded events while the original POST stays active; token streaming is
+not implemented in this increment. The request ends after completion, cancellation, disconnect
+or its 120-second deadline. Firestore holds `assistant_runs`, `assistant_operations` and a
+bounded `assistant_state/index` below the existing owner-scoped case. Each ADK invocation uses
+a fresh in-memory session reconstructed from authoritative current facts and at most two
+completed, same-scope prior turns. In-memory state is not durable business storage.
+
+The current bounds are six model generations, eight tool calls and two specialist delegations.
+Before each actual generation, a transaction counts shared visitor/global daily use and
+checks the existing kill switch and active-run lease. Provider retries are disabled. Completed
+answers retain source fingerprints; changed inputs invalidate actions and are rechecked before
+an answer is persisted. Human-only confirmation/selection endpoints remain outside the tools.
+
+The React drawer lives above individual views. Child screens publish typed record references,
+saved revisions, busy/dirty flags and context generations. Browser context is a navigation hint;
+server reads establish authority. Unsaved values are not sent. Action cards call existing
+navigation guards and field-focus handlers rather than inventing arbitrary routes or DOM clicks.
+Current actions open quotation intake/review, refresh comparison, or reopen a saved selection.
+
 ## 7. Streaming and execution lifecycle
 Use authenticated `fetch` streaming (NDJSON or equivalent) for an agent run. Avoid native
 EventSource assumptions about attaching a bearer header. Keep model/tool work inside the

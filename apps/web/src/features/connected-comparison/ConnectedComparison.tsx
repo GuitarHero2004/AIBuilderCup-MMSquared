@@ -4,6 +4,7 @@ import { ApiError } from '../../api/client';
 import type { CaseComparison, CaseRead } from '../../api/types';
 import type { SelectionSource } from '../connected-selections/recovery';
 import { Icon } from '../../components/Icon';
+import { useAssistantScope } from '../assistant/context';
 import './connected-comparison.css';
 
 interface Props {
@@ -67,6 +68,10 @@ function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview,
   function refresh() { setLoading(true); setError(null); void readComparison(); }
   useEffect(() => { heading.current?.focus(); }, []);
   const outdated = result !== null && result.case_data_revision < minimumRevision;
+  useAssistantScope({ screen: 'comparison', label: item.name + ' / Confirmed comparison', caseId: item.id, caseRevision: result?.case_data_revision ?? minimumRevision, inputFingerprint: result?.input_fingerprint, dirty: false, busy: busy || loading, unavailable: error ?? (outdated ? 'Refresh the comparison before asking about its current terms.' : undefined) }, 20, result?.checked_at ?? '', action => {
+    if (action.kind !== 'open_comparison' || action.case_id !== item.id) return false;
+    refresh(); return true;
+  });
   const requirement = result?.requirement;
   const tradeoff = result?.tradeoff_summary;
   const cheaper = tradeoff ? result?.rows.find(row => row.quote_id === tradeoff.cheaper_quote_id) : null;

@@ -3,7 +3,7 @@ import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import type { AppConfig } from '../config/environment';
 import type { SessionServices } from '../auth/firebase';
-import type { CaseCreate, CaseRead } from '../api/types';
+import type { AssistantAction, CaseCreate, CaseRead } from '../api/types';
 import { ApiError } from '../api/client';
 import { AppShell } from '../components/AppShell';
 import type { WorkspaceView } from '../components/AppShell';
@@ -16,10 +16,13 @@ import { demoDefaults } from '../features/cases/form';
 import type { CaseFormValues } from '../features/cases/form';
 import { SessionBoundary } from '../auth/sessionBoundary';
 import { Help } from './Help';
+import { AssistantProvider } from '../features/assistant/AssistantProvider';
+import { AssistantScope } from '../features/assistant/AssistantScope';
 import { ConnectedQuotations } from '../features/connected-quotations/ConnectedQuotations';
 import type { QuotationNavigationGuard } from '../features/connected-quotations/ConnectedQuotations';
 
 export function App({ config, services }: { config: AppConfig; services: SessionServices }) {
+  const [assistantTarget, setAssistantTarget] = useState<AssistantAction | null>(null);
   const quotationNavigation = useRef<QuotationNavigationGuard>(null);
   const [quotationBusy, setQuotationBusy] = useState(false);
   const [view, setView] = useState<WorkspaceView>('workspace');
@@ -50,14 +53,14 @@ export function App({ config, services }: { config: AppConfig; services: Session
   useEffect(() => onAuthStateChanged(services.auth, (currentUser) => {
     sessionBoundary.current.enter(currentUser?.uid ?? null);
     savingRequest.current = null;
-    setQuotationBusy(false); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
+    setAssistantTarget(null); setQuotationBusy(false); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
     setDraft(null); setInitialDraft(null); setPendingView(null); setView('workspace');
     setSaving(false); setSaveError(null); setUncertain(false); setReconciled(false);
     setNotice(''); setLoadError(null);
     setUser(currentUser); setAuthReady(true); setAuthError(null);
   }, () => {
     sessionBoundary.current.enter(null); savingRequest.current = null;
-    setUser(null); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
+    setAssistantTarget(null); setUser(null); setCases([]); setSelected(null); setLoaded(false); setLoading(false);
     setDraft(null); setInitialDraft(null); setPendingView(null); setView('workspace');
     setSaving(false); setSaveError(null); setUncertain(false); setReconciled(false); setNotice(''); setLoadError(null);
     setAuthError('Your private session could not be restored. Reload the page to try again.'); setAuthReady(true);
@@ -147,13 +150,17 @@ export function App({ config, services }: { config: AppConfig; services: Session
   }
 
   const createDisabled = !loaded || loading || !!loadError || cases.length >= 2 || uncertain;
-  return <AppShell view={view} caseName={selected?.name} session={!authReady ? 'restoring' : user ? 'active' : 'none'} local={config.environment === 'local'} busy={saving || quotationBusy} onWorkspace={() => navigate('workspace')} onHelp={() => navigate('help')}>
+  return <AssistantProvider key={user?.uid ?? 'signed-out'} api={services.api} ownerId={user?.uid ?? null}><AppShell view={view} caseName={selected?.name} session={!authReady ? 'restoring' : user ? 'active' : 'none'} local={config.environment === 'local'} busy={saving || quotationBusy} onWorkspace={() => navigate('workspace')} onHelp={() => navigate('help')}>
+    <AssistantScope context={{ screen: view === 'detail' ? 'case' : 'workspace', label: view === 'detail' && selected ? selected.name + ' / Requirements' : view === 'create' ? 'Unsaved sourcing case' : view === 'help' ? 'Workspace guide' : 'Sourcing workspace', caseId: user && selected && ['detail', 'quotations'].includes(view) ? selected.id : null, caseRevision: user && selected && ['detail', 'quotations'].includes(view) ? selected.data_revision : null, dirty, busy: saving || quotationBusy, unavailable: uncertain ? 'Resolve the unconfirmed case save before asking about its saved state.' : undefined }} stateKey={JSON.stringify(draft)} handle={action => {
+      if (view !== 'detail' || !selected || action.case_id !== selected.id || action.expected_case_revision !== selected.data_revision) return false;
+      setAssistantTarget(action); setView('quotations'); return true;
+    }} />
     <div className="sr-only" role="status" aria-live="polite">{notice}</div>
     {notice && view !== 'detail' && <div className="alert success-alert"><Icon name="check" size={18} />{notice}</div>}
     {view === 'help' ? <Help onBack={() => navigate('workspace')} /> : view === 'create' && user && draft ? <>
       {uncertain && <section className="alert warning-alert recovery-panel" aria-label="Unconfirmed save"><div><strong>Check whether your case was saved</strong><p>The response did not confirm the outcome. Your draft is retained. Check saved cases before trying again.</p></div><button type="button" className="button button-secondary" onClick={checkSavedCases}>Check saved cases</button></section>}
       <CaseForm values={draft} onChange={setDraft} onSave={save} onCancel={() => uncertain ? checkSavedCases() : navigate('workspace')} busy={saving} error={saveError} uncertain={uncertain} />
-    </> : view === 'quotations' && user && selected ? <ConnectedQuotations key={user.uid + ':' + selected.id} api={services.api} ownerId={user.uid} item={selected} onBack={() => setView('detail')} onCaseChanged={updateCase} navigationGuardRef={quotationNavigation} onBusy={setQuotationBusy} /> : view === 'detail' && user && selected ? <CaseDetail item={selected} onClose={() => navigate('workspace')} onQuotations={() => { setNotice(''); setView('quotations'); }} /> : <>
+    </> : view === 'quotations' && user && selected ? <ConnectedQuotations key={user.uid + ':' + selected.id} api={services.api} ownerId={user.uid} item={selected} onBack={() => setView('detail')} onCaseChanged={updateCase} navigationGuardRef={quotationNavigation} onBusy={setQuotationBusy} assistantTarget={assistantTarget} onAssistantTargetConsumed={() => setAssistantTarget(null)} /> : view === 'detail' && user && selected ? <CaseDetail item={selected} onClose={() => navigate('workspace')} onQuotations={() => { setNotice(''); setView('quotations'); }} /> : <>
       <div className="page-heading"><div><p className="eyebrow">YOUR WORKSPACE</p><h1 tabIndex={-1} data-page-title>Sourcing workspace</h1><p className="page-intro">Set a clear brief for comparing fabric quotations.</p></div>{user && <div className="section-actions"><button type="button" className="button button-secondary" onClick={refreshCases} disabled={loading} aria-label="Refresh cases"><Icon name="refresh" size={17} />{loading ? 'Refreshing…' : 'Refresh'}</button><button type="button" className="button button-primary" onClick={openForm} disabled={createDisabled} aria-describedby="case-allowance"><Icon name="plus" size={17} />{draft ? 'Resume unsaved draft' : 'Create sourcing case'}</button></div>}</div>
       {!authReady ? <div className="panel empty-state" role="status"><span className="spinner" />Restoring your private session…</div> : !user ? <section className="panel welcome-panel"><span className="empty-icon"><Icon name="shield" size={30} /></span><h2>Start with your order requirements</h2><p>Compare two fictional fabric offers using the built-in example PDFs. Gemini reads the documents; you review the evidence, compare cost and delivery, and save your choice. No email account or files needed.</p><button type="button" className="button button-primary" onClick={() => { void startDemo(); }} disabled={signingIn}>{signingIn ? 'Starting session…' : 'Start private demo'}<Icon name="arrow" size={18} /></button><p className="session-note">Your session stays in this browser. Clearing browser data or changing devices can lose access.</p>{authError && <div role="alert" className="alert error-alert">{authError}</div>}</section> : <>
         <div className="list-heading"><h2>Saved cases{loaded && <span className="count-badge">{cases.length}</span>}</h2><p id="case-allowance">{loaded ? `${cases.length} of 2 demo cases used` : 'Up to 2 demo cases'}{cases.length >= 2 ? ' · Open an existing case to continue.' : ''}</p></div>
@@ -169,5 +176,5 @@ export function App({ config, services }: { config: AppConfig; services: Session
       setDraft(null); setInitialDraft(null); setSaveError(null); setReconciled(false); setView(pendingView); setPendingView(null);
       requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-page-title]')?.focus());
     }} />}
-  </AppShell>;
+  </AppShell></AssistantProvider>;
 }

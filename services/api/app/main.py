@@ -20,6 +20,7 @@ from app.config import Settings
 from app.errors import ApiError, ErrorDetail, ErrorEnvelope
 from app.models.cases import CaseCreate, CaseList, CaseRead
 from app.models.comparison import CaseComparison
+from app.routes.assistant import assistant_router
 from app.routes.quotations import quotation_router
 from app.routes.selections import selection_router
 from app.security import FirebaseIdentityVerifier, IdentityVerifier, Principal
@@ -111,6 +112,24 @@ def get_selection_service(request: Request):
     )
 
 
+def get_assistant_service(request: Request):
+    from app.adapters.adk_assistant import AdkAssistantProvider
+    from app.services.assistant import AssistantService
+
+    with request.app.state.resource_lock:
+        if request.app.state.quotation_repository is None:
+            request.app.state.quotation_repository = FirestoreQuotationRepository(
+                request.app.state.settings
+            )
+        if request.app.state.assistant_provider is None:
+            request.app.state.assistant_provider = AdkAssistantProvider(request.app.state.settings)
+    return AssistantService(
+        request.app.state.quotation_repository,
+        request.app.state.settings,
+        request.app.state.assistant_provider,
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -119,6 +138,7 @@ def create_app(
     quotation_repository: QuotationRepository | None = None,
     document_store=None,
     extraction_provider=None,
+    assistant_provider=None,
 ) -> FastAPI:
     config = settings or Settings()
 
@@ -145,8 +165,8 @@ def create_app(
         description=(
             "Private synthetic quotation intake, direct Gemini extraction and human review. "
             "Confirmed quotation checks and human buyer selection notes are available; "
-            "ranking and agent orchestration "
-            "are not implemented."
+            "bounded ADK review and comparison assistance is available. "
+            "Carbon ranking and procurement approval are not implemented."
         ),
         responses={code: {"model": ErrorEnvelope} for code in (401, 403, 404, 422, 429, 503)},
     )
@@ -156,6 +176,7 @@ def create_app(
     app.state.quotation_repository = quotation_repository
     app.state.document_store = document_store
     app.state.extraction_provider = extraction_provider
+    app.state.assistant_provider = assistant_provider
     app.state.resource_lock = Lock()
     app.add_middleware(
         CORSMiddleware,
@@ -276,4 +297,5 @@ def create_app(
 
     app.include_router(quotation_router(get_principal, get_quotation_service))
     app.include_router(selection_router(get_principal, get_selection_service))
+    app.include_router(assistant_router(get_principal, get_assistant_service))
     return app

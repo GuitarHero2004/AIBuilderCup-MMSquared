@@ -8,10 +8,12 @@ import type { QuotationNavigationGuard } from '../connected-quotations/Connected
 import { selectionReasonIssue } from './response';
 import { readSelectionAttempt, selectionMatchesAttempt, selectionStorageKey } from './recovery';
 import type { SelectionAttempt, SelectionSource } from './recovery';
+import { useAssistantScope } from '../assistant/context';
 import './connected-selections.css';
 
 interface Props {
   api: ApiClient; ownerId: string; item: CaseRead; source: SelectionSource | null;
+  initialSelectionId?: string;
   onBack: () => void; onBusy: (busy: boolean) => void; navigationGuardRef: MutableRefObject<QuotationNavigationGuard>;
 }
 const explain = (error: unknown) => error instanceof ApiError ? error.message + (error.requestId ? ' Reference: ' + error.requestId + '.' : '') : 'The result could not be verified. Check the same saved request before continuing.';
@@ -48,7 +50,7 @@ function SnapshotFacts({ snapshot, quoteId, saved }: { snapshot: CaseComparison;
 export function ConnectedSelections(props: Props) {
   return <SelectionContent key={props.ownerId + ':' + props.item.id} {...props} />;
 }
-function SelectionContent({ api, ownerId, item, source, onBack, onBusy, navigationGuardRef }: Props) {
+function SelectionContent({ api, ownerId, item, source, onBack, onBusy, navigationGuardRef, initialSelectionId }: Props) {
   const [history, setHistory] = useState<SelectionList | null>(null);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -187,6 +189,17 @@ function SelectionContent({ api, ownerId, item, source, onBack, onBusy, navigati
     } catch (failure) { if (mounted.current && generation === readGeneration.current) setError(explain(failure)); }
     finally { lock.current = false; if (mounted.current && generation === readGeneration.current) setBusy(false); }
   }
+  useAssistantScope({ screen: visible ? 'selection' : 'comparison', label: item.name + (visible ? ' / Saved buyer selection' : source ? ' / Buyer selection draft' : ' / Selection history'), caseId: item.id, caseRevision: visible?.current_context.case_data_revision ?? source?.comparison.case_data_revision ?? item.data_revision, selectionId: visible?.selection.id, inputFingerprint: visible ? undefined : source?.comparison.input_fingerprint, dirty, busy: unresolved || checkingContext, unavailable: visible?.current_context.case_data_revision === null ? 'Current case inputs could not be verified. Refresh this saved summary first.' : undefined }, 20, JSON.stringify([reason, acknowledged, visible?.current_context]), action => {
+    if (action.kind !== 'open_selection' || !action.selection_id || action.case_id !== item.id) return false;
+    requestLeave(() => { void openSaved(action.selection_id!); }); return true;
+  });
+  useEffect(() => {
+    if (!initialSelectionId) return;
+    const frame = requestAnimationFrame(() => { void openSaved(initialSelectionId); });
+    return () => cancelAnimationFrame(frame);
+    // This opaque initial target is consumed once; normal reads use the guarded handler.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSelectionId]);
   const saveBlocked = unresolved || !sourceValid || !contextVerified || checkingContext || historyLoading || !!historyError || !history?.remaining_selection_slots || !!reasonIssue || !acknowledged;
   return <section className="connected-selections" aria-labelledby={id + '-title'}>
     <button className="button button-secondary cs-back" type="button" disabled={busy} onClick={() => requestLeave(onBack)}>{source ? 'Back to comparison' : 'Back to quotations'}</button>
