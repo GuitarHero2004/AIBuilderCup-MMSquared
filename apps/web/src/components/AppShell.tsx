@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { AssistantLauncher } from '../features/assistant/AssistantProvider';
 import { Icon } from './Icon';
 
 export type WorkspaceView = 'workspace' | 'create' | 'detail' | 'quotations' | 'help';
@@ -46,7 +45,7 @@ export function AppShell({ children, view, caseName, session, local, busy, onWor
     <div className="workspace">
       <header className="topbar">
         <nav aria-label="Breadcrumb" className="breadcrumb"><button type="button" onClick={onWorkspace} disabled={busy}>Workspace</button><Icon name="chevron" size={14} /><span aria-current="page">{current}</span></nav>
-        <div className="assistant-topbar-actions"><AssistantLauncher /><span className="session-chip"><span className={`status-dot ${session === 'active' ? 'active' : ''}`} />{session === 'active' ? 'Private session' : session === 'restoring' ? 'Restoring session' : 'No active session'}</span></div>
+        <div className="assistant-topbar-actions"><span className="session-chip"><span className={`status-dot ${session === 'active' ? 'active' : ''}`} />{session === 'active' ? 'Private session' : session === 'restoring' ? 'Restoring session' : 'No active session'}</span></div>
       </header>
       <div className="workspace-scroll" ref={scrollport}>
         <main id="main" className="main-content" tabIndex={-1}>{children}</main>
