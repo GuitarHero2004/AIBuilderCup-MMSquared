@@ -17,3 +17,11 @@
 .intake-synthetic-declaration input { width: 1rem; min-width: 1rem; height: 1rem; margin-top: 0.1875rem; }
 .intake-upload-options.intake-upload-only { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 540px) { .cq-conflict-rows dl { grid-template-columns: minmax(0, 1fr); } }
+
+.cq-activity { margin-block: 0 var(--ui-space-5); padding: var(--ui-space-5); }
+.cq-activity-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--ui-space-3); flex-wrap: wrap; }
+.cq-activity-heading h2 { margin: 0; font-size: var(--ui-text-section); }
+.cq-activity > p { margin-top: var(--ui-space-2); color: var(--secondary); font-size: var(--ui-text-small); line-height: 1.6; }
+.cq-activity > details { margin-top: var(--ui-space-2); }
+.cq-activity summary { cursor: pointer; min-height: 44px; padding-block: var(--ui-space-2); color: var(--primary); font-size: var(--ui-text-small); }
+.cq-activity-reference { font-size: var(--ui-text-caption); color: var(--secondary); overflow-wrap: anywhere; }

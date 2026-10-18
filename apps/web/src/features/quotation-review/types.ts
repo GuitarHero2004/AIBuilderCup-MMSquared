@@ -1,4 +1,5 @@
-﻿/** Presentation models only. Generate API DTOs from the agreed backend OpenAPI contract. */
+import type { ReactNode } from 'react';
+/** Presentation models only. Generate API DTOs from the agreed backend OpenAPI contract. */
 export type ReviewGroup = 'textile' | 'commercial' | 'delivery' | 'logistics' | 'evidence';
 export interface ReviewField {
   id: string;
@@ -12,6 +13,7 @@ export interface ReviewField {
   source?: { page: number | null; excerpt: string | null; label?: string };
   help?: string;
   requiredFor?: string[];
+  reviewIndividually?: boolean;
 }
 export interface ReviewDraftField {
   value: string;
@@ -20,6 +22,11 @@ export interface ReviewDraftField {
   basis: 'extracted' | 'correction' | 'assumption';
 }
 export type ReviewDraft = Record<string, ReviewDraftField>;
+export interface ReviewBatchAction {
+  kind: 'cited' | 'unknown';
+  fields: { id: string; expected: ReviewDraftField }[];
+  note?: string;
+}
 export interface ReviewIssue {
   id: string;
   fieldId?: string;
@@ -63,6 +70,10 @@ export interface QuotationReviewProps {
   operation: ReviewOperation;
   confirmation: ReviewConfirmation | null;
   onFieldChange: (fieldId: string, patch: Partial<ReviewDraftField>) => void;
+  onReviewBatch?: (action: ReviewBatchAction) => boolean;
+  activity?: ReactNode;
+  unknownNote?: string;
+  onUnknownNoteChange?: (note: string) => void;
   onSave: () => void;
   onConfirm: () => void;
   onCheckSaved: () => void;

@@ -27,15 +27,15 @@ const baseSpecs: FieldSpec[] = [
   { path: 'commercial.incoterm_text', label: 'Quoted Incoterm', group: 'commercial', kind: 'text' },
   { path: 'commercial.payment_terms', label: 'Payment terms', group: 'commercial', kind: 'text' },
   { path: 'commercial.quote_valid_until', label: 'Quote valid until', group: 'commercial', kind: 'date' },
-  { path: 'commercial.cost_basis_id', label: 'Comparison cost boundary', group: 'commercial', kind: 'select', options: [{ value: 'delivered_to_buyer_excluding_tax_v1', label: 'Material and delivery to buyer; excludes tax and duties' }], requiredFor: ['Comparable cost'], help: 'Only select this boundary when the source or an explicit reviewed assumption supports it.' },
+  { path: 'commercial.cost_basis_id', reviewIndividually: true, label: 'Comparison cost boundary', group: 'commercial', kind: 'select', options: [{ value: 'delivered_to_buyer_excluding_tax_v1', label: 'Material and delivery to buyer; excludes tax and duties' }], requiredFor: ['Comparable cost'], help: 'Only select this boundary when the source or an explicit reviewed assumption supports it.' },
   { path: 'commercial.included_charges', label: 'Included charges', group: 'commercial', kind: 'text', conversion: 'list', help: 'Separate charge categories with semicolons, for example: material; delivery.' },
   { path: 'commercial.excluded_charges', label: 'Excluded charges', group: 'commercial', kind: 'text', conversion: 'list', help: 'Separate charge categories with semicolons, for example: tax; duties.' },
-  { path: 'commercial.cost_basis_reviewed', label: 'Cost boundary established', group: 'commercial', kind: 'select', conversion: 'boolean', options: yesNo, requiredFor: ['Comparable cost'], help: 'Record your review of the boundary, including which charges are included. Unknown charges are never zero.' },
+  { path: 'commercial.cost_basis_reviewed', reviewIndividually: true, label: 'Cost boundary established', group: 'commercial', kind: 'select', conversion: 'boolean', options: yesNo, requiredFor: ['Comparable cost'], help: 'Record your review of the boundary, including which charges are included. Unknown charges are never zero.' },
   { path: 'supply_chain.production_lead_time_days', label: 'Production time', group: 'delivery', kind: 'decimal', conversion: 'integer', unit: 'days' },
   { path: 'supply_chain.shipping_lead_time_days', label: 'Shipping time', group: 'delivery', kind: 'decimal', conversion: 'integer', unit: 'days' },
   { path: 'supply_chain.end_to_end_lead_time_days', label: 'Full-order lead time', group: 'delivery', kind: 'decimal', conversion: 'integer', unit: 'calendar days', requiredFor: ['Delivery'] },
   { path: 'supply_chain.lead_time_basis', label: 'Delivery basis', group: 'delivery', kind: 'select', options: [{ value: 'full_order_calendar_days_to_buyer', label: 'Full order arrives at buyer, calendar days' }, { value: 'production_only', label: 'Production only; arrival not established' }, { value: 'shipping_only', label: 'Shipping only; arrival not established' }, { value: 'unknown', label: 'Unclear quoted delivery basis' }], requiredFor: ['Delivery'] },
-  { path: 'supply_chain.lead_time_basis_reviewed', label: 'Delivery basis established', group: 'delivery', kind: 'select', conversion: 'boolean', options: yesNo, requiredFor: ['Delivery'], help: 'Production and shipping time are not automatically added. Explain how the full-order arrival commitment is supported.' },
+  { path: 'supply_chain.lead_time_basis_reviewed', reviewIndividually: true, label: 'Delivery basis established', group: 'delivery', kind: 'select', conversion: 'boolean', options: yesNo, requiredFor: ['Delivery'], help: 'Production and shipping time are not automatically added. Explain how the full-order arrival commitment is supported.' },
   { path: 'supply_chain.actual_net_fabric_mass_kg', label: 'Actual net fabric mass', group: 'logistics', kind: 'decimal', unit: 'kg', help: 'Net material mass is distinct from gross shipment mass.' },
   { path: 'supply_chain.actual_gross_shipment_mass_kg', label: 'Actual gross shipment mass', group: 'logistics', kind: 'decimal', unit: 'kg' },
   { path: 'supply_chain.actual_mass_covers_order', label: 'Actual mass covers the full order', group: 'logistics', kind: 'select', conversion: 'boolean', options: yesNo },
@@ -139,4 +139,19 @@ export function intakeQuote(quote: QuoteRead): IntakeQuotation {
 export function intakeCase(item: CaseRead, revision = item.data_revision): IntakeCaseInfo {
   const r = item.requirement, t = r.textile_specification;
   return { name: item.name, revision, quantityLabel: `${formatDecimal(r.quantity)} metres`, budgetLabel: `${r.currency} ${formatDecimal(r.maximum_budget_amount)}`, deliveryLabel: `${r.maximum_lead_time_days} calendar days`, fabricLabel: `${t.construction} · ${t.composition.map(p => `${p.percentage}% ${p.fibre}`).join(' / ')} · ${t.target_gsm} GSM ±${t.gsm_tolerance_pct}% · minimum usable width ${t.minimum_usable_width_cm} cm` };
+}
+
+/** One field edit clears its review and any dependent human boundary acknowledgement. */
+export function updateReviewDraft(draft: ReviewDraft, id: string, patch: Partial<ReviewDraft[string]>): ReviewDraft {
+  if (!draft[id]) return draft;
+  const current = draft[id], next = { ...current, ...patch };
+  if (patch.value !== undefined && patch.value !== current.value || patch.note !== undefined && patch.note !== current.note || patch.basis !== undefined && patch.basis !== current.basis) next.reviewed = false;
+  const updated = { ...draft, [id]: next };
+  if (patch.value !== undefined && patch.value !== current.value) {
+    const dependents = ['commercial.cost_basis_id', 'commercial.included_charges', 'commercial.excluded_charges'].includes(id) ? ['commercial.cost_basis_reviewed']
+      : ['supply_chain.production_lead_time_days', 'supply_chain.shipping_lead_time_days', 'supply_chain.end_to_end_lead_time_days', 'supply_chain.lead_time_basis'].includes(id) ? ['supply_chain.lead_time_basis_reviewed']
+        : id.startsWith('supply_chain.legs[') ? ['supply_chain.route_complete'] : [];
+    for (const dependent of dependents) if (updated[dependent]) updated[dependent] = { ...updated[dependent], reviewed: false, value: '', note: '', basis: 'assumption' };
+  }
+  return updated;
 }
