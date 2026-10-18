@@ -4,6 +4,9 @@ import type { ApiClient } from '../../api/client';
 import { ApiError } from '../../api/client';
 import type { CaseRead, ConfirmQuote, ExtractRequest, MutationReceipt, QuoteList, QuoteRead, RunEvents, RunRead, SaveDraft } from '../../api/types';
 import { QuotationIntake } from '../quotations/QuotationIntake';
+import { ConnectedSelections } from '../connected-selections/ConnectedSelections';
+import { readSelectionAttempt } from '../connected-selections/recovery';
+import type { SelectionSource } from '../connected-selections/recovery';
 import { ConnectedComparison } from '../connected-comparison/ConnectedComparison';
 import { Icon } from '../../components/Icon';
 import { QuotationReview } from '../quotation-review/QuotationReview';
@@ -59,6 +62,9 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   const [transfer, setTransfer] = useState<IntakeTransfer>(() => pending ? { status: 'uncertain', message: 'An earlier operation needs readback. Check its recorded result before adding or changing quotations. Unsaved browser edits were not stored.' } : { status: 'idle' });
   const [selected, setSelected] = useState<QuoteRead | null>(null);
   const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [selectionView, setSelectionView] = useState<{ source: SelectionSource | null } | null>(() => !pending && readSelectionAttempt(ownerId, item.id) ? { source: null } : null);
+  const [selectionBusy, setSelectionBusy] = useState(false);
+  const selectionNavigation = useRef<QuotationNavigationGuard>(null);
   const [draft, setDraft] = useState<ReviewDraft>({});
   const [saved, setSaved] = useState<ReviewDraft>({});
   const [operation, setOperation] = useState<ReviewOperation>({ status: 'idle' });
@@ -80,7 +86,7 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   const discardDialog = useRef<HTMLDialogElement>(null);
   const conflictDialog = useRef<HTMLDialogElement>(null);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
-  const blocked = busy || pending !== null;
+  const blocked = busy || pending !== null || selectionBusy;
   const issues = selected ? draftIssues(selected, draft, dirty) : [];
 
   const remember = useCallback((value: Pending | null) => {
@@ -116,11 +122,12 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   }, [dirty, blocked]);
   useEffect(() => {
     navigationGuardRef.current = (proceed) => {
+      if (selectionView && selectionNavigation.current) { selectionNavigation.current(proceed); return; }
       if (lock.current || pendingRef.current) { setNotice('Check the current operation before leaving this case.'); return; }
       if (dirty) setLeave({ proceed }); else proceed();
     };
     return () => { navigationGuardRef.current = null; };
-  }, [dirty, navigationGuardRef]);
+  }, [dirty, navigationGuardRef, selectionView]);
   useEffect(() => {
     const element = discardDialog.current;
     if (leave) { element?.showModal(); element?.querySelector<HTMLButtonElement>('button')?.focus(); }
@@ -301,9 +308,11 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
   const conflictingFields = conflict ? selectedFields.filter(field => JSON.stringify(draft[field.id]) !== JSON.stringify(saved[field.id]) || JSON.stringify(reviewDraft(conflict)[field.id]) !== JSON.stringify(saved[field.id])) : [];
   return <>
     {notice && <div className="alert info-alert cq-notice" role="status">{notice}</div>}
-    {comparisonOpen ? <ConnectedComparison api={api} ownerId={ownerId} item={item} minimumRevision={Math.max(item.data_revision, collection?.case_data_revision ?? 0)} busy={busy}
+    {selectionView ? <ConnectedSelections api={api} ownerId={ownerId} item={item} source={selectionView.source} navigationGuardRef={selectionNavigation} onBusy={setSelectionBusy}
+      onBack={() => { setSelectionView(null); setComparisonOpen(!!selectionView.source); setNotice(''); void refreshCollection(); }} /> : comparisonOpen ? <ConnectedComparison api={api} ownerId={ownerId} item={item} minimumRevision={Math.max(item.data_revision, collection?.case_data_revision ?? 0)} busy={busy}
       onBack={() => requestLeave(() => { setComparisonOpen(false); setNotice(''); void refreshCollection(); })}
-      onReview={quoteId => requestLeave(() => { void openReview(quoteId); })} /> : selected ? <>
+      onReview={quoteId => requestLeave(() => { void openReview(quoteId); })}
+      onSelect={source => requestLeave(() => { setNotice(''); setSelectionView({ source }); })} /> : selected ? <>
       <QuotationReview quote={{ id: selected.id, supplierName: selected.draft_data?.supplier_name ?? 'Supplier not identified', caseName: item.name, caseRevision: selected.case_data_revision, savedDraftRevision: selected.draft_revision, extractionLabel: 'Check each extracted value and citation against the original PDF.' }}
         fields={selectedFields} draft={draft} issues={issues} document={source} dirty={dirty} operation={busy && operation.status === 'idle' ? { status: 'checking' } : operation}
         confirmation={selected.confirmation ? { draftRevision: selected.confirmation.draft_revision, confirmedAt: selected.confirmation.confirmed_at, reviewerLabel: 'You, in this private session' } : null}
@@ -320,12 +329,12 @@ export function ConnectedQuotations({ api, ownerId, item, onBack, onCaseChanged,
       onUpload={file => { if (collection?.capabilities.upload_enabled && !loading && !loadError && !pendingRef.current && !lock.current) void perform({ kind: 'upload', key: crypto.randomUUID(), file, revision: collection.case_data_revision }); }} onUseSample={() => { /* No synthetic sample endpoint is advertised. */ }}
       onExtract={collection?.capabilities.extraction_enabled ? startExtraction : undefined} onRetryExtraction={collection?.capabilities.extraction_enabled ? startExtraction : undefined} onReview={quoteId => { void openReview(quoteId); }} />
       <section className="panel cc-entry" aria-label="Check confirmed quotations"><div><h2>Check confirmed offers</h2><p>See which confirmed terms meet your requirements and which need clarification. Unconfirmed drafts remain visible for follow-up.</p></div>
-        <button type="button" className="button button-primary" disabled={blocked || loading || !!loadError || !collection} onClick={() => requestLeave(() => { setNotice(''); setComparisonOpen(true); })}>Compare confirmed terms<Icon name="arrow" size={17} /></button>
+        <button type="button" className="button button-primary" disabled={blocked || loading || !!loadError || !collection} onClick={() => requestLeave(() => { setNotice(''); setComparisonOpen(true); })}>Compare confirmed terms<Icon name="arrow" size={17} /></button><button type="button" className="button button-secondary" disabled={blocked} onClick={() => requestLeave(() => { setNotice(''); setSelectionView({ source: null }); })}>Saved selections</button>
       </section></>}
     {pending && !busy && (pending.file || pending.body) && <section className="cq-replay"><p>If the recorded result is still unavailable, you can resend the exact same request. Its existing request key prevents a second saved operation.</p><button className="button button-secondary" onClick={() => { void perform(pending); }}>Retry the same request</button></section>}
     {pending && canCloseAttempt && <section className="cq-replay"><p>No operation record was found. Close this unresolved attempt to prevent a late request from saving. This does not cancel a model call that is already recorded.</p><button className="button button-secondary" disabled={busy} onClick={() => { void closeAttempt(); }}>Close unresolved attempt</button></section>}
-    {!comparisonOpen && (run || events) && <section className="panel cq-activity" aria-labelledby="quotation-activity-title"><h2 id="quotation-activity-title">Recorded extraction activity</h2>{run && <p>Run {run.id.slice(0, 8)} · {run.status.replaceAll('_', ' ')} · {run.model_call_count} model {run.model_call_count === 1 ? 'call' : 'calls'}</p>}{events?.items.length ? <ol>{events.items.map(event => <li key={event.sequence}><span>{event.message}</span><time dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleTimeString()}</time></li>)}</ol> : <p>Detailed activity is unavailable. Only the stored run status is shown.</p>}</section>}
-    {!comparisonOpen && <p className="cq-availability">Requirement checks use confirmed quotation terms. Carbon estimates, supplier ranking, scenarios and final decisions are not connected yet.</p>}
+    {!comparisonOpen && !selectionView && (run || events) && <section className="panel cq-activity" aria-labelledby="quotation-activity-title"><h2 id="quotation-activity-title">Recorded extraction activity</h2>{run && <p>Run {run.id.slice(0, 8)} · {run.status.replaceAll('_', ' ')} · {run.model_call_count} model {run.model_call_count === 1 ? 'call' : 'calls'}</p>}{events?.items.length ? <ol>{events.items.map(event => <li key={event.sequence}><span>{event.message}</span><time dateTime={event.timestamp}>{new Date(event.timestamp).toLocaleTimeString()}</time></li>)}</ol> : <p>Detailed activity is unavailable. Only the stored run status is shown.</p>}</section>}
+    {!comparisonOpen && !selectionView && <p className="cq-availability">Requirement checks and saved buyer selection notes use confirmed quotation terms. Carbon estimates, supplier ranking, scenarios and full sourcing decisions are not connected yet.</p>}
     <dialog ref={discardDialog} className="discard-dialog" aria-labelledby="quotation-discard-title" onCancel={event => { event.preventDefault(); setLeave(null); }}><h2 id="quotation-discard-title">Discard unsaved review changes?</h2><p>Your last saved draft remains available. The changes in this browser have not been saved.</p><div className="dialog-actions"><button className="button button-secondary" onClick={() => setLeave(null)}>Keep editing</button><button className="button button-danger" onClick={() => { const proceed = leave?.proceed; setLeave(null); proceed?.(); }}>Discard changes</button></div></dialog>
     <dialog ref={conflictDialog} className="discard-dialog cq-conflict-dialog" aria-labelledby="quotation-conflict-title" onCancel={event => { event.preventDefault(); setShowConflict(false); }}><h2 id="quotation-conflict-title">Compare the current saved draft</h2><p>Your local edits have not overwritten the saved version. Keeping them requires renewed review against the current case and source.</p><div className="cq-conflict-rows">{conflictingFields.map(field => <section key={field.id}><h3>{field.label}</h3><dl><dt>Your local value</dt><dd>{draft[field.id]?.value || 'Unknown'}<small>{draft[field.id]?.note || 'No review note'}</small></dd><dt>Current saved value</dt><dd>{conflict ? reviewDraft(conflict)[field.id]?.value || 'Unknown' : 'Unavailable'}<small>{conflict ? reviewDraft(conflict)[field.id]?.note || 'No review note' : ''}</small></dd></dl></section>)}</div><div className="dialog-actions"><button className="button button-secondary" onClick={() => setShowConflict(false)}>Keep both for now</button><button className="button button-secondary" onClick={() => resolveConflict(false)}>Discard my edits and use latest</button><button className="button button-primary" onClick={() => resolveConflict(true)}>Keep my edits on the latest draft</button></div></dialog>
   </>;

@@ -2,12 +2,13 @@ import { Fragment, useCallback, useEffect, useId, useRef, useState } from 'react
 import type { ApiClient } from '../../api/client';
 import { ApiError } from '../../api/client';
 import type { CaseComparison, CaseRead } from '../../api/types';
+import type { SelectionSource } from '../connected-selections/recovery';
 import { Icon } from '../../components/Icon';
 import './connected-comparison.css';
 
 interface Props {
   api: ApiClient; ownerId: string; item: CaseRead; minimumRevision: number; busy: boolean;
-  onBack: () => void; onReview: (quoteId: string) => void;
+  onBack: () => void; onReview: (quoteId: string) => void; onSelect: (source: SelectionSource) => void;
 }
 type Row = CaseComparison['rows'][number];
 type Check = Row['checks'][number];
@@ -43,7 +44,7 @@ const explanation = (error: unknown) => error instanceof ApiError
 export function ConnectedComparison(props: Props) {
   return <ComparisonContent key={props.ownerId + ':' + props.item.id} {...props} />;
 }
-function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview }: Props) {
+function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview, onSelect }: Props) {
   const [result, setResult] = useState<CaseComparison | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +111,7 @@ function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview 
                   {metric.quoted_cost_amount !== null && metric.comparable_cost_amount === null && <span className="cc-secondary">Quoted amount: {metric.currency ?? 'Currency unconfirmed \u00b7'} {displayDecimal(metric.quoted_cost_amount)}. Not used as a comparable total.</span>}
                 </td>
                 <td role="cell"><span className="cc-mobile-label">Full-order delivery</span><strong className="cc-value">{metric.end_to_end_lead_time_days !== null ? metric.end_to_end_lead_time_days + ' calendar days' : row.status === 'unconfirmed' ? 'Not checked' : 'Needs delivery review'}</strong>{metric.arrival_date && <span className="cc-secondary">Arrival: {dateLabel(metric.arrival_date)}</span>}</td>
-                <td role="cell" className="cc-actions"><span className="cc-mobile-label">Next step</span><button type="button" className="button button-secondary" aria-expanded={expanded === row.quote_id} aria-controls={detailsId} onClick={() => setExpanded(current => current === row.quote_id ? null : row.quote_id)}>{expanded === row.quote_id ? 'Hide checks' : 'View checks'}</button><button className="text-link" type="button" disabled={busy} onClick={() => canReview ? onReview(row.quote_id) : onBack()}>{canReview ? 'Review quotation' : 'Open quotations'}<Icon name="arrow" size={16} /></button></td>
+                <td role="cell" className="cc-actions"><span className="cc-mobile-label">Next step</span><button type="button" className="button button-secondary" aria-expanded={expanded === row.quote_id} aria-controls={detailsId} onClick={() => setExpanded(current => current === row.quote_id ? null : row.quote_id)}>{expanded === row.quote_id ? 'Hide checks' : 'View checks'}</button><button className="text-link" type="button" disabled={busy} onClick={() => canReview ? onReview(row.quote_id) : onBack()}>{canReview ? 'Review quotation' : 'Open quotations'}<Icon name="arrow" size={16} /></button>{row.status === 'meets_checked_requirements' && <button type="button" className="button button-primary" disabled={busy || loading || !!error || outdated} onClick={() => onSelect({ comparison: structuredClone(result), quoteId: row.quote_id })}>Record buyer selection</button>}</td>
               </tr>
               <tr className="cc-detail-row" hidden={expanded !== row.quote_id}><td colSpan={5}><section id={detailsId} className="cc-details" aria-label={'Checks for ' + (row.supplier_name ?? row.source_name)}><h3>Checks for {row.supplier_name ?? row.source_name}</h3>
                 <dl className="cc-mass"><dt>{metric.net_mass_basis === 'actual' ? 'Actual net fabric mass' : metric.net_mass_basis === 'estimated' ? 'Estimated net fabric mass' : 'Net fabric mass'}</dt><dd>{metric.net_fabric_mass_kg !== null ? displayDecimal(metric.net_fabric_mass_kg) + ' kg' : 'Unavailable from the confirmed terms'}<span className="cc-secondary">Fabric mass does not include packaging or establish freight weight.</span></dd></dl>
@@ -118,7 +119,7 @@ function ComparisonContent({ api, item, minimumRevision, busy, onBack, onReview 
               </section></td></tr></Fragment>;
             })}</tbody></table>}
       </section>
-      <section className="panel cc-limitations"><h2>What these checks cover</h2><p>Carbon estimates, preference scores and recommendations are unavailable. A passing check is not a sourcing approval.</p>{result.limitations.length > 0 && <ul>{result.limitations.map((limitation, index) => <li key={index}>{limitation}</li>)}</ul>}<p className="cc-secondary">Results reflect the saved inputs at the time shown above. Review changed quotations and refresh these checks before relying on them.</p></section>
+      <section className="panel cc-limitations"><h2>What these checks cover</h2><p>Carbon estimates, preference scores and recommendations are unavailable. A passing check is not a sourcing approval. You can separately record a limited buyer selection note with your reason.</p>{result.limitations.length > 0 && <ul>{result.limitations.map((limitation, index) => <li key={index}>{limitation}</li>)}</ul>}<p className="cc-secondary">Results reflect the saved inputs at the time shown above. Review changed quotations and refresh these checks before relying on them.</p></section>
     </>}
     {!loading && !result && !error && <div className="panel empty-state"><h2>No verified result is available</h2><p>Refresh the checks to read the saved quotations.</p></div>}
   </section>;

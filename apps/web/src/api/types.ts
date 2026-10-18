@@ -25,3 +25,9 @@ export type CaseComparison = Omit<ComparisonContract, 'rows'> & {
     metrics: Required<NonNullable<ComparisonRowContract['metrics']>>;
   })[];
 };
+
+export type SelectionCreate = components['schemas']['SelectionCreate'];
+export type SelectionOperation = components['schemas']['SelectionOperation'];
+export type SelectionList = components['schemas']['SelectionList'];
+export type SelectionRecord = Omit<components['schemas']['SelectionRecord'], 'comparison_snapshot'> & { comparison_snapshot: CaseComparison };
+export type SelectionRead = Omit<components['schemas']['SelectionRead'], 'selection'> & { selection: SelectionRecord };
